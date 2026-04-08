@@ -194,6 +194,21 @@ All commands are run from the root of the project:
 | `npm run build`       | Build production site to `./dist/`         |
 | `npm run preview`     | Preview production build locally           |
 
+## GitHub Pages Deployment
+
+This repo is configured to deploy with GitHub Actions to:
+
+- `https://gmdavisux.github.io/chairs/`
+
+One-time GitHub setup:
+
+1. Make the repository public (GitHub Pages for project sites is simplest on public repos).
+2. In GitHub, open **Settings -> Pages**.
+3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+4. Push to `main` to trigger deployment.
+
+After the action succeeds, the site is available at the URL above.
+
 ## Credit
 
 This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
