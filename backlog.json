@@ -1,0 +1,324 @@
+{
+  "pages": [
+    {
+      "slug": "barcelona-chair",
+      "title": "Barcelona Chair",
+      "designer": "Ludwig Mies van der Rohe",
+      "era": "Modernist",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "wassily-chair",
+      "title": "Wassily Chair",
+      "designer": "Marcel Breuer",
+      "era": "Bauhaus",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "tulip-chair",
+      "title": "Tulip Chair",
+      "designer": "Eero Saarinen",
+      "era": "Mid-Century Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "egg-chair",
+      "title": "Egg Chair",
+      "designer": "Arne Jacobsen",
+      "era": "Mid-Century Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "swan-chair",
+      "title": "Swan Chair",
+      "designer": "Arne Jacobsen",
+      "era": "Mid-Century Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "ant-chair",
+      "title": "Ant Chair",
+      "designer": "Arne Jacobsen",
+      "era": "Mid-Century Modern",
+      "category": "Dining Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "panton-chair",
+      "title": "Panton Chair",
+      "designer": "Verner Panton",
+      "era": "Late Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "wishbone-chair",
+      "title": "Wishbone Chair (CH24)",
+      "designer": "Hans J. Wegner",
+      "era": "Danish Modern",
+      "category": "Dining Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "the-chair-wegner",
+      "title": "The Chair (JH501)",
+      "designer": "Hans J. Wegner",
+      "era": "Danish Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "shell-chair-ch07",
+      "title": "Shell Chair (CH07)",
+      "designer": "Hans J. Wegner",
+      "era": "Danish Modern",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "ox-chair",
+      "title": "Ox Chair (EJ100)",
+      "designer": "Hans J. Wegner",
+      "era": "Danish Modern",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "le-corbusier-lc2",
+      "title": "LC2 Grand Confort",
+      "designer": "Le Corbusier, Pierre Jeanneret & Charlotte Perriand",
+      "era": "Modernist",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "le-corbusier-lc4",
+      "title": "LC4 Chaise Longue",
+      "designer": "Le Corbusier, Pierre Jeanneret & Charlotte Perriand",
+      "era": "Modernist",
+      "category": "Chaise Longues",
+      "status": "pending"
+    },
+    {
+      "slug": "red-and-blue-chair",
+      "title": "Red and Blue Chair",
+      "designer": "Gerrit Rietveld",
+      "era": "De Stijl",
+      "category": "Avant-Garde",
+      "status": "pending"
+    },
+    {
+      "slug": "zig-zag-chair",
+      "title": "Zig-Zag Chair",
+      "designer": "Gerrit Rietveld",
+      "era": "De Stijl",
+      "category": "Avant-Garde",
+      "status": "pending"
+    },
+    {
+      "slug": "hill-house-chair",
+      "title": "Hill House Ladder-Back Chair",
+      "designer": "Charles Rennie Mackintosh",
+      "era": "Arts & Crafts",
+      "category": "Arts & Crafts",
+      "status": "pending"
+    },
+    {
+      "slug": "diamond-chair",
+      "title": "Diamond Chair",
+      "designer": "Harry Bertoia",
+      "era": "Mid-Century Modern",
+      "category": "Wire & Metal",
+      "status": "pending"
+    },
+    {
+      "slug": "platner-chair",
+      "title": "Platner Easy Chair",
+      "designer": "Warren Platner",
+      "era": "Mid-Century Modern",
+      "category": "Wire & Metal",
+      "status": "pending"
+    },
+    {
+      "slug": "womb-chair",
+      "title": "Womb Chair",
+      "designer": "Eero Saarinen",
+      "era": "Mid-Century Modern",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "paimio-chair",
+      "title": "Paimio Chair (No. 41)",
+      "designer": "Alvar Aalto",
+      "era": "Functionalism",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "tank-chair-aalto",
+      "title": "Tank Chair (No. 400)",
+      "designer": "Alvar Aalto",
+      "era": "Functionalism",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "chieftain-chair",
+      "title": "Chieftain Chair",
+      "designer": "Finn Juhl",
+      "era": "Danish Modern",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "pelican-chair",
+      "title": "Pelican Chair",
+      "designer": "Finn Juhl",
+      "era": "Danish Modern",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "butterfly-chair",
+      "title": "Butterfly Chair (BKF)",
+      "designer": "Bonet, Kurchan & Ferrari-Hardoy",
+      "era": "Modernist",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "ball-chair",
+      "title": "Ball Chair (Globe Chair)",
+      "designer": "Eero Aarnio",
+      "era": "Space Age",
+      "category": "Space Age",
+      "status": "pending"
+    },
+    {
+      "slug": "pastil-chair",
+      "title": "Pastil Chair",
+      "designer": "Eero Aarnio",
+      "era": "Space Age",
+      "category": "Space Age",
+      "status": "pending"
+    },
+    {
+      "slug": "djinn-chair",
+      "title": "Djinn Chair",
+      "designer": "Olivier Mourgue",
+      "era": "Space Age",
+      "category": "Space Age",
+      "status": "pending"
+    },
+    {
+      "slug": "mushroom-chair",
+      "title": "Mushroom Chair (F560)",
+      "designer": "Pierre Paulin",
+      "era": "Late Modern",
+      "category": "Lounge Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "tongue-chair",
+      "title": "Tongue Chair (F577)",
+      "designer": "Pierre Paulin",
+      "era": "Late Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "ribbon-chair",
+      "title": "Ribbon Chair (F582)",
+      "designer": "Pierre Paulin",
+      "era": "Late Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "cone-chair",
+      "title": "Cone Chair",
+      "designer": "Verner Panton",
+      "era": "Late Modern",
+      "category": "Iconic Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "sacco-beanbag",
+      "title": "Sacco Bean Bag",
+      "designer": "Piero Gatti, Cesare Paolini & Franco Teodoro",
+      "era": "Pop Design",
+      "category": "Soft Seating",
+      "status": "pending"
+    },
+    {
+      "slug": "blow-chair",
+      "title": "Blow Chair",
+      "designer": "De Pas, D'Urbino, Lomazzi & Scolari",
+      "era": "Pop Design",
+      "category": "Avant-Garde",
+      "status": "pending"
+    },
+    {
+      "slug": "up-5-chair",
+      "title": "Up 5 Armchair",
+      "designer": "Gaetano Pesce",
+      "era": "Pop Design",
+      "category": "Soft Seating",
+      "status": "pending"
+    },
+    {
+      "slug": "brno-chair",
+      "title": "Brno Chair",
+      "designer": "Ludwig Mies van der Rohe",
+      "era": "Modernist",
+      "category": "Dining Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "noguchi-table",
+      "title": "Noguchi Coffee Table (IN-50)",
+      "designer": "Isamu Noguchi",
+      "era": "Mid-Century Modern",
+      "category": "Tables",
+      "status": "pending"
+    },
+    {
+      "slug": "poet-sofa-finn-juhl",
+      "title": "The Poet Sofa",
+      "designer": "Finn Juhl",
+      "era": "Danish Modern",
+      "category": "Sofas",
+      "status": "pending"
+    },
+    {
+      "slug": "chair-one-magis",
+      "title": "Chair One",
+      "designer": "Konstantin Grcic",
+      "era": "Contemporary Classics",
+      "category": "Contemporary Classics",
+      "status": "pending"
+    },
+    {
+      "slug": "series-7-chair",
+      "title": "Series 7 Chair (Model 3107)",
+      "designer": "Arne Jacobsen",
+      "era": "Mid-Century Modern",
+      "category": "Dining Chairs",
+      "status": "pending"
+    },
+    {
+      "slug": "low-pad-chair",
+      "title": "Low Pad Chair",
+      "designer": "Jasper Morrison",
+      "era": "Contemporary Classics",
+      "category": "Contemporary Classics",
+      "status": "pending"
+    }
+  ]
+}

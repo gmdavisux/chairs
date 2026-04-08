@@ -1,0 +1,16 @@
+# ── LLM provider ────────────────────────────────────────────────────────────
+# Option A: Standard OpenAI API (default)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Option B: GitHub Models endpoint (routes through your Copilot subscription)
+# Set GITHUB_MODELS=1 AND provide your GitHub PAT as GITHUB_TOKEN.
+# When GITHUB_MODELS=1, OPENAI_API_KEY is not required.
+GITHUB_MODELS=0
+GITHUB_TOKEN=your_github_personal_access_token_here
+
+# Override the default model (default: gpt-5.4-mini, 0.33x cost tier)
+# FURNITURE_MODEL=gpt-5.4-mini
+
+# ── Web search ───────────────────────────────────────────────────────────────
+# Required for the Researcher agent. Get a free key at https://tavily.com
+TAVILY_API_KEY=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

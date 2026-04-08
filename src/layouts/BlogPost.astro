@@ -1,0 +1,223 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+
+type Props = CollectionEntry<'blog'>['data'];
+
+const { title, description, pubDate, updatedDate, heroImage, designer, era, category } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} />
+		<style>
+			/* Override global main width to allow the wider article+sidebar layout */
+			main {
+				width: calc(100% - 2em);
+				max-width: 100%;
+				margin: 0 auto;
+				padding: 3em 1em;
+			}
+			.article-outer {
+				max-width: 1120px;
+				margin: 0 auto;
+			}
+			.hero-image {
+				width: 100%;
+				margin-bottom: 2rem;
+			}
+			.hero-image img {
+				display: block;
+				margin: 0 auto;
+				border-radius: 12px;
+				box-shadow: var(--box-shadow);
+			}
+			/* Two-column grid: prose | sidebar */
+			.article-body {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 2.5rem;
+				align-items: start;
+			}
+			@media (min-width: 1024px) {
+				.article-body {
+					grid-template-columns: 1fr 300px;
+				}
+			}
+			.prose {
+				min-width: 0; /* prevent grid blowout */
+				color: rgb(var(--gray-dark));
+			}
+			.title {
+				margin-bottom: 1em;
+				padding: 1em 0;
+				text-align: center;
+				line-height: 1;
+			}
+			.title h1 {
+				margin: 0 0 0.5em 0;
+			}
+			.date {
+				margin-bottom: 0.5em;
+				color: rgb(var(--gray));
+			}
+			.last-updated-on {
+				font-style: italic;
+			}
+
+			/* ── Sidebar ─────────────────────────────────────────────────── */
+			#post-sidebar {
+				position: sticky;
+				top: 2rem;
+				background: rgba(200, 121, 65, 0.07);
+				border: 1px solid rgba(200, 121, 65, 0.18);
+				border-top: 3px solid var(--accent);
+				border-radius: 6px;
+				padding: 1.5rem 1.5rem 1.25rem;
+				font-size: 0.875rem;
+				line-height: 1.6;
+			}
+			/* Metadata pill tags */
+			.sidebar-meta {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4rem;
+				margin-bottom: 1.25rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid rgba(200, 121, 65, 0.2);
+			}
+			.sidebar-tag {
+				font-family: "Lato", sans-serif;
+				font-size: 0.62rem;
+				font-weight: 700;
+				letter-spacing: 0.09em;
+				text-transform: uppercase;
+				padding: 0.2rem 0.55rem;
+				border-radius: 3px;
+				background: rgba(200, 121, 65, 0.13);
+				color: var(--accent-dark);
+			}
+			/* Reset global blockquote styles inside the sidebar */
+			:global(#post-sidebar blockquote) {
+				border-left: none;
+				padding: 0;
+				margin: 0;
+				font-size: 0.875rem;
+				font-style: normal;
+				font-family: "Playfair Display", Georgia, serif;
+				color: rgb(var(--gray-dark));
+			}
+			/* Section headings: **Meet the Designer**, **Related Chairs** */
+			:global(#post-sidebar blockquote p > strong:only-child),
+			:global(#post-sidebar blockquote > p > strong) {
+				display: block;
+				font-family: "Lato", sans-serif;
+				font-size: 0.62rem;
+				font-weight: 700;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin: 1.1rem 0 0.45rem;
+				padding-bottom: 0.3rem;
+				border-bottom: 1px solid rgba(200, 121, 65, 0.22);
+			}
+			:global(#post-sidebar blockquote > p:first-child > strong) {
+				margin-top: 0;
+			}
+			:global(#post-sidebar blockquote p) {
+				margin-bottom: 0.5rem;
+				font-size: 0.875rem;
+				line-height: 1.55;
+			}
+			/* Related chairs list */
+			:global(#post-sidebar blockquote ul) {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+			}
+			:global(#post-sidebar blockquote li) {
+				padding: 0.3rem 0;
+				border-bottom: 1px solid rgba(155, 135, 118, 0.12);
+				font-family: "Playfair Display", Georgia, serif;
+				font-size: 0.875rem;
+			}
+			:global(#post-sidebar blockquote li:last-child) {
+				border-bottom: none;
+			}
+			/* Links in sidebar: warm white, hover to amber */
+			:global(#post-sidebar blockquote a) {
+				color: rgb(var(--black));
+				text-decoration: none;
+				transition: color 0.18s ease;
+			}
+			:global(#post-sidebar blockquote a:hover) {
+				color: var(--accent-dark);
+			}
+			/* *(coming soon)* italic note */
+			:global(#post-sidebar blockquote em) {
+				font-size: 0.75rem;
+				color: rgb(var(--gray));
+				font-style: italic;
+			}
+		</style>
+	</head>
+
+	<body>
+		<Header />
+		<main>
+			<article class="article-outer">
+				<div class="hero-image">
+					{heroImage && <img width={1020} height={510} src={heroImage} alt={title} />}
+				</div>
+				<div class="article-body">
+					<div class="prose">
+						<div class="title">
+							<div class="date">
+								<FormattedDate date={pubDate} />
+								{
+									updatedDate && (
+										<div class="last-updated-on">
+											Last updated on <FormattedDate date={updatedDate} />
+										</div>
+									)
+								}
+							</div>
+							<h1>{title}</h1>
+							<hr />
+						</div>
+						<slot />
+					</div>
+					<aside id="post-sidebar">
+						{(designer || era || category) && (
+							<div class="sidebar-meta">
+								{designer && <span class="sidebar-tag">{designer}</span>}
+								{era && <span class="sidebar-tag">{era}</span>}
+								{category && <span class="sidebar-tag">{category}</span>}
+							</div>
+						)}
+					</aside>
+				</div>
+			</article>
+		</main>
+		<Footer />
+		<script is:inline>
+			// Move the "Meet the Designer" blockquote from prose into the sticky sidebar.
+			// Runs inline (end of body) so the DOM is fully available with no flash.
+			(function () {
+				var prose = document.querySelector('.prose');
+				var sidebar = document.getElementById('post-sidebar');
+				if (!prose || !sidebar) return;
+				var blockquotes = prose.querySelectorAll('blockquote');
+				for (var i = 0; i < blockquotes.length; i++) {
+					if (blockquotes[i].textContent && blockquotes[i].textContent.indexOf('Meet the Designer') !== -1) {
+						sidebar.appendChild(blockquotes[i]);
+						break;
+					}
+				}
+			})();
+		</script>
+	</body>
+</html>

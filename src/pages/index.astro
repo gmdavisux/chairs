@@ -1,0 +1,38 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Crafted to Last a Lifetime</h1>
+			<p>
+				Welcome to <strong>Chairs</strong> — a celebration of classic furniture design, fine
+				materials, and the enduring beauty of handcrafted woodwork. From heirloom dining chairs to
+				study armchairs, each piece is built with care and meant to be passed down.
+			</p>
+			<p>
+				Explore our journal for essays on joinery techniques, wood species, upholstery traditions,
+				and the stories behind enduring furniture styles.
+			</p>
+			<ul>
+				<li><a href="/blog">Read the Journal</a> — craft, materials &amp; design</li>
+				<li><a href="/about">Our Story</a> — the people and philosophy behind Chairs</li>
+			</ul>
+			<blockquote>
+				"A chair is the first thing you need when you don't have anything, and it is the essence of
+				civilization."
+				<footer>— Charles Eames</footer>
+			</blockquote>
+		</main>
+		<Footer />
+	</body>
+</html>
