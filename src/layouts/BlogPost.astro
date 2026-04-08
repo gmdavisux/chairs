@@ -7,7 +7,36 @@ import Header from '../components/Header.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage, designer, era, category } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	heroImageAlt,
+	heroImageAltStatus,
+	heroImageCaption,
+	heroImageSource,
+	heroImageLicense,
+	heroImageOrigin,
+	designer,
+	era,
+	category,
+} = Astro.props;
+
+const heroAlt =
+	heroImageAlt ||
+	`Proposed hero image for ${title}`;
+const heroSourceLabel = heroImageSource || 'TBD';
+const heroLicenseLabel = heroImageLicense || 'unknown';
+const heroOriginLabel = heroImageOrigin || 'placeholder';
+const heroAltStatusLabel = heroImageAltStatus || 'proposed';
+const showHeroMetadata =
+	Boolean(heroImageCaption) ||
+	Boolean(heroImageSource) ||
+	Boolean(heroImageLicense) ||
+	Boolean(heroImageOrigin) ||
+	Boolean(heroImageAlt);
 ---
 
 <html lang="en">
@@ -34,6 +63,59 @@ const { title, description, pubDate, updatedDate, heroImage, designer, era, cate
 				margin: 0 auto;
 				border-radius: 12px;
 				box-shadow: var(--box-shadow);
+			}
+			.hero-meta {
+				margin: -1rem auto 2rem;
+				max-width: 1020px;
+				padding: 0.8rem 1rem;
+				border: 1px solid rgba(200, 121, 65, 0.18);
+				border-left: 4px solid var(--accent);
+				border-radius: 6px;
+				background: rgba(200, 121, 65, 0.05);
+				font-family: "Lato", sans-serif;
+				font-size: 0.82rem;
+				line-height: 1.55;
+				color: rgb(var(--gray-dark));
+			}
+			.hero-meta p {
+				margin: 0.2rem 0;
+			}
+			.hero-meta strong {
+				font-size: 0.72rem;
+				text-transform: uppercase;
+				letter-spacing: 0.07em;
+				color: var(--accent-dark);
+			}
+			.hero-meta .hero-meta-placeholder {
+				font-style: italic;
+				color: rgb(var(--gray));
+			}
+			.hero-meta .hero-origin-public_domain,
+			.hero-meta .hero-origin-licensed,
+			.hero-meta .hero-origin-ai_generated,
+			.hero-meta .hero-origin-placeholder {
+				padding: 0.05rem 0.35rem;
+				border-radius: 3px;
+				font-size: 0.72rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+			.hero-meta .hero-origin-public_domain {
+				background: rgba(82, 126, 72, 0.18);
+				color: #3f5f36;
+			}
+			.hero-meta .hero-origin-licensed {
+				background: rgba(67, 105, 166, 0.15);
+				color: #314f7d;
+			}
+			.hero-meta .hero-origin-ai_generated {
+				background: rgba(147, 89, 35, 0.16);
+				color: #7b4b1e;
+			}
+			.hero-meta .hero-origin-placeholder {
+				background: rgba(120, 120, 120, 0.14);
+				color: #565656;
 			}
 			/* Two-column grid: prose | sidebar */
 			.article-body {
@@ -170,8 +252,38 @@ const { title, description, pubDate, updatedDate, heroImage, designer, era, cate
 		<main>
 			<article class="article-outer">
 				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt={title} />}
+					{heroImage && <img width={1020} height={510} src={heroImage} alt={heroAlt} />}
 				</div>
+				{heroImage && (
+					<div class="hero-meta">
+						{heroImageCaption ? (
+							<p><strong>Caption:</strong> {heroImageCaption}</p>
+						) : (
+							<p class="hero-meta-placeholder"><strong>Caption:</strong> TBD</p>
+						)}
+						<p>
+							<strong>Source:</strong>{' '}
+							{heroImageSource ? heroSourceLabel : <span class="hero-meta-placeholder">{heroSourceLabel}</span>}
+						</p>
+						<p>
+							<strong>License:</strong>{' '}
+							{heroImageLicense ? heroLicenseLabel : <span class="hero-meta-placeholder">{heroLicenseLabel}</span>}
+						</p>
+						<p>
+							<strong>Origin:</strong>{' '}
+							<span class={`hero-origin-${heroOriginLabel}`}>{heroOriginLabel}</span>
+						</p>
+						<p>
+							<strong>Alt Status:</strong>{' '}
+							{heroImageAltStatus ? heroAltStatusLabel : <span class="hero-meta-placeholder">{heroAltStatusLabel}</span>}
+						</p>
+						{!showHeroMetadata && (
+							<p class="hero-meta-placeholder">
+								Add image provenance fields in frontmatter to replace placeholders.
+							</p>
+						)}
+					</div>
+				)}
 				<div class="article-body">
 					<div class="prose">
 						<div class="title">

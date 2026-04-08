@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import sys
 from datetime import date
 from pathlib import Path
@@ -47,6 +48,20 @@ BACKLOG = ROOT / "backlog.json"
 CONCEPT = ROOT / "site_concept.md"
 CONTENT_DIR = ROOT / "src" / "content" / "blog"
 PROMPTS_DIR = ROOT / "public" / "images" / "generated-prompts"
+IMAGES_DIR = ROOT / "public" / "images"
+DEFAULT_PLACEHOLDER_IMAGE = IMAGES_DIR / "blog-placeholder-1.jpg"
+PLACEHOLDER_IMAGE_CANDIDATES = [
+    IMAGES_DIR / "blog-placeholder-1.jpg",
+    IMAGES_DIR / "blog-placeholder-2.jpg",
+    IMAGES_DIR / "blog-placeholder-3.jpg",
+    IMAGES_DIR / "blog-placeholder-4.jpg",
+]
+PLACEHOLDER_SLOTS = [
+    ("hero", "Hero view of the full chair profile"),
+    ("detail-material", "Close-up of the chair material and finish"),
+    ("detail-structure", "Detail of structural joinery or hardware"),
+    ("detail-silhouette", "Profile or silhouette detail of the chair form"),
+]
 
 
 # ── Default backlog (~40 classic pieces) ──────────────────────────────────
@@ -158,11 +173,11 @@ def make_llm(temperature: float = 0.7) -> ChatOpenAI:
       • GitHub Models endpoint  (GITHUB_MODELS=1 in .env, uses GITHUB_TOKEN)
       • Standard OpenAI API     (default, uses OPENAI_API_KEY)
 
-    Model is always gpt-5.4-mini (0.33x cost tier on GitHub Copilot billing).
+    Model defaults to gpt-4o unless overridden via FURNITURE_MODEL.
     temperature=0.3 → analytical agents (Planner, Researcher, Publisher)
     temperature=0.7 → creative agents (Writer, ImagePrompter)
     """
-    model = os.getenv("FURNITURE_MODEL", "gpt-5.4-mini")
+    model = os.getenv("FURNITURE_MODEL", "gpt-4o")
 
     if os.getenv("GITHUB_MODELS", "").strip() in ("1", "true", "yes"):
         token = os.getenv("GITHUB_TOKEN")
@@ -198,6 +213,10 @@ def build_crew(page: dict, concept: str) -> Crew:
     category = page.get("category", "Iconic Chairs")
     today = date.today().isoformat()
 
+    # Instantiate LLMs — analytical agents use lower temperature, creative ones higher.
+    llm_analytical = make_llm(temperature=0.3)
+    llm_creative = make_llm(temperature=0.7)
+
     # TavilySearchResults reads TAVILY_API_KEY from the environment automatically.
     # max_results=6 keeps token usage low while giving the Researcher enough sources.
     search_tool = TavilySearchResults(max_results=6)
@@ -215,7 +234,7 @@ def build_crew(page: dict, concept: str) -> Crew:
             "deep-dive distinct and authoritative. You read the site concept carefully "
             "before issuing any brief."
         ),
-        llm=llm,
+        llm=llm_analytical,
         verbose=True,
         allow_delegation=False,
     )
@@ -233,7 +252,9 @@ def build_crew(page: dict, concept: str) -> Crew:
             "targeted searches to ensure completeness."
         ),
         tools=[search_tool],
-        llm=llm,
+        llm=llm_analytical,
+        max_iter=10,
+        respect_context_window=True,
         verbose=True,
         allow_delegation=False,
     )
@@ -251,24 +272,7 @@ def build_crew(page: dict, concept: str) -> Crew:
             "significance. You use inline citations like [1], [2] throughout, and end "
             "with a numbered References section."
         ),
-        llm=llm,
-        verbose=True,
-        allow_delegation=False,
-    )
-
-    image_prompter = Agent(
-        role="Visual Director",
-        goal=(
-            "Create detailed image generation prompts and public domain search queries "
-            "for the furniture piece."
-        ),
-        backstory=(
-            "You are a visual director with deep knowledge of furniture photography, "
-            "studio lighting, and archival image research. You know exactly which shots "
-            "will make a design archive page authoritative — hero views, material "
-            "details, structural close-ups, and context shots."
-        ),
-        llm=llm,
+        llm=llm_creative,
         verbose=True,
         allow_delegation=False,
     )
@@ -284,7 +288,7 @@ def build_crew(page: dict, concept: str) -> Crew:
             "valid Astro frontmatter, proper Markdown structure, an accurate description "
             "field extracted from the article, and no formatting artifacts."
         ),
-        llm=llm,
+        llm=llm_analytical,
         verbose=True,
         allow_delegation=False,
     )
@@ -376,49 +380,6 @@ def build_crew(page: dict, concept: str) -> Crew:
         context=[plan_task, research_task],
     )
 
-    image_task = Task(
-        description=(
-            f"Create image generation prompts for **{title}** (slug: `{slug}`).\n\n"
-            "Output EXACTLY this plain-text format — no JSON, no markdown fences, "
-            "no extra commentary. Each section is separated by a blank line and starts "
-            "with its label on its own line followed by the prompt on the next line.\n\n"
-            "FORMAT:\n"
-            "HERO\n"
-            "<full hero prompt here>\n"
-            "\n"
-            "DETAIL_1\n"
-            "<close-up prompt: primary material or surface texture>\n"
-            "\n"
-            "DETAIL_2\n"
-            "<close-up prompt: structural joint, hardware, or base detail>\n"
-            "\n"
-            "DETAIL_3\n"
-            "<close-up prompt: signature silhouette or profile view>\n"
-            "\n"
-            "PUBLIC_DOMAIN_1\n"
-            "<Wikimedia Commons search query>\n"
-            "\n"
-            "PUBLIC_DOMAIN_2\n"
-            "<museum digital collection search query — MoMA, V&A, Cooper Hewitt, Vitra>\n"
-            "\n"
-            "PUBLIC_DOMAIN_3\n"
-            "<Library of Congress or archive.org search query>\n\n"
-            "Prompt quality requirements:\n"
-            "- HERO: photorealistic studio shot, pure white seamless background, "
-            "museum-quality three-point lighting, full object visible, no people, "
-            "35mm product photography aesthetic, 8K resolution\n"
-            "- DETAIL shots: extreme macro close-up, shallow depth of field, "
-            "specific material or construction element unique to this design\n"
-            "- PUBLIC DOMAIN queries: precise terminology a museum archivist would use"
-        ),
-        expected_output=(
-            "Plain text with 7 labeled sections (HERO, DETAIL_1-3, PUBLIC_DOMAIN_1-3), "
-            "ready to copy-paste into any image generator or archive search."
-        ),
-        agent=image_prompter,
-        context=[plan_task],
-    )
-
     publish_task = Task(
         description=(
             f"Assemble the complete, final Markdown file for **{title}**.\n\n"
@@ -431,6 +392,45 @@ def build_crew(page: dict, concept: str) -> Crew:
             'description: "[your extracted description here]"\n'
             f"pubDate: {today}\n"
             f"heroImage: /images/{slug}-hero.jpg\n"
+            f"heroImageAlt: \"Proposed hero image for {title} highlighting form and materials\"\n"
+            "heroImageAltStatus: proposed\n"
+            "heroImageCaption: \"TBD\"\n"
+            "heroImageSource: \"TBD\"\n"
+            "heroImageLicense: unknown\n"
+            "heroImageOrigin: placeholder\n"
+            "images:\n"
+            f"  - id: {slug}-hero\n"
+            f"    src: /images/{slug}-hero.jpg\n"
+            f"    alt: \"Proposed hero image for {title} highlighting form and materials\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f"  - id: {slug}-detail-material\n"
+            f"    src: /images/{slug}-detail-material.jpg\n"
+            f"    alt: \"Proposed close-up of material texture on {title}\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f"  - id: {slug}-detail-structure\n"
+            f"    src: /images/{slug}-detail-structure.jpg\n"
+            "    alt: \"Proposed detail of visible joints, screws, or frame transitions\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f"  - id: {slug}-detail-silhouette\n"
+            f"    src: /images/{slug}-detail-silhouette.jpg\n"
+            f"    alt: \"Proposed profile silhouette of {title} showing signature geometry\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
             f'designer: "{designer}"\n'
             f'era: "{era}"\n'
             f'category: "{category}"\n'
@@ -438,19 +438,21 @@ def build_crew(page: dict, concept: str) -> Crew:
             "3. Return the COMPLETE file content: the frontmatter block, a blank line, "
             "then the full article body.\n"
             "4. Do NOT wrap the output in code fences. Output the raw file content only.\n"
-            "5. The description field must contain real extracted text, not a placeholder."
+            "5. The description field must contain real extracted text, not a placeholder.\n"
+            "6. Keep the metadata scaffold exactly, including proposed alt text and TBD source/license placeholders."
         ),
         expected_output=(
             f"Complete Markdown file content — YAML frontmatter + article body — "
             f"ready to write as src/content/blog/{slug}.md"
         ),
         agent=publisher,
-        context=[write_task, image_task],
+        context=[write_task],
     )
 
     return Crew(
-        agents=[planner, researcher, writer, image_prompter, publisher],
-        tasks=[plan_task, research_task, write_task, image_task, publish_task],
+        agents=[planner, researcher, writer, publisher],
+        tasks=[plan_task, research_task, write_task, publish_task],
+        max_rpm=6,  # additional buffer under free-tier rate limits
         verbose=True,
     )
 
@@ -523,13 +525,108 @@ def save_image_prompts(slug: str, prompts_raw: str) -> None:
     log.info("Image prompts written: %d/%d files in %s", written, len(_PROMPT_LABELS), out_dir)
 
 
+def ensure_placeholder_hero(slug: str) -> Path:
+    """Create a page-scoped placeholder hero image if one does not already exist."""
+    hero_path = IMAGES_DIR / f"{slug}-hero.jpg"
+    if hero_path.exists():
+        return hero_path
+
+    if DEFAULT_PLACEHOLDER_IMAGE.exists():
+        shutil.copyfile(DEFAULT_PLACEHOLDER_IMAGE, hero_path)
+        log.info("Placeholder hero image created: %s", hero_path)
+    else:
+        log.warning(
+            "Default placeholder image not found at %s; hero image remains missing.",
+            DEFAULT_PLACEHOLDER_IMAGE,
+        )
+    return hero_path
+
+
+def ensure_placeholder_images(slug: str) -> list[Path]:
+    """Create a standard set of image placeholders for expected image slots."""
+    created_paths: list[Path] = []
+    existing_candidates = [p for p in PLACEHOLDER_IMAGE_CANDIDATES if p.exists()]
+
+    if not existing_candidates:
+        log.warning("No placeholder source images found in %s", IMAGES_DIR)
+        return created_paths
+
+    for index, (slot, _alt_hint) in enumerate(PLACEHOLDER_SLOTS):
+        out_path = IMAGES_DIR / f"{slug}-{slot}.jpg"
+        if not out_path.exists():
+            source_img = existing_candidates[index % len(existing_candidates)]
+            shutil.copyfile(source_img, out_path)
+            log.info("Placeholder image created: %s", out_path)
+        created_paths.append(out_path)
+
+    return created_paths
+
+
+def collect_public_domain_sources(page: dict) -> Path:
+    """
+    Collect public-domain image source URLs using direct Tavily queries.
+    This phase runs after publishing and must not block page creation.
+    """
+    slug = page["slug"]
+    title = page["title"]
+    designer = page.get("designer", "")
+    out_dir = PROMPTS_DIR / slug
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "public-domain-sources.txt"
+
+    search_tool = TavilySearchResults(max_results=5)
+    queries = [
+        ("WIKIMEDIA", f"{title} {designer} site:commons.wikimedia.org"),
+        ("MUSEUMS", f"{title} {designer} site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk"),
+        ("ARCHIVES", f"{title} {designer} site:archive.org OR site:loc.gov"),
+    ]
+
+    lines = [
+        f"Public-domain discovery for: {title} [{slug}]",
+        "",
+    ]
+
+    for label, query in queries:
+        lines.append(f"[{label} QUERY]")
+        lines.append(query)
+        lines.append("")
+
+        results = []
+        try:
+            raw = search_tool.invoke({"query": query})
+        except Exception:
+            raw = search_tool.invoke(query)
+
+        if isinstance(raw, dict):
+            results = raw.get("results", [])
+        elif isinstance(raw, list):
+            results = raw
+
+        if not results:
+            lines.append("No results returned.")
+            lines.append("")
+            continue
+
+        lines.append(f"[{label} RESULTS]")
+        for i, item in enumerate(results[:5], start=1):
+            if isinstance(item, dict):
+                name = item.get("title") or item.get("name") or "Untitled"
+                url = item.get("url") or item.get("link") or ""
+                lines.append(f"{i}. {name}")
+                lines.append(f"   {url}")
+        lines.append("")
+
+    out_path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+    log.info("Public-domain sources written: %s", out_path)
+    return out_path
+
+
 def extract_and_save(result, page: dict) -> Path:
     """
-    Extract article and image prompts from the crew result and write them to disk.
+    Extract article from the crew result and write it to disk.
 
-    Task indices: 0=plan, 1=research, 2=write, 3=image, 4=publish
-    The Publisher (index 4) returns the complete file with frontmatter.
-    The ImagePrompter (index 3) returns the JSON prompts block.
+    Task indices: 0=plan, 1=research, 2=write, 3=publish
+    The Publisher (index 3) returns the complete file with frontmatter.
     """
     slug = page["slug"]
 
@@ -539,14 +636,11 @@ def extract_and_save(result, page: dict) -> Path:
         tasks_output = []
 
     # Full file from Publisher
-    full_markdown = _get_task_raw(tasks_output, 4)
+    full_markdown = _get_task_raw(tasks_output, 3)
     if not full_markdown:
         # Fallback: use the complete result string
         full_markdown = str(result)
         log.warning("Publisher task output missing; using full crew result as fallback.")
-
-    # Image prompts from ImagePrompter
-    prompts_raw = _get_task_raw(tasks_output, 3)
 
     # Write the article
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
@@ -554,11 +648,9 @@ def extract_and_save(result, page: dict) -> Path:
     article_path.write_text(full_markdown.strip() + "\n", encoding="utf-8")
     log.info("Article written: %s", article_path)
 
-    # Write image prompts
-    if prompts_raw:
-        save_image_prompts(slug, prompts_raw)
-    else:
-        log.warning("No image prompts output found for slug '%s'.", slug)
+    # Create guaranteed placeholder assets for immediate publishing.
+    ensure_placeholder_hero(slug)
+    ensure_placeholder_images(slug)
 
     return article_path
 
@@ -649,6 +741,16 @@ def run_build() -> None:
         result = crew.kickoff()
         extract_and_save(result, page)
         mark_done(backlog, page["slug"])
+
+        # Phase 2: non-blocking discovery of public-domain source links.
+        try:
+            collect_public_domain_sources(page)
+        except Exception as pd_exc:
+            log.warning(
+                "Public-domain source discovery failed (non-blocking): %s",
+                pd_exc,
+            )
+
         print(
             f"\n✅ PAGE COMPLETE: {page['slug']} — "
             f"Review at http://localhost:4321/blog/{page['slug']}"

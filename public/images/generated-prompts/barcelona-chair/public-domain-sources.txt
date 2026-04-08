@@ -1,0 +1,46 @@
+Public-domain discovery for: Barcelona Chair [barcelona-chair]
+
+[WIKIMEDIA QUERY]
+Barcelona Chair Ludwig Mies van der Rohe site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/File:Mies-Barcelona-Chair-and-Ottoman.jpg
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Ngv_design,_ludwig_mies_van_der_rohe_%26_co,_barcelona_chair.JPG
+3. Untitled
+   https://commons.wikimedia.org/wiki/File:Ludwig_mies_van_der_rohe,_sedia_barcelona_modello_M_R90,_1923.jpg
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Pavelle%C3%B3_Mies_van_del_Rohe_-_Barcelona_Chair.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/File:Pavell%C3%B3_Mies_06.JPG
+
+[MUSEUMS QUERY]
+Barcelona Chair Ludwig Mies van der Rohe site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://collections.vam.ac.uk/item/O301144/barcelona-chair-chair-mies-van-der/
+2. Untitled
+   https://www.moma.org/collection/works/4369
+3. Untitled
+   https://en.wikipedia.org/wiki/Barcelona_chair
+4. Untitled
+   https://www.paletteandparlor.com/collections/ludwig-mies-van-der-rohe?srsltid=AfmBOooXMMh0Q4r2X-HTyg7X0yg2YRQ26I4kaLjsO3NNKpRU7pL4BEnI
+5. Untitled
+   https://www.moma.org/documents/moma_catalogue_1801_300297552.pdf
+
+[ARCHIVES QUERY]
+Barcelona Chair Ludwig Mies van der Rohe site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://www.knoll-int.com/home/by-designer/classic-designers/ludwig-mies-van-der-rohe/barcelona-chair
+2. Untitled
+   https://www.moma.org/collection/works/4369
+3. Untitled
+   https://www.paletteandparlor.com/collections/ludwig-mies-van-der-rohe?srsltid=AfmBOopwtzDqifHfrSQZ0U0Id9TVufzvXhqOAsMy4tyPMKDTg5ru13M2
+4. Untitled
+   https://ia801609.us.archive.org/6/items/bub_gb_fuIe9wRI5YsC/bub_gb_fuIe9wRI5YsC.pdf
+5. Untitled
+   https://www.knoll.com/product/barcelona-chair

@@ -1,0 +1,156 @@
+---
+interface ImageRecord {
+  id: string;
+  src: string;
+  alt: string;
+  altStatus?: 'proposed' | 'actual';
+  caption?: string;
+  source?: string;
+  license?: string;
+  origin?: string;
+}
+
+interface Props {
+  id?: string;
+  images?: ImageRecord[];
+  src?: string;
+  alt?: string;
+  altStatus?: 'proposed' | 'actual';
+  caption?: string;
+  source?: string;
+  license?: string;
+  origin?: string;
+}
+
+const {
+  id,
+  images = [],
+  src,
+  alt,
+  altStatus,
+  caption,
+  source,
+  license,
+  origin,
+} = Astro.props;
+
+const fromRegistry = id ? images.find((item) => item.id === id) : undefined;
+const resolvedSrc = src || fromRegistry?.src;
+const resolvedAlt = alt || fromRegistry?.alt || 'Proposed image placeholder';
+const resolvedAltStatus = altStatus || fromRegistry?.altStatus || 'proposed';
+const resolvedCaption = caption || fromRegistry?.caption;
+const resolvedSource = source || fromRegistry?.source || 'TBD';
+const resolvedLicense = license || fromRegistry?.license || 'unknown';
+const resolvedOrigin = origin || fromRegistry?.origin || 'placeholder';
+---
+
+{resolvedSrc && (
+  <figure class="image-with-meta">
+    <img src={resolvedSrc} alt={resolvedAlt} loading="lazy" decoding="async" />
+    <figcaption>
+      {resolvedCaption ? (
+        <p><strong>Caption:</strong> {resolvedCaption}</p>
+      ) : (
+        <p class="meta-placeholder"><strong>Caption:</strong> TBD</p>
+      )}
+      <p>
+        <strong>Source:</strong>{' '}
+        {resolvedSource === 'TBD' ? (
+          <span class="meta-placeholder">{resolvedSource}</span>
+        ) : (
+          resolvedSource
+        )}
+      </p>
+      <p>
+        <strong>License:</strong>{' '}
+        {resolvedLicense === 'unknown' ? (
+          <span class="meta-placeholder">{resolvedLicense}</span>
+        ) : (
+          resolvedLicense
+        )}
+      </p>
+      <p>
+        <strong>Origin:</strong> <span class={`origin-${resolvedOrigin}`}>{resolvedOrigin}</span>
+      </p>
+      <p>
+        <strong>Alt Status:</strong>{' '}
+        {resolvedAltStatus === 'proposed' ? (
+          <span class="meta-placeholder">{resolvedAltStatus}</span>
+        ) : (
+          resolvedAltStatus
+        )}
+      </p>
+    </figcaption>
+  </figure>
+)}
+
+<style>
+  .image-with-meta {
+    margin: 2rem 0;
+  }
+
+  .image-with-meta img {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: var(--box-shadow);
+  }
+
+  .image-with-meta figcaption {
+    margin-top: 0.65rem;
+    padding: 0.65rem 0.8rem;
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    background: rgba(200, 121, 65, 0.05);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: rgb(var(--gray-dark));
+  }
+
+  .image-with-meta p {
+    margin: 0.15rem 0;
+  }
+
+  .image-with-meta strong {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-dark);
+  }
+
+  .meta-placeholder {
+    font-style: italic;
+    color: rgb(var(--gray));
+  }
+
+  .origin-public_domain,
+  .origin-licensed,
+  .origin-ai_generated,
+  .origin-placeholder {
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .origin-public_domain {
+    background: rgba(82, 126, 72, 0.18);
+    color: #3f5f36;
+  }
+
+  .origin-licensed {
+    background: rgba(67, 105, 166, 0.15);
+    color: #314f7d;
+  }
+
+  .origin-ai_generated {
+    background: rgba(147, 89, 35, 0.16);
+    color: #7b4b1e;
+  }
+
+  .origin-placeholder {
+    background: rgba(120, 120, 120, 0.14);
+    color: #565656;
+  }
+</style>
