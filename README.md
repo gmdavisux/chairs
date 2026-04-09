@@ -1,6 +1,6 @@
 # Classic Furniture Archives
 
-A slow-growing, authoritative static website documenting timeless furniture designs — built with Astro and deployed to GitHub Pages. One beautifully crafted page at a time.
+A slow-growing, authoritative static website documenting timeless furniture designs — built with Astro and deployed to GitHub Pages. One beautifully crafted page at a time.  
 
 > **Editorial standard:** Every page reads like a high-end design museum catalog — warm, expert, accurate, properly cited. See [site_concept.md](site_concept.md) for the full editorial constitution.
 
