@@ -68,7 +68,7 @@ python update_mdx_images.py wassily-chair --dry-run
 
 ### First time
 ```bash
-pip install google-generativeai pyyaml
+pip install google-genai pyyaml
 echo "GOOGLE_API_KEY=your_key" >> .env
 ```
 

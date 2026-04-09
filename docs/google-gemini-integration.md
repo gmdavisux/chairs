@@ -89,7 +89,7 @@ FURNITURE_IMAGE_PROVIDER=google    # google, fal, or openai
 
 # ── Google Gemini ───────────────────────────────────────────
 GOOGLE_API_KEY=your_key_here
-GOOGLE_IMAGE_MODEL=imagen-3.0-generate-001
+GOOGLE_IMAGE_MODEL=imagen-4.0-generate-001
 
 # ── FAL (FLUX) ──────────────────────────────────────────────
 FAL_KEY=your_fal_key_here

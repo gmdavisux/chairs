@@ -16,15 +16,18 @@ import logging
 import os
 import sys
 import time
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
 from urllib.request import Request, urlopen
 
+import requests
 import yaml
 from dotenv import load_dotenv
+from PIL import Image
 
 # Load environment variables
-load_dotenv(override=True)
+load_dotenv(override=False)  # Command line env vars take precedence
 
 # Setup logging
 logging.basicConfig(
@@ -43,9 +46,9 @@ CONTENT_DIR = ROOT / "src" / "content" / "blog"
 # Image slot configuration
 IMAGE_SLOTS = [
     ("hero", "hero.txt"),
-    ("detail-material", "detail-1-material.txt"),
-    ("detail-structure", "detail-2-structure.txt"),
-    ("detail-silhouette", "detail-3-silhouette.txt"),
+    ("silhouette", "silhouette.txt"),
+    ("context", "context.txt"),
+    ("designer", "designer.txt"),
 ]
 
 
@@ -75,118 +78,120 @@ def generate_with_gemini(
         )
     
     try:
-        import google.generativeai as genai
+        from google import genai
     except ImportError:
         raise RuntimeError(
-            "google-generativeai package is required. Install with:\n"
-            "  pip install google-generativeai"
+            "google-genai package is required. Install with:\n"
+            "  pip install google-genai"
         )
     
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
     
-    log.info(f"Generating image with Gemini...")
+    log.info(f"Generating image with Google Gemini (Imagen)...")
     log.info(f"Prompt: {prompt[:100]}...")
     
-    # For image generation, we use the image generation endpoint
-    # Note: As of early 2024, Gemini's image generation is through Imagen
-    # The API might vary - adjust based on actual Google AI Studio API
-    
     try:
-        # Using Imagen 2 or 3 via the generativeai library
-        # The actual method may vary - check current docs
-        imagen = genai.ImageGenerationModel("imagegeneration@006")
-        
-        generation_config = {
-            "number_of_images": 1,
-            "aspect_ratio": "1:1",
-        }
-        
-        # Build prompt with reference guidance if provided
-        full_prompt = prompt
-        if reference_image_url:
-            log.info(f"Note: Reference image URL: {reference_image_url}")
-            log.info("(Reference image guidance via prompt description)")
-            full_prompt = f"{prompt}\n\nUse the style and composition from the reference image at: {reference_image_url}"
-        
-        response = imagen.generate_images(
-            prompt=full_prompt,
-            **generation_config
+        # Using the new google.genai API
+        # Note: Reference images are not supported in the basic imagen API
+        # They may require a different model or method
+        response = client.models.generate_images(
+            model='imagen-4.0-generate-001',
+            prompt=prompt,
+            config={
+                'numberOfImages': 1,
+                'aspectRatio': '1:1',
+            }
         )
         
-        if not response or not hasattr(response, 'images') or not response.images:
+        if not response or not response.generated_images:
             raise RuntimeError("Gemini returned no images")
         
-        # Get first image and convert to bytes
-        from io import BytesIO
+        # Get first image
+        image = response.generated_images[0]
+        
+        # Convert PIL Image to PNG bytes
         buffer = BytesIO()
-        response.images[0]._pil_image.save(buffer, format="PNG")
+        image.image._pil_image.save(buffer, format="PNG")
         return buffer.getvalue()
         
     except Exception as e:
-        # Fallback: Use REST API directly
-        log.warning(f"SDK method failed, trying direct API: {e}")
-        return _generate_with_gemini_rest(prompt, reference_image_url, api_key)
+        raise RuntimeError(f"Google Gemini generation failed: {e}")
 
 
-def _generate_with_gemini_rest(
+def generate_with_fal(
     prompt: str,
-    reference_image_url: Optional[str],
-    api_key: str,
+    reference_image_url: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> bytes:
     """
-    Fallback: Generate image using Google's REST API directly.
-    This uses the Imagen API endpoint.
+    Generate an image using FAL FLUX API with img2img support.
+    
+    Args:
+        prompt: The text prompt for image generation
+        reference_image_url: Optional reference image URL for img2img
+        api_key: FAL API key (defaults to FAL_KEY env var)
+    
+    Returns:
+        Image bytes (PNG format)
     """
-    import json
+    if api_key is None:
+        api_key = os.getenv("FAL_KEY")
     
-    # Imagen 3 API endpoint
-    # Note: Actual endpoint may vary, check Google AI Studio documentation
-    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key={api_key}"
+    if not api_key:
+        raise RuntimeError(
+            "FAL_KEY environment variable is required. "
+            "Get your key at https://fal.ai"
+        )
     
-    payload = {
-        "instances": [
-            {
-                "prompt": prompt,
-            }
-        ],
-        "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": "1:1",
-        }
-    }
+    try:
+        import fal_client
+    except ImportError:
+        raise RuntimeError(
+            "fal-client package is required. Install with:\n"
+            "  pip install fal-client"
+        )
     
+    log.info(f"Generating image with FAL (FLUX)...")
+    log.info(f"Prompt: {prompt[:100]}...")
     if reference_image_url:
-        # Some image generation APIs accept reference_image
-        # Adjust based on actual API capabilities
-        log.info(f"Including reference guidance for: {reference_image_url}")
-        payload["parameters"]["reference_image_url"] = reference_image_url
+        log.info(f"Using reference image: {reference_image_url}")
     
-    request_data = json.dumps(payload).encode("utf-8")
-    req = Request(
-        endpoint,
-        data=request_data,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
+    try:
+        model = "fal-ai/flux/dev"
+        arguments = {
+            "prompt": prompt,
+            "image_size": "square_hd",
+            "num_inference_steps": 40,
+            "guidance_scale": 3.5,
+            "num_images": 1,
+            "enable_safety_checker": False,
         }
-    )
-    
-    with urlopen(req, timeout=90) as response:
-        result = json.loads(response.read().decode("utf-8"))
-    
-    # Extract image from response
-    # Format depends on actual API response structure
-    if "predictions" in result and result["predictions"]:
-        prediction = result["predictions"][0]
-        if "bytesBase64Encoded" in prediction:
-            return base64.b64decode(prediction["bytesBase64Encoded"])
-        elif "imageUrl" in prediction:
-            # Download from URL
-            img_req = Request(prediction["imageUrl"], headers={"User-Agent": "Mozilla/5.0"})
-            with urlopen(img_req, timeout=30) as img_response:
-                return img_response.read()
-    
-    raise RuntimeError("Could not extract image from Gemini response")
+        
+        # Add reference image for img2img if provided
+        if reference_image_url:
+            # Convert local path to URL if needed
+            if not reference_image_url.startswith(('http://', 'https://')):
+                # For local files, we need to upload or use a different approach
+                log.warning(f"Local reference images not yet supported with FAL. Skipping reference.")
+            else:
+                arguments["image_url"] = reference_image_url
+                arguments["strength"] = float(os.getenv("FURNITURE_IMAGE_STRENGTH", "0.6"))
+        
+        response = fal_client.run(model, arguments=arguments)
+        
+        if not response or "images" not in response or not response["images"]:
+            raise RuntimeError("FAL returned no images")
+        
+        # Get first image URL
+        image_url = response["images"][0]["url"]
+        
+        # Download the image
+        response = requests.get(image_url, timeout=60)
+        response.raise_for_status()
+        return response.content
+        
+    except Exception as e:
+        raise RuntimeError(f"FAL generation failed: {e}")
 
 
 def read_prompts(slug: str) -> dict[str, str]:
@@ -303,7 +308,7 @@ def main():
     parser.add_argument(
         "--slots",
         nargs="+",
-        choices=["hero", "detail-material", "detail-structure", "detail-silhouette"],
+        choices=["hero", "silhouette", "context", "designer"],
         help="Generate only specific slots (default: all)",
     )
     parser.add_argument(
@@ -340,6 +345,10 @@ def main():
     
     log.info(f"Generating {len(slots_to_generate)} images for {args.slug}")
     
+    # Determine provider
+    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "google").lower()
+    log.info(f"Using provider: {provider}")
+    
     # Generate images
     results = []
     for slot, _ in slots_to_generate:
@@ -350,11 +359,17 @@ def main():
         try:
             log.info(f"Generating {slot}...")
             
-            # Generate image
-            image_bytes = generate_with_gemini(
-                prompt=prompt,
-                reference_image_url=reference_url,
-            )
+            # Generate image with selected provider
+            if provider == "fal":
+                image_bytes = generate_with_fal(
+                    prompt=prompt,
+                    reference_image_url=reference_url,
+                )
+            else:  # default to google/gemini
+                image_bytes = generate_with_gemini(
+                    prompt=prompt,
+                    reference_image_url=reference_url,
+                )
             
             # Save to disk
             output_path.write_bytes(image_bytes)

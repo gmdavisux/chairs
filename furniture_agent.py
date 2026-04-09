@@ -86,44 +86,91 @@ PLACEHOLDER_IMAGE_CANDIDATES = [
 ]
 PLACEHOLDER_SLOTS = [
     ("hero", "Hero view of the full chair profile"),
-    ("detail-material", "Close-up of the chair material and finish"),
-    ("detail-structure", "Detail of structural joinery or hardware"),
-    ("detail-silhouette", "Profile or silhouette detail of the chair form"),
+    ("silhouette", "Technical silhouette or marker rendering"),
+    ("context", "Chair in home or interior setting"),
+    ("designer", "Designer portrait or archival photo"),
 ]
 IMAGE_SLOT_PROMPT_FILES = [
     ("hero", "hero.txt"),
-    ("detail-material", "detail-1-material.txt"),
-    ("detail-structure", "detail-2-structure.txt"),
-    ("detail-silhouette", "detail-3-silhouette.txt"),
+    ("silhouette", "silhouette.txt"),
+    ("context", "context.txt"),
+    ("designer", "designer.txt"),
 ]
 SLOT_ALIASES = {
     "hero": ["hero"],
-    "detail-material": ["detail-material", "material-detail", "detail-1-material"],
-    "detail-structure": ["detail-structure", "structure-detail", "detail-2-structure"],
-    "detail-silhouette": [
+    "silhouette": [
+        "silhouette",
         "detail-silhouette",
-        "silhouette-context",
         "detail-3-silhouette",
-        "detail-context",
-        "ottoman-pairing",
+        "technical",
+        "rendering",
+        "marker",
         "profile",
     ],
+    "context": [
+        "context",
+        "detail-context",
+        "lifestyle",
+        "interior",
+        "setting",
+        "room",
+    ],
+    "designer": [
+        "designer",
+        "portrait",
+        "archival",
+        "historical",
+    ],
 }
-STYLE_NEGATIVE_PROMPT = (
-    "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, "
-    "cluttered background, people, rugs, lamps, artwork, books, decorative props, "
-    "text, logos, watermark, modern anachronistic elements, cartoonish, painterly, "
-    "low resolution, blur, motion blur, incorrect colors, wrong materials, fabricated details, "
-    "invented finishes, altered proportions, modified geometry"
-)
-STYLE_PROMPT_SUFFIX = (
-    "Use soft diffused warm light in the 2700-3000K range. Keep natural color grading, "
-    "moderate contrast, realistic material textures, and clean negative space. Preserve "
-    "historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. "
-    "CRITICAL: Use ONLY colors, materials, and finishes visible in the reference images. "
-    "Do not invent or fabricate colors, materials, or structural details not present in references. "
-    "No people or clutter."
-)
+# Slot-specific negative prompts and style guidance
+STYLE_NEGATIVE_PROMPTS = {
+    "hero": (
+        "harsh shadows, cool lighting, over-saturated colors, cluttered background, "
+        "people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, "
+        "low resolution, blur, motion blur, incorrect colors, wrong materials, "
+        "fabricated details, invented finishes, altered proportions, modified geometry"
+    ),
+    "silhouette": (
+        "photorealistic, 3D rendering, shadows, shading, color, texture, background details, "
+        "cluttered, realistic materials, blur, motion blur, text, logos, watermark"
+    ),
+    "context": (
+        "harsh lighting, clutter, excessive decorative items, people, modern anachronisms, "
+        "text, logos, watermark, low resolution, blur, wrong era furniture"
+    ),
+    "designer": (
+        "modern clothing, anachronistic elements, color photos (unless original was color), "
+        "digital artifacts, text overlays, logos, watermark, poor quality"
+    ),
+}
+
+STYLE_PROMPT_SUFFIXES = {
+    "hero": (
+        "Use soft diffused warm light in the 2700-3000K range. Keep natural color grading, "
+        "moderate contrast, realistic material textures, and clean negative space. Preserve "
+        "historical fidelity: authentic silhouette, proportions, and era plausibility. "
+        "CRITICAL: Use ONLY colors, materials, and finishes visible in the reference images. "
+        "Do not invent or fabricate structural details. No people or clutter."
+    ),
+    "silhouette": (
+        "Industrial design marker rendering style with clean lines and minimal shading. "
+        "Use precise technical drawing conventions with clean white or kraft paper background. "
+        "Show accurate proportions and form. Style should evoke 1960s-1980s design sketches "
+        "with markers and pencil. Emphasize the chair's distinctive profile and geometry. "
+        "No photorealistic details, no invented structural elements."
+    ),
+    "context": (
+        "Place chair in period-appropriate interior setting matching the design era. "
+        "Use natural warm lighting, minimal styling, clean composition. Interior should feel "
+        "authentic to the period without excessive decoration. Focus remains on the chair "
+        "while showing how it lives in a real space. No people, no clutter, historically accurate."
+    ),
+    "designer": (
+        "Archival portrait photograph from designer's active period. Black and white or "
+        "period-appropriate color photography. Professional quality, clear focus on subject. "
+        "Style should match historical photography conventions of the era. No modern elements."
+    ),
+}
 
 
 # ── Default backlog (~40 classic pieces) ──────────────────────────────────
@@ -1057,15 +1104,29 @@ def _load_reference_bank_urls(slug: str) -> list[str]:
 
 
 def _build_style_prompt(base_prompt: str, page: dict, slot: str) -> str:
-    """Wrap a slot prompt with shared style and fidelity constraints."""
+    """Wrap a slot prompt with slot-specific style and fidelity constraints."""
     title = page.get("title", "furniture piece")
     designer = page.get("designer", "")
-    header = f"Photorealistic museum-catalog image of {title}"
-    if designer:
+    
+    # Build slot-specific header
+    if slot == "silhouette":
+        header = f"Industrial design marker rendering of {title}"
+    elif slot == "context":
+        header = f"Interior photograph showing {title}"
+    elif slot == "designer":
+        header = f"Archival portrait photograph of {designer}" if designer else "Designer portrait"
+    else:  # hero
+        header = f"Photorealistic museum-catalog image of {title}"
+    
+    if designer and slot not in {"designer"}:
         header += f" by {designer}"
+    
+    # Get slot-specific style suffix (fallback to hero if not defined)
+    style_suffix = STYLE_PROMPT_SUFFIXES.get(slot, STYLE_PROMPT_SUFFIXES["hero"])
+    
     return (
         f"{header}. Slot intent: {slot}. "
-        f"{base_prompt.strip()}\n\n{STYLE_PROMPT_SUFFIX}"
+        f"{base_prompt.strip()}\n\n{style_suffix}"
     )
 
 
@@ -1141,50 +1202,44 @@ def _generate_with_google(
 ) -> dict:
     """Generate one image via Google Gemini (Imagen)."""
     try:
-        import google.generativeai as genai
+        from google import genai
     except ImportError as exc:
         raise RuntimeError(
-            "google-generativeai is not installed; install it to use FURNITURE_IMAGE_PROVIDER=google"
+            "google-genai is not installed; install it to use FURNITURE_IMAGE_PROVIDER=google"
         ) from exc
 
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise RuntimeError("GOOGLE_API_KEY is required for Google image generation")
 
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
 
     log.info(f"Generating image with Google Gemini (Imagen)...")
     log.info(f"Prompt: {prompt[:100]}...")
 
     try:
-        # Try using the generativeai library's image generation
-        imagen = genai.ImageGenerationModel(model)
-        
-        generation_config = {
-            "number_of_images": 1,
-            "aspect_ratio": "1:1",
-        }
-        
         # Build prompt - Gemini works better with simpler prompts
-        # Strip complex style guidance that causes hallucinations
         full_prompt = prompt
         if reference_url:
             log.info(f"Reference image URL: {reference_url}")
-            # Note: Add reference guidance to prompt since direct image reference may not be supported
             full_prompt = f"{prompt}\n\nMatch style and composition from reference image."
         
-        response = imagen.generate_images(
+        response = client.models.generate_images(
+            model=model,
             prompt=full_prompt,
-            **generation_config
+            config={
+                'numberOfImages': 1,
+                'aspectRatio': '1:1',
+            }
         )
         
-        if not response or not hasattr(response, 'images') or not response.images:
+        if not response or not response.generated_images:
             raise RuntimeError("Google Gemini returned no images")
         
         # Convert to PNG bytes
         from io import BytesIO
         buffer = BytesIO()
-        response.images[0]._pil_image.save(buffer, format="PNG")
+        response.generated_images[0].image._pil_image.save(buffer, format="PNG")
         image_bytes = buffer.getvalue()
         
         return {
@@ -1286,7 +1341,7 @@ def _provider_and_model() -> tuple[str, str]:
     if provider == "openai":
         model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
     elif provider == "google":
-        model = os.getenv("GOOGLE_IMAGE_MODEL", "imagen-3.0-generate-001").strip() or "imagen-3.0-generate-001"
+        model = os.getenv("GOOGLE_IMAGE_MODEL", "imagen-4.0-generate-001").strip() or "imagen-4.0-generate-001"
     else:
         model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
     return provider, model
@@ -1672,6 +1727,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
             continue
 
         final_prompt = _build_style_prompt(base_prompt, page, slot)
+        negative_prompt = STYLE_NEGATIVE_PROMPTS.get(slot, STYLE_NEGATIVE_PROMPTS["hero"])
         out_file = IMAGES_DIR / f"{slug}-{slot}.jpg"
         response_payload = None
 
@@ -1703,14 +1759,14 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                             continue
                         response_payload = _generate_with_google(
                             prompt=final_prompt,
-                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            negative_prompt=negative_prompt,
                             size=size,
-                            model=os.getenv("GOOGLE_IMAGE_MODEL", "imagen-3.0-generate-001"),
+                            model=os.getenv("GOOGLE_IMAGE_MODEL", "imagen-4.0-generate-001"),
                             reference_url=reference_url,
                             timeout_seconds=timeout_seconds,
                         )
                         used_provider = "google"
-                        used_model = os.getenv("GOOGLE_IMAGE_MODEL", "imagen-3.0-generate-001")
+                        used_model = os.getenv("GOOGLE_IMAGE_MODEL", "imagen-4.0-generate-001")
                         break
                         
                     elif attempt_provider == "fal":
@@ -1719,7 +1775,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                             continue
                         response_payload = _generate_with_fal(
                             prompt=final_prompt,
-                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            negative_prompt=negative_prompt,
                             size=size,
                             model=os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev"),
                             reference_url=reference_url,
@@ -1734,7 +1790,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                             continue
                         response_payload = _generate_with_openai(
                             prompt=final_prompt,
-                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            negative_prompt=negative_prompt,
                             size=size,
                             model=fallback_model,
                             timeout_seconds=timeout_seconds,
@@ -1783,7 +1839,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                     "provider": used_provider,
                     "model": used_model,
                     "prompt": final_prompt,
-                    "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                    "negativePrompt": negative_prompt,
                     "referenceUrl": reference_url,
                     "response": response_payload.get("raw") if response_payload else None,
                     "revisedPrompt": response_payload.get("revised_prompt") if response_payload else None,
@@ -1815,7 +1871,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                         "license": fallback_result["license"],
                         "origin": fallback_result["origin"],
                         "prompt": final_prompt,
-                        "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                        "negativePrompt": negative_prompt,
                         "referenceUrl": reference_url,
                     }
                 )
@@ -1831,7 +1887,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                         "status": "failed",
                         "reason": str(exc),
                         "prompt": final_prompt,
-                        "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                        "negativePrompt": negative_prompt,
                         "referenceUrl": reference_url,
                     }
                 )

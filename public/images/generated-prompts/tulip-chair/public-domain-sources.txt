@@ -1,0 +1,65 @@
+Image source discovery for: Tulip Chair [tulip-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Tulip Chair Eero Saarinen site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/Category:Tulip_Chair
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Tulip_chair.jpg
+3. Untitled
+   https://commons.wikimedia.org/wiki/File:Sedia_n._151,_tulipano,_design_eero_saarinen_1955-56,_realizzata_1964.JPG
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Eero_saarinen_per_knoll_international,_sedia_tulip_dalla_collezione_pedestal,_1955-56.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/File:Saarinen_Tulpanstolen.jpg
+
+[MUSEUMS QUERY]
+Tulip Chair Eero Saarinen site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://collections.vam.ac.uk/item/O144560/tulip-chair-saarinen-eero/
+2. Untitled
+   https://www.dwell.com/article/the-story-of-eero-saarinens-famous-tulip-chair-35feab23
+3. Untitled
+   https://hivemodern.com/pages/category297/eero-saarinen?srsltid=AfmBOore0NGmm3uBfZFuXjiqoHp1cQzd2x09We94HvrM66yEbgk_VOiw
+4. Untitled
+   https://www.slam.org/collection/objects/38546/
+5. Untitled
+   https://www.moma.org/momaorg/shared/pdfs/moma_learning/docs/design_2.pdf
+
+[ARCHIVES QUERY]
+Tulip Chair Eero Saarinen site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://www.dwell.com/article/the-story-of-eero-saarinens-famous-tulip-chair-35feab23
+2. Untitled
+   https://www.knoll-int.com/home/by-designer/classic-designers/eero-saarinen/saarinen-tulip-side-chair
+3. Untitled
+   https://hivemodern.com/pages/category297/eero-saarinen?srsltid=AfmBOooU_fWTl5PvmhBESTGFXaN-29qgGFDrSkiVIqkMxfOGKWdn-wmn
+4. Untitled
+   https://www.slam.org/collection/objects/38546/
+5. Untitled
+   https://www.knoll.com/shop/en_us/dining-dining-chairs/saarinen-tulip-armchair/7224.html
+
+[MANUFACTURERS QUERY]
+Tulip Chair Eero Saarinen site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.knoll.com/design-plan/product/tulip-armless-chair?section=design
+2. Untitled
+   https://www.vitra.com/en-us/product/details/miniatures-collection-tulip-chair?srsltid=AfmBOory0sJNrP4Y08Slf_dO2OPDPDdqeldREuLVLEPPNoGbqfMInlnu
+3. Untitled
+   https://www.knoll.com/design-plan/product/tulip-arm-chair-upholstered?section=design
+4. Untitled
+   https://www.knoll.com/design-plan/product/tulip-stool?section=design
+5. Untitled
+   https://www.knoll.com/document/1352940484486/SaarinenBrochure.pdf

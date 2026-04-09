@@ -21,7 +21,7 @@ ROOT = Path(__file__).parent
 CONTENT_DIR = ROOT / "src" / "content" / "blog"
 IMAGES_DIR = ROOT / "public" / "images"
 
-IMAGE_SLOTS = ["hero", "detail-material", "detail-structure", "detail-silhouette"]
+IMAGE_SLOTS = ["hero", "silhouette", "context", "designer"]
 
 
 def find_mdx_file(slug: str) -> Path:

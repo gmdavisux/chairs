@@ -26,9 +26,9 @@ REFERENCE_DIR = ROOT / "public" / "images" / "reference"
 
 IMAGE_SLOTS = [
     ("hero", "hero.txt"),
-    ("detail-material", "detail-1-material.txt"),
-    ("detail-structure", "detail-2-structure.txt"),
-    ("detail-silhouette", "detail-3-silhouette.txt"),
+    ("silhouette", "silhouette.txt"),
+    ("context", "context.txt"),
+    ("designer", "designer.txt"),
 ]
 
 

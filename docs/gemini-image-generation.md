@@ -6,7 +6,7 @@ This script automates image generation using Google's Gemini AI (Imagen) as an a
 
 1. **Install the required package:**
    ```bash
-   pip install google-generativeai
+   pip install google-genai
    ```
 
 2. **Get your Google API key:**

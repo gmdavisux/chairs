@@ -1,0 +1,63 @@
+{
+  "slug": "tulip-chair",
+  "title": "Tulip Chair",
+  "generatedAt": "2026-04-09T19:56:57.470328Z",
+  "provider": "google",
+  "model": "imagen-3.0-generate-001",
+  "imageSize": "1024x1024",
+  "maxImages": 4,
+  "budgetUsd": null,
+  "referenceBankUrls": [
+    "https://commons.wikimedia.org/wiki/Category:Tulip_Chair",
+    "https://commons.wikimedia.org/wiki/File:Tulip_chair.jpg",
+    "https://commons.wikimedia.org/wiki/File:Sedia_n._151,_tulipano,_design_eero_saarinen_1955-56,_realizzata_1964.JPG",
+    "https://commons.wikimedia.org/wiki/File:Eero_saarinen_per_knoll_international,_sedia_tulip_dalla_collezione_pedestal,_1955-56.jpg",
+    "https://commons.wikimedia.org/wiki/File:Saarinen_Tulpanstolen.jpg",
+    "https://collections.vam.ac.uk/item/O144560/tulip-chair-saarinen-eero/",
+    "https://www.dwell.com/article/the-story-of-eero-saarinens-famous-tulip-chair-35feab23",
+    "https://hivemodern.com/pages/category297/eero-saarinen?srsltid=AfmBOore0NGmm3uBfZFuXjiqoHp1cQzd2x09We94HvrM66yEbgk_VOiw",
+    "https://www.slam.org/collection/objects/38546/",
+    "https://www.moma.org/momaorg/shared/pdfs/moma_learning/docs/design_2.pdf",
+    "https://www.knoll-int.com/home/by-designer/classic-designers/eero-saarinen/saarinen-tulip-side-chair",
+    "https://hivemodern.com/pages/category297/eero-saarinen?srsltid=AfmBOooU_fWTl5PvmhBESTGFXaN-29qgGFDrSkiVIqkMxfOGKWdn-wmn",
+    "https://www.knoll.com/shop/en_us/dining-dining-chairs/saarinen-tulip-armchair/7224.html",
+    "https://www.knoll.com/design-plan/product/tulip-armless-chair?section=design",
+    "https://www.vitra.com/en-us/product/details/miniatures-collection-tulip-chair?srsltid=AfmBOory0sJNrP4Y08Slf_dO2OPDPDdqeldREuLVLEPPNoGbqfMInlnu",
+    "https://www.knoll.com/design-plan/product/tulip-arm-chair-upholstered?section=design",
+    "https://www.knoll.com/design-plan/product/tulip-stool?section=design",
+    "https://www.knoll.com/document/1352940484486/SaarinenBrochure.pdf",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Tulip_chair.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Sedia_n._151%2C_tulipano%2C_design_eero_saarinen_1955-56%2C_realizzata_1964.JPG",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Eero_saarinen_per_knoll_international%2C_sedia_tulip_dalla_collezione_pedestal%2C_1955-56.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Saarinen_Tulpanstolen.jpg"
+  ],
+  "aiReferenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Tulip_chair.jpg",
+  "results": [
+    {
+      "slot": "hero",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "silhouette",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "context",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "designer",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    }
+  ],
+  "summary": {
+    "generatedCount": 0,
+    "referenceFallbackCount": 0,
+    "failedCount": 0,
+    "skippedCount": 4
+  }
+}
