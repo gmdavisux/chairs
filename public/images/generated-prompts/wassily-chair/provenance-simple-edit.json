@@ -1,0 +1,44 @@
+{
+  "slug": "wassily-chair",
+  "title": "Wassily Chair",
+  "processedAt": "2026-04-09T17:56:22.620007Z",
+  "method": "simple_editing",
+  "results": [
+    {
+      "slot": "hero",
+      "status": "color_graded",
+      "file": "public/images/wassily-chair-hero.jpg",
+      "hash": "sha256:a72be2844fe852a55e70efa2c70e35d3481802b0b9505989e839ae7809fea132",
+      "method": "warm_color_grade_only",
+      "originalReference": "ref-001",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Wassily_Chair_by_Marcel_Breuer%2C_reproduction%2C_1925%2C_chrome_covered_steel_and_belting_leather_-_University_of_Arizona_Museum_of_Art_-_University_of_Arizona_-_Tucson%2C_AZ_-_DSC08029.jpg"
+    },
+    {
+      "slot": "detail-material",
+      "status": "color_graded",
+      "file": "public/images/wassily-chair-detail-material.jpg",
+      "hash": "sha256:a72be2844fe852a55e70efa2c70e35d3481802b0b9505989e839ae7809fea132",
+      "method": "warm_color_grade_only",
+      "originalReference": "ref-001",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Wassily_Chair_by_Marcel_Breuer%2C_reproduction%2C_1925%2C_chrome_covered_steel_and_belting_leather_-_University_of_Arizona_Museum_of_Art_-_University_of_Arizona_-_Tucson%2C_AZ_-_DSC08029.jpg"
+    },
+    {
+      "slot": "detail-structure",
+      "status": "color_graded",
+      "file": "public/images/wassily-chair-detail-structure.jpg",
+      "hash": "sha256:318fa137338df77298b587961f1d36b501ecf90f20449a2d3b55e16c620cb9e0",
+      "method": "warm_color_grade_only",
+      "originalReference": "ref-002",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Marcel_Breuer_-_Wassily_Chair_-_Eileen_Gray_-_Adjustable_table_E-1027_.jpg"
+    },
+    {
+      "slot": "detail-silhouette",
+      "status": "color_graded",
+      "file": "public/images/wassily-chair-detail-silhouette.jpg",
+      "hash": "sha256:318fa137338df77298b587961f1d36b501ecf90f20449a2d3b55e16c620cb9e0",
+      "method": "warm_color_grade_only",
+      "originalReference": "ref-002",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Marcel_Breuer_-_Wassily_Chair_-_Eileen_Gray_-_Adjustable_table_E-1027_.jpg"
+    }
+  ]
+}

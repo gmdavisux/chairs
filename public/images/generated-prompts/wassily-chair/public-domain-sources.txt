@@ -1,0 +1,65 @@
+Image source discovery for: Wassily Chair [wassily-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Wassily Chair Marcel Breuer site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/File:Wassily_Chair_by_Marcel_Breuer,_reproduction,_1925,_chrome_covered_steel_and_belting_leather_-_University_of_Arizona_Museum_of_Art_-_University_of_Arizona_-_Tucson,_AZ_-_DSC08029.jpg
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Marcel_Breuer_-_Wassily_Chair_-_Eileen_Gray_-_Adjustable_table_E-1027_.jpg
+3. Untitled
+   https://commons.wikimedia.org/wiki/File:Wassily_Chair.jpg
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Marcel_Breuer_-_Wassily_Chair.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/Category:Wassily_Chair?uselang=fr
+
+[MUSEUMS QUERY]
+Wassily Chair Marcel Breuer site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://www.iconeye.com/design/a-brief-history-of-marcel-breuers-wassily-chair
+2. Untitled
+   https://www.moma.org/collection/works/2851
+3. Untitled
+   https://www.knoll.com/shop/en_us/wassily-chair-guide.html
+4. Untitled
+   https://www.metmuseum.org/art/collection/search/485067
+5. Untitled
+   https://www.moma.org/documents/moma_catalogue_1782_300296422.pdf
+
+[ARCHIVES QUERY]
+Wassily Chair Marcel Breuer site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://www.iconeye.com/design/a-brief-history-of-marcel-breuers-wassily-chair
+2. Untitled
+   https://www.moma.org/collection/works/2851
+3. Untitled
+   https://www.metmuseum.org/art/collection/search/485067
+4. Untitled
+   https://www.knoll.com/shop/en_us/living-lounge-chairs/wassily-chair/7852.html
+5. Untitled
+   https://archive.org/download/designsince194500hies/designsince194500hies.pdf
+
+[MANUFACTURERS QUERY]
+Wassily Chair Marcel Breuer site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.knoll.com/design-plan/product/wassily-chair-gold?section=design
+2. Untitled
+   https://www.knoll.com/product/wassily-chair%3Fsection=Design
+3. Untitled
+   https://www.knoll.com/design-plan/product/wassily-chair-canvas?section=design
+4. Untitled
+   https://www.knoll.com/shop/en_us/wassily-chair-guide.html
+5. Untitled
+   https://www.knoll.com/design-plan/product/mb-lounge-chair?section=design

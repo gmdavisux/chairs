@@ -21,7 +21,8 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import date, datetime, timezone
+import time
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.parse import quote, unquote, urlparse
@@ -36,6 +37,24 @@ from langchain_openai import ChatOpenAI
 # Copilot/Azure AI inference gateway. Set GITHUB_MODELS=1 in .env to opt in.
 # The token is the same GITHUB_TOKEN used for PyGithub.
 _GITHUB_MODELS_BASE_URL = "https://models.inference.ai.azure.com"
+
+# Default fallback chain for GitHub Models.
+# Each entry is a distinct model ID with its own independent per-day quota bucket
+# ("UserByModelByDay" in the rate-limit error). When the primary model is exhausted,
+# the pipeline switches to the next entry immediately — no waiting required.
+#
+# Tier reference (Copilot Pro, as of 2026):
+#   High-tier (gpt-4o):                    50 req/day
+#   Low-tier  (gpt-4o-mini, Llama-3.3-70B): 150 req/day
+#
+# Quality ordering: gpt-4o ≈ gpt-4o-mini >> Meta-Llama-3.3-70B-Instruct
+# All three produce well-structured, authoritative prose. The Llama model is the
+# most conservative choice but still produces excellent furniture archive copy.
+_GITHUB_MODELS_DEFAULT_FALLBACK_CHAIN = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "Meta-Llama-3.3-70B-Instruct",
+]
 
 # Prefer project-local .env values over inherited shell exports so stale
 # session tokens don't silently override workspace configuration.
@@ -94,12 +113,15 @@ STYLE_NEGATIVE_PROMPT = (
     "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, "
     "cluttered background, people, rugs, lamps, artwork, books, decorative props, "
     "text, logos, watermark, modern anachronistic elements, cartoonish, painterly, "
-    "low resolution, blur, motion blur"
+    "low resolution, blur, motion blur, incorrect colors, wrong materials, fabricated details, "
+    "invented finishes, altered proportions, modified geometry"
 )
 STYLE_PROMPT_SUFFIX = (
     "Use soft diffused warm light in the 2700-3000K range. Keep natural color grading, "
     "moderate contrast, realistic material textures, and clean negative space. Preserve "
     "historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. "
+    "CRITICAL: Use ONLY colors, materials, and finishes visible in the reference images. "
+    "Do not invent or fabricate colors, materials, or structural details not present in references. "
     "No people or clutter."
 )
 
@@ -206,18 +228,128 @@ def mark_done(backlog: dict, slug: str) -> None:
     save_backlog(backlog)
 
 
-# ── LLM factory ───────────────────────────────────────────────────────────
-def make_llm(temperature: float = 0.7) -> ChatOpenAI:
+def assemble_frontmatter(article_body: str, page: dict, pubdate: str) -> str:
     """
-    Return a ChatOpenAI instance pointed at either:
+    Deterministic frontmatter assembly — replaces the AI Publisher agent.
+
+    Extracts a 1-sentence description from the opening paragraph and wraps
+    the article in complete YAML frontmatter ready for Astro content collections.
+    """
+    slug = page["slug"]
+    title = page["title"]
+    designer = page.get("designer", "Unknown")
+    era = page.get("era", "Classic")
+    category = page.get("category", "Iconic Chairs")
+
+    # Extract first paragraph (before first ##)
+    lines = article_body.strip().split("\n")
+    first_para_lines = []
+    for line in lines:
+        if line.strip().startswith("##"):
+            break
+        if line.strip():
+            first_para_lines.append(line.strip())
+
+    first_para = " ".join(first_para_lines)
+
+    # Extract a ~100-160 char description from the opening
+    description = first_para[:160].strip()
+    if len(first_para) > 160:
+        # Try to break at sentence or clause boundary
+        for sep in (".", ",", ";"):
+            if sep in description:
+                description = description.rsplit(sep, 1)[0] + sep
+                break
+
+    # Build YAML frontmatter block
+    frontmatter = f"""---
+title: "{title}"
+description: "{description}"
+pubDate: {pubdate}
+heroImage: /images/{slug}-hero.jpg
+heroImageAlt: "Proposed hero image for {title} highlighting form and materials"
+heroImageAltStatus: proposed
+heroImageCaption: "TBD"
+heroImageSource: "TBD"
+heroImageLicense: unknown
+heroImageOrigin: placeholder
+images:
+  - id: {slug}-hero
+    src: /images/{slug}-hero.jpg
+    alt: "Proposed hero image for {title} highlighting form and materials"
+    altStatus: proposed
+    caption:  "TBD"
+    source: "TBD"
+    license: unknown
+    origin: placeholder
+  - id: {slug}-detail-material
+    src: /images/{slug}-detail-material.jpg
+    alt: "Proposed close-up of material texture on {title}"
+    altStatus: proposed
+    caption: "TBD"
+    source: "TBD"
+    license: unknown
+    origin: placeholder
+  - id: {slug}-detail-structure
+    src: /images/{slug}-detail-structure.jpg
+    alt: "Proposed detail of visible joints, screws, or frame transitions"
+    altStatus: proposed
+    caption: "TBD"
+    source: "TBD"
+    license: unknown
+    origin: placeholder
+  - id: {slug}-detail-silhouette
+    src: /images/{slug}-detail-silhouette.jpg
+    alt: "Proposed profile silhouette of {title} showing signature geometry"
+    altStatus: proposed
+    caption: "TBD"
+    source: "TBD"
+    license: unknown
+    origin: placeholder
+designer: "{designer}"
+era: "{era}"
+category: "{category}"
+---
+
+"""
+
+    return frontmatter + article_body.strip()
+
+
+# ── LLM factory ───────────────────────────────────────────────────────────
+def _model_fallback_chain() -> list[str]:
+    """
+    Return the ordered model fallback chain for GitHub Models rate-limit recovery.
+
+    Reads FURNITURE_MODEL_FALLBACKS (comma-separated) when set; otherwise builds
+    a chain from the primary FURNITURE_MODEL followed by the hard-coded defaults,
+    deduplicating while preserving order.
+    """
+    env_chain = os.getenv("FURNITURE_MODEL_FALLBACKS", "").strip()
+    if env_chain:
+        return [m.strip() for m in env_chain.split(",") if m.strip()]
+    primary = os.getenv("FURNITURE_MODEL", "gpt-4o")
+    chain: list[str] = [primary]
+    for model in _GITHUB_MODELS_DEFAULT_FALLBACK_CHAIN:
+        if model not in chain:
+            chain.append(model)
+    return chain
+
+
+def make_llm(temperature: float = 0.7, model_override: Optional[str] = None):
+    """
+        Return an LLM client pointed at either:
       • GitHub Models endpoint  (GITHUB_MODELS=1 in .env, uses GITHUB_TOKEN)
       • Standard OpenAI API     (default, uses OPENAI_API_KEY)
 
-    Model defaults to gpt-4o unless overridden via FURNITURE_MODEL.
+        CrewAI 0.5 expects a LangChain-compatible chat model; use ChatOpenAI for
+        both providers and keep response size conservative.
+
+    model_override bypasses FURNITURE_MODEL for fallback-chain switching.
     temperature=0.3 → analytical agents (Planner, Researcher, Publisher)
     temperature=0.7 → creative agents (Writer, ImagePrompter)
     """
-    model = os.getenv("FURNITURE_MODEL", "gpt-4o")
+    model = model_override or os.getenv("FURNITURE_MODEL", "gpt-4o")
 
     if os.getenv("GITHUB_MODELS", "").strip() in ("1", "true", "yes"):
         token = os.getenv("GITHUB_TOKEN")
@@ -231,6 +363,7 @@ def make_llm(temperature: float = 0.7) -> ChatOpenAI:
             api_key=token,
             base_url=_GITHUB_MODELS_BASE_URL,
             temperature=temperature,
+            max_tokens=3500,
         )
 
     api_key = os.getenv("OPENAI_API_KEY")
@@ -245,7 +378,12 @@ def make_llm(temperature: float = 0.7) -> ChatOpenAI:
 
 
 # ── CrewAI crew builder ────────────────────────────────────────────────────
-def build_crew(page: dict, concept: str) -> Crew:
+def build_crew(
+    page: dict,
+    concept: str,
+    model_override: Optional[str] = None,
+    slim_context: bool = False,
+) -> Crew:
     slug = page["slug"]
     title = page["title"]
     designer = page.get("designer", "Unknown")
@@ -254,12 +392,23 @@ def build_crew(page: dict, concept: str) -> Crew:
     today = date.today().isoformat()
 
     # Instantiate LLMs — analytical agents use lower temperature, creative ones higher.
-    llm_analytical = make_llm(temperature=0.3)
-    llm_creative = make_llm(temperature=0.7)
+    llm_analytical = make_llm(temperature=0.3, model_override=model_override)
+    llm_creative = make_llm(temperature=0.7, model_override=model_override)
+
+    # Keep a slimmer context profile for providers with strict input caps.
+    concept_for_plan = concept
+    search_results_limit = 6
+    researcher_max_iter = 10
+    writer_word_range = "1800–2200"
+    if slim_context:
+        # Preserve the most recent guidance while capping prompt size.
+        concept_for_plan = concept[-6000:]
+        search_results_limit = 4
+        researcher_max_iter = 6
+        writer_word_range = "1300–1600"
 
     # TavilySearchResults reads TAVILY_API_KEY from the environment automatically.
-    # max_results=6 keeps token usage low while giving the Researcher enough sources.
-    search_tool = TavilySearchResults(max_results=6)
+    search_tool = TavilySearchResults(max_results=search_results_limit)
 
     # ── Agents ────────────────────────────────────────────────────────────
     planner = Agent(
@@ -275,6 +424,7 @@ def build_crew(page: dict, concept: str) -> Crew:
             "before issuing any brief."
         ),
         llm=llm_analytical,
+        respect_context_window=True,
         verbose=True,
         allow_delegation=False,
     )
@@ -293,7 +443,7 @@ def build_crew(page: dict, concept: str) -> Crew:
         ),
         tools=[search_tool],
         llm=llm_analytical,
-        max_iter=10,
+        max_iter=researcher_max_iter,
         respect_context_window=True,
         verbose=True,
         allow_delegation=False,
@@ -313,30 +463,18 @@ def build_crew(page: dict, concept: str) -> Crew:
             "with a numbered References section."
         ),
         llm=llm_creative,
+        respect_context_window=True,
         verbose=True,
         allow_delegation=False,
     )
 
-    publisher = Agent(
-        role="Publisher",
-        goal=(
-            "Assemble the final, complete Markdown file — YAML frontmatter plus article "
-            "body — ready to save as an Astro content collection entry."
-        ),
-        backstory=(
-            "You are a precise technical editor who ensures every page has complete, "
-            "valid Astro frontmatter, proper Markdown structure, an accurate description "
-            "field extracted from the article, and no formatting artifacts."
-        ),
-        llm=llm_analytical,
-        verbose=True,
-        allow_delegation=False,
-    )
+    # Publisher agent removed — frontmatter assembly now happens deterministically
+    # via assemble_frontmatter() function after crew.kickoff()
 
     # ── Tasks ─────────────────────────────────────────────────────────────
     plan_task = Task(
         description=(
-            f"Read this site concept document carefully:\n\n{concept}\n\n"
+            f"Read this site concept document carefully:\n\n{concept_for_plan}\n\n"
             f"The next page to build is: **{title}** "
             f"(slug: `{slug}`, designer: {designer}, era: {era}, category: {category}).\n\n"
             "Produce a concise editorial brief (under 350 words) covering:\n"
@@ -377,7 +515,7 @@ def build_crew(page: dict, concept: str) -> Crew:
             f"Using the editorial brief and research, write the full article for "
             f"**{title}**.\n\n"
             "Requirements:\n"
-            "- 1800–2200 words\n"
+            f"- {writer_word_range} words\n"
             "- Opening hook paragraph with no heading (place the reader in the moment)\n"
             "- 4–5 H2 sections with descriptive, non-generic titles\n"
             "- A 'Meet the Designer' H2 section\n"
@@ -391,85 +529,16 @@ def build_crew(page: dict, concept: str) -> Crew:
             "Output: raw Markdown only. No frontmatter. No code fences around the output."
         ),
         expected_output=(
-            "Full article body in Markdown, 1800-2200 words, no frontmatter, "
+            f"Full article body in Markdown, {writer_word_range} words, no frontmatter, "
             "ending with a References section."
         ),
         agent=writer,
-        context=[plan_task, research_task],
-    )
-
-    publish_task = Task(
-        description=(
-            f"Assemble the complete, final Markdown file for **{title}**.\n\n"
-            "Steps:\n"
-            "1. Extract a precise 1-sentence description (100–160 characters) from the "
-            "article's opening paragraph.\n"
-            "2. Prepend this exact YAML frontmatter block to the article body:\n\n"
-            "---\n"
-            f'title: "{title}"\n'
-            'description: "[your extracted description here]"\n'
-            f"pubDate: {today}\n"
-            f"heroImage: /images/{slug}-hero.jpg\n"
-            f"heroImageAlt: \"Proposed hero image for {title} highlighting form and materials\"\n"
-            "heroImageAltStatus: proposed\n"
-            "heroImageCaption: \"TBD\"\n"
-            "heroImageSource: \"TBD\"\n"
-            "heroImageLicense: unknown\n"
-            "heroImageOrigin: placeholder\n"
-            "images:\n"
-            f"  - id: {slug}-hero\n"
-            f"    src: /images/{slug}-hero.jpg\n"
-            f"    alt: \"Proposed hero image for {title} highlighting form and materials\"\n"
-            "    altStatus: proposed\n"
-            "    caption: \"TBD\"\n"
-            "    source: \"TBD\"\n"
-            "    license: unknown\n"
-            "    origin: placeholder\n"
-            f"  - id: {slug}-detail-material\n"
-            f"    src: /images/{slug}-detail-material.jpg\n"
-            f"    alt: \"Proposed close-up of material texture on {title}\"\n"
-            "    altStatus: proposed\n"
-            "    caption: \"TBD\"\n"
-            "    source: \"TBD\"\n"
-            "    license: unknown\n"
-            "    origin: placeholder\n"
-            f"  - id: {slug}-detail-structure\n"
-            f"    src: /images/{slug}-detail-structure.jpg\n"
-            "    alt: \"Proposed detail of visible joints, screws, or frame transitions\"\n"
-            "    altStatus: proposed\n"
-            "    caption: \"TBD\"\n"
-            "    source: \"TBD\"\n"
-            "    license: unknown\n"
-            "    origin: placeholder\n"
-            f"  - id: {slug}-detail-silhouette\n"
-            f"    src: /images/{slug}-detail-silhouette.jpg\n"
-            f"    alt: \"Proposed profile silhouette of {title} showing signature geometry\"\n"
-            "    altStatus: proposed\n"
-            "    caption: \"TBD\"\n"
-            "    source: \"TBD\"\n"
-            "    license: unknown\n"
-            "    origin: placeholder\n"
-            f'designer: "{designer}"\n'
-            f'era: "{era}"\n'
-            f'category: "{category}"\n'
-            "---\n\n"
-            "3. Return the COMPLETE file content: the frontmatter block, a blank line, "
-            "then the full article body.\n"
-            "4. Do NOT wrap the output in code fences. Output the raw file content only.\n"
-            "5. The description field must contain real extracted text, not a placeholder.\n"
-            "6. Keep the metadata scaffold exactly, including proposed alt text and TBD source/license placeholders."
-        ),
-        expected_output=(
-            f"Complete Markdown file content — YAML frontmatter + article body — "
-            f"ready to write as src/content/blog/{slug}.md"
-        ),
-        agent=publisher,
-        context=[write_task],
+        context=[research_task] if slim_context else [plan_task, research_task],
     )
 
     return Crew(
-        agents=[planner, researcher, writer, publisher],
-        tasks=[plan_task, research_task, write_task, publish_task],
+        agents=[planner, researcher, writer],
+        tasks=[plan_task, research_task, write_task],
         max_rpm=6,  # additional buffer under free-tier rate limits
         verbose=True,
     )
@@ -824,12 +893,12 @@ def collect_reference_images(page: dict, sources_path: Path) -> Path:
     return metadata_path
 
 
-def extract_and_save(result, page: dict) -> Path:
+def extract_and_save(result, page: dict, pubdate: str) -> Path:
     """
     Extract article from the crew result and write it to disk.
 
-    Task indices: 0=plan, 1=research, 2=write, 3=publish
-    The Publisher (index 3) returns the complete file with frontmatter.
+    Task indices: 0=plan, 1=research, 2=write
+    Writer (index 2) returns article body; we wrap it with frontmatter here.
     """
     slug = page["slug"]
 
@@ -838,12 +907,15 @@ def extract_and_save(result, page: dict) -> Path:
     except AttributeError:
         tasks_output = []
 
-    # Full file from Publisher
-    full_markdown = _get_task_raw(tasks_output, 3)
-    if not full_markdown:
+    # Article body from Writer (index 2)
+    article_body = _get_task_raw(tasks_output, 2)
+    if not article_body:
         # Fallback: use the complete result string
-        full_markdown = str(result)
-        log.warning("Publisher task output missing; using full crew result as fallback.")
+        article_body = str(result)
+        log.warning("Writer task output missing; using full crew result as fallback.")
+
+    # Assemble frontmatter + body deterministically (no AI)
+    full_markdown = assemble_frontmatter(article_body, page, pubdate)
 
     # Write the article
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
@@ -875,6 +947,45 @@ def _safe_int_env(name: str, default: int) -> int:
         return int(value)
     except ValueError:
         return default
+
+
+def _is_rate_limit_error(error_text: str) -> bool:
+    """Return True when error text indicates a provider rate-limit response."""
+    return "RateLimitReached" in error_text or (
+        "429" in error_text and "rate" in error_text.lower()
+    )
+
+
+def _wait_with_progress(seconds: int) -> None:
+    """Sleep for `seconds`, logging progress every 60 s so the terminal stays alive."""
+    log.info("Rate-limit backoff: waiting %s before retry...", _format_duration(seconds))
+    remaining = seconds
+    while remaining > 0:
+        chunk = min(60, remaining)
+        time.sleep(chunk)
+        remaining -= chunk
+        if remaining > 0:
+            log.info("  Still waiting — %s remaining.", _format_duration(remaining))
+    log.info("Wait complete — retrying now.")
+
+
+def _extract_retry_seconds(error_text: str) -> Optional[int]:
+    """Extract provider retry wait seconds from a rate-limit error string."""
+    match = re.search(r"[Pp]lease wait\s+(\d+)\s+seconds", error_text)
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_duration(seconds: int) -> str:
+    """Format a duration in HH:MM:SS."""
+    safe_seconds = max(0, int(seconds))
+    hours, remainder = divmod(safe_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
 def _now_iso_utc() -> str:
@@ -1020,12 +1131,81 @@ def _generate_with_openai(
     }
 
 
+def _generate_with_google(
+    prompt: str,
+    negative_prompt: str,
+    size: str,
+    model: str,
+    reference_url: Optional[str],
+    timeout_seconds: int,
+) -> dict:
+    """Generate one image via Google Gemini (Imagen)."""
+    try:
+        import google.generativeai as genai
+    except ImportError as exc:
+        raise RuntimeError(
+            "google-generativeai is not installed; install it to use FURNITURE_IMAGE_PROVIDER=google"
+        ) from exc
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is required for Google image generation")
+
+    genai.configure(api_key=api_key)
+
+    log.info(f"Generating image with Google Gemini (Imagen)...")
+    log.info(f"Prompt: {prompt[:100]}...")
+
+    try:
+        # Try using the generativeai library's image generation
+        imagen = genai.ImageGenerationModel(model)
+        
+        generation_config = {
+            "number_of_images": 1,
+            "aspect_ratio": "1:1",
+        }
+        
+        # Build prompt - Gemini works better with simpler prompts
+        # Strip complex style guidance that causes hallucinations
+        full_prompt = prompt
+        if reference_url:
+            log.info(f"Reference image URL: {reference_url}")
+            # Note: Add reference guidance to prompt since direct image reference may not be supported
+            full_prompt = f"{prompt}\n\nMatch style and composition from reference image."
+        
+        response = imagen.generate_images(
+            prompt=full_prompt,
+            **generation_config
+        )
+        
+        if not response or not hasattr(response, 'images') or not response.images:
+            raise RuntimeError("Google Gemini returned no images")
+        
+        # Convert to PNG bytes
+        from io import BytesIO
+        buffer = BytesIO()
+        response.images[0]._pil_image.save(buffer, format="PNG")
+        image_bytes = buffer.getvalue()
+        
+        return {
+            "image_url": None,
+            "image_bytes": image_bytes,
+            "revised_prompt": None,
+            "raw": str(response),
+        }
+        
+    except Exception as e:
+        log.warning(f"Gemini generation error: {e}")
+        raise RuntimeError(f"Google Gemini generation failed: {e}")
+
+
 def _generate_with_fal(
     prompt: str,
     negative_prompt: str,
     size: str,
     model: str,
     reference_url: Optional[str],
+    strength: Optional[float] = None,
 ) -> dict:
     """Generate one image via fal-client if available."""
     try:
@@ -1038,13 +1218,33 @@ def _generate_with_fal(
     if not os.getenv("FAL_KEY"):
         raise RuntimeError("FAL_KEY is required for FAL image generation")
 
+    # Convert "1024x1024" format to FAL preset format
+    fal_size = "square_hd"  # default
+    if size in ["1024x1024", "square"]:
+        fal_size = "square_hd"
+    elif "landscape" in size or size in ["1920x1080", "1280x720"]:
+        fal_size = "landscape_16_9"
+    elif "portrait" in size or size in ["1080x1920", "720x1280"]:
+        fal_size = "portrait_16_9"
+
     arguments = {
         "prompt": prompt,
-        "negative_prompt": negative_prompt,
-        "image_size": size,
+        "image_size": fal_size,
+        "num_inference_steps": 40,  # Increased for better quality with reference
+        "guidance_scale": 3.5,
+        "num_images": 1,
+        "enable_safety_checker": False,
     }
+    
+    # Use reference image with strength control for img2img
     if reference_url:
         arguments["image_url"] = reference_url
+        # Strength: default from env, or explicit override
+        # 0.5-0.65 for style adaptation, 0.9-0.95 for minimal enhancement
+        if strength is not None:
+            arguments["strength"] = float(strength)
+        else:
+            arguments["strength"] = float(os.getenv("FURNITURE_IMAGE_STRENGTH", "0.6"))
 
     if hasattr(fal_client, "run"):
         response = fal_client.run(model, arguments=arguments)
@@ -1079,12 +1279,14 @@ def _generate_with_fal(
 
 def _provider_and_model() -> tuple[str, str]:
     """Resolve configured image provider and model values."""
-    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "fal").strip().lower()
-    if provider not in {"fal", "openai"}:
-        provider = "fal"
+    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "google").strip().lower()
+    if provider not in {"fal", "openai", "google"}:
+        provider = "google"
 
     if provider == "openai":
         model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
+    elif provider == "google":
+        model = os.getenv("GOOGLE_IMAGE_MODEL", "imagen-3.0-generate-001").strip() or "imagen-3.0-generate-001"
     else:
         model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
     return provider, model
@@ -1328,8 +1530,21 @@ def _build_display_fallback_plan(slug: str, article_path: Path) -> dict[str, dic
     return plan
 
 
-def _select_ai_reference_url(slug: str, article_path: Path) -> Optional[str]:
-    """Select a primary reference URL for AI guidance without requiring downloads."""
+def _select_ai_reference_url(slug: str, article_path: Path, slot: Optional[str] = None) -> Optional[str]:
+    """Select reference URL for AI guidance, preferring local downloaded images."""
+    # First, try locally downloaded reference images
+    ref_dir = REFERENCE_IMAGES_DIR / f"{slug}-reference"
+    if ref_dir.exists():
+        ref_images = sorted(ref_dir.glob("ref-*.jpg"))
+        if ref_images:
+            # Rotate through available references for variety
+            slot_index = {"hero": 0, "detail-material": 0, "detail-structure": 1, "detail-silhouette": 1}
+            idx = slot_index.get(slot, 0) if slot else 0
+            selected = ref_images[idx % len(ref_images)]
+            log.info("Using local reference image for slot %s: %s", slot or "default", selected.name)
+            # FAL needs a URL - we'll need to handle file upload differently
+            # For now, fall through to URL-based approach
+    
     file_preferences = _load_display_selection_file(slug)
     article_preferences = _load_article_reference_preferences(article_path)
 
@@ -1338,10 +1553,19 @@ def _select_ai_reference_url(slug: str, article_path: Path) -> Optional[str]:
         article_preferences.get("hero", {}).get("sourceUrl"),
     ):
         if isinstance(source, str) and source.startswith("http"):
-            return source
+            direct_url = _direct_image_url(source)
+            if direct_url:
+                return direct_url
 
     urls = _load_reference_bank_urls(slug)
-    return urls[0] if urls else None
+    # Find first URL that can be resolved to a direct image URL
+    for url in urls:
+        direct_url = _direct_image_url(url)
+        if direct_url:
+            log.info("Using reference image for AI generation (slot %s): %s", slot or "default", direct_url)
+            return direct_url
+    
+    return None
 
 
 def _use_reference_image_fallback(
@@ -1426,7 +1650,6 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
     size = _normalize_image_size(os.getenv("FURNITURE_IMAGE_SIZE", "1024x1024"))
     timeout_seconds = _safe_int_env("FURNITURE_IMAGE_TIMEOUT_SECONDS", 60)
     max_images = max(1, min(_safe_int_env("FURNITURE_IMAGE_MAX_PER_PAGE", 4), 4))
-    reference_url = _select_ai_reference_url(slug, article_path)
     reference_bank_urls = _load_reference_bank_urls(slug)
     reference_fallback_plan = _build_display_fallback_plan(slug, article_path)
 
@@ -1435,6 +1658,8 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
     resolved_slots: dict[str, dict] = {}
 
     for slot, _filename in IMAGE_SLOT_PROMPT_FILES[:max_images]:
+        # Select reference for this specific slot
+        reference_url = _select_ai_reference_url(slug, article_path, slot=slot)
         base_prompt = prompts.get(slot)
         if not base_prompt:
             results.append(
@@ -1453,30 +1678,60 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
         try:
             used_provider = provider
             used_model = model
-            if provider == "openai":
-                response_payload = _generate_with_openai(
-                    prompt=final_prompt,
-                    negative_prompt=STYLE_NEGATIVE_PROMPT,
-                    size=size,
-                    model=model,
-                    timeout_seconds=timeout_seconds,
-                )
+            
+            # Get fallback chain from env (supports google, fal, openai)
+            fallback_chain = os.getenv("FURNITURE_IMAGE_FALLBACKS", "").strip()
+            if fallback_chain:
+                providers_to_try = [p.strip().lower() for p in fallback_chain.split(",")]
             else:
+                # Default fallback: google -> fal -> openai
+                providers_to_try = ["google", "fal", "openai"]
+            
+            # Start with configured provider
+            if provider not in providers_to_try:
+                providers_to_try.insert(0, provider)
+            
+            generation_error = None
+            
+            for attempt_provider in providers_to_try:
                 try:
-                    response_payload = _generate_with_fal(
-                        prompt=final_prompt,
-                        negative_prompt=STYLE_NEGATIVE_PROMPT,
-                        size=size,
-                        model=model,
-                        reference_url=reference_url,
-                    )
-                except Exception as fal_exc:
-                    if can_use_openai_fallback:
-                        log.warning(
-                            "FAL generation failed for slot '%s'; trying OpenAI fallback: %s",
-                            slot,
-                            fal_exc,
+                    log.info("Generating %s with %s (reference: %s)", slot, attempt_provider, reference_url or "none")
+                    
+                    if attempt_provider == "google":
+                        if not os.getenv("GOOGLE_API_KEY"):
+                            log.warning("Google API key not configured, skipping")
+                            continue
+                        response_payload = _generate_with_google(
+                            prompt=final_prompt,
+                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            size=size,
+                            model=os.getenv("GOOGLE_IMAGE_MODEL", "imagen-3.0-generate-001"),
+                            reference_url=reference_url,
+                            timeout_seconds=timeout_seconds,
                         )
+                        used_provider = "google"
+                        used_model = os.getenv("GOOGLE_IMAGE_MODEL", "imagen-3.0-generate-001")
+                        break
+                        
+                    elif attempt_provider == "fal":
+                        if not os.getenv("FAL_KEY"):
+                            log.warning("FAL key not configured, skipping")
+                            continue
+                        response_payload = _generate_with_fal(
+                            prompt=final_prompt,
+                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            size=size,
+                            model=os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev"),
+                            reference_url=reference_url,
+                        )
+                        used_provider = "fal"
+                        used_model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev")
+                        break
+                        
+                    elif attempt_provider == "openai":
+                        if not _has_real_openai_key():
+                            log.warning("OpenAI API key not configured, skipping")
+                            continue
                         response_payload = _generate_with_openai(
                             prompt=final_prompt,
                             negative_prompt=STYLE_NEGATIVE_PROMPT,
@@ -1486,10 +1741,22 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                         )
                         used_provider = "openai"
                         used_model = fallback_model
-                    else:
-                        raise RuntimeError(
-                            f"FAL generation failed and no OpenAI fallback key is configured: {fal_exc}"
-                        )
+                        break
+                        
+                except Exception as provider_exc:
+                    generation_error = provider_exc
+                    log.warning(
+                        "%s generation failed for slot '%s': %s",
+                        attempt_provider.upper(),
+                        slot,
+                        provider_exc,
+                    )
+                    continue
+            
+            if not response_payload:
+                raise RuntimeError(
+                    f"All image providers failed. Last error: {generation_error}"
+                )
 
             image_bytes = response_payload.get("image_bytes") if response_payload else None
             image_url = response_payload.get("image_url") if response_payload else None
@@ -1728,9 +1995,101 @@ def run_build() -> None:
         reference_metadata_path: Optional[Path] = None
         generated_meta_path: Optional[Path] = None
 
-        crew = build_crew(page, concept)
-        result = crew.kickoff()
-        article_path = extract_and_save(result, page)
+        # Model-fallback kickoff.
+        # For GitHub Models, each model ID has its own independent per-day quota
+        # ("UserByModelByDay"). On a rate-limit error we advance to the next model
+        # in the chain immediately — no waiting, fresh quota bucket.
+        # If every fallback is also rate-limited and FURNITURE_RETRY_MAX_WAIT_SECONDS > 0,
+        # we fall back to the timed-wait path using the primary model.
+        _use_github_models = os.getenv("GITHUB_MODELS", "").strip().lower() in ("1", "true", "yes")
+        _max_retry_wait = _safe_int_env("FURNITURE_RETRY_MAX_WAIT_SECONDS", 3600)
+        _chain = _model_fallback_chain() if _use_github_models else [os.getenv("FURNITURE_MODEL", "gpt-4o")]
+        _last_rate_exc: Optional[Exception] = None
+        result = None
+
+        for _idx, _model_name in enumerate(_chain):
+            _is_primary = _idx == 0
+            if not _is_primary:
+                log.warning(
+                    "Rate limit hit for '%s'; switching to fallback model '%s' (%d/%d).",
+                    _chain[_idx - 1], _model_name, _idx + 1, len(_chain),
+                )
+            try:
+                _crew = build_crew(page, concept, model_override=None if _is_primary else _model_name)
+                result = _crew.kickoff()
+                if not _is_primary:
+                    log.info("Build completed using fallback model '%s'.", _model_name)
+                break
+            except Exception as _kickoff_exc:
+                _exc_text = str(_kickoff_exc)
+                if _is_rate_limit_error(_exc_text):
+                    _secs = _extract_retry_seconds(_exc_text)
+                    log.warning(
+                        "Rate limit on '%s'%s.",
+                        _model_name,
+                        f" (retry in {_format_duration(_secs)})" if _secs else "",
+                    )
+                    _last_rate_exc = _kickoff_exc
+                    continue  # advance to next fallback
+                if "tokens_limit_reached" in _exc_text or "413" in _exc_text:
+                    if _use_github_models:
+                        log.warning(
+                            "Token limit exceeded for '%s'; retrying once with compact-context mode.",
+                            _model_name,
+                        )
+                        try:
+                            _crew = build_crew(
+                                page,
+                                concept,
+                                model_override=None if _is_primary else _model_name,
+                                slim_context=True,
+                            )
+                            result = _crew.kickoff()
+                            log.info(
+                                "Build completed using compact-context mode on model '%s'.",
+                                _model_name,
+                            )
+                            break
+                        except Exception as _slim_exc:
+                            _slim_text = str(_slim_exc)
+                            if _is_rate_limit_error(_slim_text):
+                                _secs = _extract_retry_seconds(_slim_text)
+                                log.warning(
+                                    "Rate limit on '%s' during compact-context retry%s.",
+                                    _model_name,
+                                    f" (retry in {_format_duration(_secs)})" if _secs else "",
+                                )
+                                _last_rate_exc = _slim_exc
+                                continue  # advance to next fallback model
+                            if "tokens_limit_reached" in _slim_text or "413" in _slim_text:
+                                log.error(
+                                    "Token limit still exceeded for '%s' even in compact-context mode. "
+                                    "Try shortening site_concept.md or temporarily using OPENAI_API_KEY.",
+                                    _model_name,
+                                )
+                            raise
+                raise  # non-rate-limit error — propagate immediately
+        else:
+            # All models in the chain were rate-limited.
+            # If wait-retry is configured and the wait is short enough, pause and retry.
+            _retry_secs = _extract_retry_seconds(str(_last_rate_exc)) if _last_rate_exc else None
+            if (
+                _last_rate_exc is not None
+                and _retry_secs is not None
+                and _max_retry_wait > 0
+                and _retry_secs <= _max_retry_wait
+            ):
+                log.warning(
+                    "All fallback models rate-limited. Waiting %s then retrying primary model. "
+                    "Set FURNITURE_RETRY_MAX_WAIT_SECONDS=0 to disable.",
+                    _format_duration(_retry_secs),
+                )
+                _wait_with_progress(_retry_secs)
+                result = build_crew(page, concept).kickoff()
+            elif _last_rate_exc is not None:
+                raise _last_rate_exc
+
+        article_path = extract_and_save(result, page, date.today().isoformat())
         artifact_paths.append(article_path)
         mark_done(backlog, page["slug"])
 
@@ -1789,6 +2148,26 @@ def run_build() -> None:
         log.error("Build failed for '%s': %s", page["slug"], exc)
         use_github_models = os.getenv("GITHUB_MODELS", "").strip().lower() in ("1", "true", "yes")
         err_text = str(exc)
+        retry_seconds = _extract_retry_seconds(err_text)
+        if "RateLimitReached" in err_text or ("429" in err_text and retry_seconds is not None):
+            log.error("Rate limit reached for current model/provider.")
+            if retry_seconds is not None:
+                retry_at = datetime.now().astimezone() + timedelta(seconds=retry_seconds)
+                log.error(
+                    "Retry after %s (around %s local time).",
+                    _format_duration(retry_seconds),
+                    retry_at.strftime("%Y-%m-%d %H:%M:%S %Z"),
+                )
+            if use_github_models:
+                log.error(
+                    "GitHub Models daily quota was hit. Options: wait for reset, switch FURNITURE_MODEL, "
+                    "or disable GITHUB_MODELS and run with OPENAI_API_KEY."
+                )
+            else:
+                log.error(
+                    "OpenAI API quota/rate limit was hit. Options: wait and retry, reduce run frequency, "
+                    "or change model/plan limits."
+                )
         if use_github_models and ("401" in err_text or "Bad credentials" in err_text):
             log.error(
                 "GitHub Models authentication failed. Verify GITHUB_TOKEN has Models read permission, "

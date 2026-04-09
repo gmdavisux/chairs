@@ -1,0 +1,49 @@
+{
+  "slug": "wassily-chair",
+  "title": "Wassily Chair",
+  "enhancedAt": "2026-04-09T17:47:16.002048Z",
+  "method": "reference_enhancement",
+  "strength": 0.92,
+  "results": [
+    {
+      "slot": "hero",
+      "status": "enhanced",
+      "file": "public/images/wassily-chair-hero.jpg",
+      "hash": "sha256:251fcd763eca84307a8f34804616140b2480eb2936870c39275ca64e3aa0c57b",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Wassily_Chair_by_Marcel_Breuer%2C_reproduction%2C_1925%2C_chrome_covered_steel_and_belting_leather_-_University_of_Arizona_Museum_of_Art_-_University_of_Arizona_-_Tucson%2C_AZ_-_DSC08029.jpg",
+      "strength": 0.92,
+      "prompt": "Wassily Chair. Professional museum photograph of iconic modernist chair. Clean neutral background, soft warm 2700K lighting, enhanced sharpness. Preserve ALL original colors, materials, proportions, and structural details exactly as shown. No changes to design, geometry, or materials.",
+      "originalReference": "ref-001.jpg"
+    },
+    {
+      "slot": "detail-material",
+      "status": "enhanced",
+      "file": "public/images/wassily-chair-detail-material.jpg",
+      "hash": "sha256:92c0a5bb63a63dbf707938305d9226dea021e7333dfa204395ef6a11ad268bd0",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Wassily_Chair_by_Marcel_Breuer%2C_reproduction%2C_1925%2C_chrome_covered_steel_and_belting_leather_-_University_of_Arizona_Museum_of_Art_-_University_of_Arizona_-_Tucson%2C_AZ_-_DSC08029.jpg",
+      "strength": 0.92,
+      "prompt": "Wassily Chair. Professional close-up photograph showing material texture and surface detail. Clean background, soft warm 2700K lighting, macro focus enhancement. Preserve exact original colors, materials, and textures without alteration.",
+      "originalReference": "ref-001.jpg"
+    },
+    {
+      "slot": "detail-structure",
+      "status": "enhanced",
+      "file": "public/images/wassily-chair-detail-structure.jpg",
+      "hash": "sha256:a964bee0e8e2c39b754f1536a442889901fcc01f86337983ea35ae79d6050319",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Marcel_Breuer_-_Wassily_Chair_-_Eileen_Gray_-_Adjustable_table_E-1027_.jpg",
+      "strength": 0.92,
+      "prompt": "Wassily Chair. Professional detail photograph of structural connections and joinery. Clean background, soft warm 2700K lighting, enhanced focus on construction detail. Preserve all original structural elements, materials, and geometry exactly.",
+      "originalReference": "ref-002.jpg"
+    },
+    {
+      "slot": "detail-silhouette",
+      "status": "enhanced",
+      "file": "public/images/wassily-chair-detail-silhouette.jpg",
+      "hash": "sha256:9302a4fc153b40e84fbe47dce056bde88442f21c53156ca78f6fbf0940f88c39",
+      "source": "https://commons.wikimedia.org/wiki/Special:FilePath/Marcel_Breuer_-_Wassily_Chair_-_Eileen_Gray_-_Adjustable_table_E-1027_.jpg",
+      "strength": 0.92,
+      "prompt": "Wassily Chair. Professional profile photograph capturing distinctive form and proportions. Clean neutral background with subtle architectural context, soft warm 2700K rim lighting. Preserve exact original silhouette, proportions, and all structural elements.",
+      "originalReference": "ref-002.jpg"
+    }
+  ]
+}

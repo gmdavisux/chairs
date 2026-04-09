@@ -117,14 +117,17 @@ Examples of useful edits:
 
 ### Estimated cost
 
-| Provider | Model | Cost per page (est.) |
-|---|---|---|
-| OpenAI API | gpt-5.4-mini | ~$0.01–0.03 |
-| GitHub Models | gpt-5.4-mini | Included in Copilot quota |
+| Provider | Model | Req/day limit | Cost per page (est.) |
+|---|---|---|---|
+| OpenAI API | gpt-4o (default) | unlimited | ~$0.10–0.25 |
+| OpenAI API | gpt-4o-mini | unlimited | ~$0.01–0.03 |
+| GitHub Models | gpt-4o | 50/day (High tier) | Included in Copilot quota |
+| GitHub Models | gpt-4o-mini | 150/day (Low tier) | Included in Copilot quota |
+| GitHub Models | Meta-Llama-3.3-70B-Instruct | 150/day (Low tier) | Included in Copilot quota |
 
-gpt-5.4-mini is billed at **0.33×** the standard GPT-4 mini rate. A full run of the 40-page backlog costs roughly $0.40–$1.20 via the OpenAI API, or essentially free via GitHub Models against your Copilot subscription.
+Override the primary model via `FURNITURE_MODEL` in `.env`. When using GitHub Models, the agent automatically falls back through the chain above if the active model's daily quota is exhausted — each model ID has its own independent counter, so no waiting is needed.
 
-> **Quota note:** The agent is designed to run one high-quality page per manual execution so we stay within Copilot quota limits. Never run it in a loop or with automated scheduling unless you have confirmed your quota headroom first.
+> **Quota note:** The agent is designed to run one high-quality page per manual execution. The default fallback chain (`gpt-4o → gpt-4o-mini → Meta-Llama-3.3-70B-Instruct`) gives you up to 350 requests/day across three independent quota buckets before any waiting is required.
 
 ### Recommended next page after the Eames Lounge Chair
 
