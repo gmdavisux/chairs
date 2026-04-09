@@ -1,0 +1,17 @@
+{
+  "hero": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Mies-Barcelona-Chair-and-Ottoman.jpg",
+    "license": "cc_by_sa",
+    "origin": "public_domain"
+  },
+  "detail-material": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Ngv_design,_ludwig_mies_van_der_rohe_%26_co,_barcelona_chair.JPG",
+    "license": "cc_by_sa",
+    "origin": "public_domain"
+  },
+  "detail-structure": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Ludwig_mies_van_der_rohe,_sedia_barcelona_modello_M_R90,_1923.jpg",
+    "license": "cc_by_sa",
+    "origin": "public_domain"
+  }
+}

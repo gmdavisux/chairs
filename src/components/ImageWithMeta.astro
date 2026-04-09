@@ -13,6 +13,7 @@ interface ImageRecord {
 interface Props {
   id?: string;
   images?: ImageRecord[];
+  entryImages?: ImageRecord[];
   src?: string;
   alt?: string;
   altStatus?: 'proposed' | 'actual';
@@ -24,7 +25,8 @@ interface Props {
 
 const {
   id,
-  images = [],
+  images,
+  entryImages,
   src,
   alt,
   altStatus,
@@ -34,7 +36,9 @@ const {
   origin,
 } = Astro.props;
 
-const fromRegistry = id ? images.find((item) => item.id === id) : undefined;
+const imageRegistry = images ?? entryImages ?? [];
+
+const fromRegistry = id ? imageRegistry.find((item) => item.id === id) : undefined;
 const resolvedSrc = src || fromRegistry?.src;
 const resolvedAlt = alt || fromRegistry?.alt || 'Proposed image placeholder';
 const resolvedAltStatus = altStatus || fromRegistry?.altStatus || 'proposed';

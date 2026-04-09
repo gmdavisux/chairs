@@ -1,0 +1,22 @@
+{
+  "hero": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Eameslounch.jpg",
+    "license": "public_domain",
+    "origin": "public_domain"
+  },
+  "detail-material": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Eames_LCW_shock_mount.jpg",
+    "license": "cc_by_sa",
+    "origin": "public_domain"
+  },
+  "detail-structure": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Exploded_Eames_Lounge_Chair_and_Ottoman_(2006)_Sculpture_designed_by_Vincent_Faust._Components_made_by_Herman_Miller._Chair_designed_by_Ray_%26_Charles_Eames_(ID2008.7.1)_-_Fully_Furnished_-_Historic_Furniture_Exhibit_-_Henry_Ford_Museum.jpg",
+    "license": "cc_by_sa",
+    "origin": "public_domain"
+  },
+  "detail-silhouette": {
+    "source": "Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Jens_Semjan_auf_einem_historischen_Eames_Lounge_Chair_.jpg",
+    "license": "cc_by_sa",
+    "origin": "public_domain"
+  }
+}

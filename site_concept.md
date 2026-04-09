@@ -105,9 +105,32 @@ Every page has four images:
 | Detail 2 | Structural joint, hardware, or base | DALL-E / Midjourney prompt |
 | Detail 3 | Signature silhouette or profile view | DALL-E / Midjourney prompt |
 
-All prompts saved to `public/images/generated-prompts/[slug]/prompts.json`.
+All prompts and image metadata saved to `public/images/generated-prompts/[slug]/`.
 
-Three public-domain reference queries per page targeting: Wikimedia Commons, Library of Congress, museum digital collections (MoMA, V&A, Cooper Hewitt, Vitra Design Museum archive).
+### Automated Image Pipeline Policy
+
+Image sourcing, generation, and normalization are automated and run within the one-page-per-execution workflow.
+
+- Provider abstraction is required: default to FLUX via fal.ai, with OpenAI image APIs as fallback.
+- Every generated image must preserve historical fidelity in silhouette, proportions, materials, and visible construction logic.
+- Missing image assets or metadata must never block page creation; placeholders and proposed metadata are acceptable until review.
+- Every generated output must include traceable provenance metadata (prompt, provider/model, parameters, timestamp, and output file mapping).
+
+### Photographic Style Requirements
+
+All generated or refined images must follow one unified visual language:
+
+- Soft, diffused warm light in the 2700-3000 K range.
+- Natural color grading with moderate contrast and realistic material texture.
+- Furniture as primary subject (roughly 60-75 percent of frame), with clean negative space.
+- Minimal, era-appropriate architecture only when context is required.
+- No visual clutter: no people, rugs, lamps, books, decorative props, text overlays, or logos.
+
+Outputs that alter defining geometry, material behavior, or signature joinery are rejected and regenerated.
+
+Reference-source discovery per page should include: Wikimedia Commons, Library of Congress / Internet Archive, museum digital collections (MoMA, V&A, Cooper Hewitt, Vitra Design Museum archive), and authenticated manufacturer galleries.
+
+Reference-image collection is license-agnostic (all licenses allowed for non-display ideation); publication in blog posts must include explicit source + license metadata and comply with terms.
 
 ---
 
@@ -140,6 +163,10 @@ Three public-domain reference queries per page targeting: Wikimedia Commons, Lib
 5. **Reviewable output** — every completed page prints its localhost preview URL so a human can review before deployment
 6. **Graceful degradation** — if a tool call fails, log the error clearly rather than silently producing incomplete content
 7. **Respect the voice** — every page should read as if it belongs alongside the Eames Lounge Chair piece already on the site
+8. **Automated with oversight** - writing, sourcing, and image creation can be automated, but each page is reviewed before deployment
+9. **Local commit only** - automation may create one local commit per run; no unattended push or deploy
+10. **Historical fidelity first** - visual style supports object truth and never overrides it
+11. **Deterministic traceability** - every generated image keeps auditable metadata and review status
 
 ---
 
@@ -159,3 +186,6 @@ Three public-domain reference queries per page targeting: Wikimedia Commons, Lib
 ---
 
 *This document is the agent's editorial constitution. It must be read at the start of every run.*
+
+Implementation-specific automation rules live in `docs/automation-requirements.md`.
+Prompt and normalization style constraints live in `docs/photographic-style-guide.md`.

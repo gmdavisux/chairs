@@ -315,21 +315,5 @@ const showHeroMetadata =
 			</article>
 		</main>
 		<Footer />
-		<script is:inline>
-			// Move the "Meet the Designer" blockquote from prose into the sticky sidebar.
-			// Runs inline (end of body) so the DOM is fully available with no flash.
-			(function () {
-				var prose = document.querySelector('.prose');
-				var sidebar = document.getElementById('post-sidebar');
-				if (!prose || !sidebar) return;
-				var blockquotes = prose.querySelectorAll('blockquote');
-				for (var i = 0; i < blockquotes.length; i++) {
-					if (blockquotes[i].textContent && blockquotes[i].textContent.indexOf('Meet the Designer') !== -1) {
-						sidebar.appendChild(blockquotes[i]);
-						break;
-					}
-				}
-			})();
-		</script>
 	</body>
 </html>

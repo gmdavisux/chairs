@@ -1,0 +1,90 @@
+{
+  "slug": "barcelona-chair",
+  "title": "Barcelona Chair",
+  "referenceFolder": "public/images/reference/barcelona-chair-reference",
+  "collectedAt": "2026-04-09",
+  "downloadedCount": 3,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Mies-Barcelona-Chair-and-Ottoman.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+      "localPath": "public/images/reference/barcelona-chair-reference/ref-001.jpg",
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Ngv_design,_ludwig_mies_van_der_rohe_%26_co,_barcelona_chair.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+      "localPath": "public/images/reference/barcelona-chair-reference/ref-002.jpg",
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Ludwig_mies_van_der_rohe,_sedia_barcelona_modello_M_R90,_1923.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg",
+      "localPath": "public/images/reference/barcelona-chair-reference/ref-003.jpg",
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Pavelle%C3%B3_Mies_van_del_Rohe_-_Barcelona_Chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pavelle%C3%B3_Mies_van_del_Rohe_-_Barcelona_Chair.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Pavell%C3%B3_Mies_06.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pavell%C3%B3_Mies_06.JPG",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://collections.vam.ac.uk/item/O301144/barcelona-chair-chair-mies-van-der/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "https://www.moma.org/collection/works/4369",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://en.wikipedia.org/wiki/Barcelona_chair",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "public_domain_candidate",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}

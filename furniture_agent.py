@@ -11,15 +11,21 @@ Usage:
 """
 
 import argparse
+import base64
+import hashlib
+import importlib
 import json
 import logging
 import os
 import re
 import shutil
+import subprocess
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Optional
+from urllib.parse import quote, unquote, urlparse
+from urllib.request import Request, urlopen
 
 from crewai import Agent, Crew, Task
 from dotenv import load_dotenv
@@ -31,7 +37,9 @@ from langchain_openai import ChatOpenAI
 # The token is the same GITHUB_TOKEN used for PyGithub.
 _GITHUB_MODELS_BASE_URL = "https://models.inference.ai.azure.com"
 
-load_dotenv()
+# Prefer project-local .env values over inherited shell exports so stale
+# session tokens don't silently override workspace configuration.
+load_dotenv(override=True)
 
 # ── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -49,6 +57,7 @@ CONCEPT = ROOT / "site_concept.md"
 CONTENT_DIR = ROOT / "src" / "content" / "blog"
 PROMPTS_DIR = ROOT / "public" / "images" / "generated-prompts"
 IMAGES_DIR = ROOT / "public" / "images"
+REFERENCE_IMAGES_DIR = IMAGES_DIR / "reference"
 DEFAULT_PLACEHOLDER_IMAGE = IMAGES_DIR / "blog-placeholder-1.jpg"
 PLACEHOLDER_IMAGE_CANDIDATES = [
     IMAGES_DIR / "blog-placeholder-1.jpg",
@@ -62,6 +71,37 @@ PLACEHOLDER_SLOTS = [
     ("detail-structure", "Detail of structural joinery or hardware"),
     ("detail-silhouette", "Profile or silhouette detail of the chair form"),
 ]
+IMAGE_SLOT_PROMPT_FILES = [
+    ("hero", "hero.txt"),
+    ("detail-material", "detail-1-material.txt"),
+    ("detail-structure", "detail-2-structure.txt"),
+    ("detail-silhouette", "detail-3-silhouette.txt"),
+]
+SLOT_ALIASES = {
+    "hero": ["hero"],
+    "detail-material": ["detail-material", "material-detail", "detail-1-material"],
+    "detail-structure": ["detail-structure", "structure-detail", "detail-2-structure"],
+    "detail-silhouette": [
+        "detail-silhouette",
+        "silhouette-context",
+        "detail-3-silhouette",
+        "detail-context",
+        "ottoman-pairing",
+        "profile",
+    ],
+}
+STYLE_NEGATIVE_PROMPT = (
+    "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, "
+    "cluttered background, people, rugs, lamps, artwork, books, decorative props, "
+    "text, logos, watermark, modern anachronistic elements, cartoonish, painterly, "
+    "low resolution, blur, motion blur"
+)
+STYLE_PROMPT_SUFFIX = (
+    "Use soft diffused warm light in the 2700-3000K range. Keep natural color grading, "
+    "moderate contrast, realistic material textures, and clean negative space. Preserve "
+    "historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. "
+    "No people or clutter."
+)
 
 
 # ── Default backlog (~40 classic pieces) ──────────────────────────────────
@@ -332,17 +372,6 @@ def build_crew(page: dict, concept: str) -> Crew:
         context=[plan_task],
     )
 
-    # Build the designer slug and related-page hints for the sidebar block
-    designer_slug = re.sub(r"[^a-z0-9]+", "-", designer.lower()).strip("-")
-    related_slugs_hint = ", ".join(
-        p["slug"] for p in INITIAL_PAGES
-        if p["slug"] != slug and (
-            p.get("designer") == designer
-            or p.get("era") == era
-            or p.get("category") == category
-        )
-    )[:200]
-
     write_task = Task(
         description=(
             f"Using the editorial brief and research, write the full article for "
@@ -359,22 +388,11 @@ def build_crew(page: dict, concept: str) -> Crew:
             "- A '## References' section with numbered, formatted citations\n"
             "- Tone: warm, expert, museum-catalog quality — match the voice of the "
             "existing Eames Lounge Chair page on this site\n\n"
-            "SIDEBAR BLOCK (mandatory):\n"
-            "Immediately after the opening hook paragraph, insert this sidebar as a "
-            "Markdown blockquote with bold headings. Use real slugs where pages likely "
-            "exist; append '*(coming soon)*' for pages not yet published.\n\n"
-            "> **Meet the Designer**\n"
-            f"> [{designer}](/designers/{designer_slug}) — one-sentence bio teaser.\n"
-            ">\n"
-            "> **Related Chairs**\n"
-            f"> Choose 3–4 from these relevant slugs: {related_slugs_hint}\n"
-            "> Format each as: `> - [Chair Name](/blog/slug)`\n"
-            "> Append *(coming soon)* if the page doesn't exist yet.\n\n"
             "Output: raw Markdown only. No frontmatter. No code fences around the output."
         ),
         expected_output=(
-            "Full article body in Markdown, 1800–2200 words, no frontmatter, "
-            "with sidebar blockquote after opening hook, ending with References section."
+            "Full article body in Markdown, 1800-2200 words, no frontmatter, "
+            "ending with a References section."
         ),
         agent=writer,
         context=[plan_task, research_task],
@@ -562,9 +580,10 @@ def ensure_placeholder_images(slug: str) -> list[Path]:
     return created_paths
 
 
-def collect_public_domain_sources(page: dict) -> Path:
+def collect_image_sources(page: dict) -> Path:
     """
-    Collect public-domain image source URLs using direct Tavily queries.
+    Collect image source URLs for editorial/reference use across mixed licenses.
+    This includes Commons, museum collections, archives, and manufacturer pages.
     This phase runs after publishing and must not block page creation.
     """
     slug = page["slug"]
@@ -572,17 +591,22 @@ def collect_public_domain_sources(page: dict) -> Path:
     designer = page.get("designer", "")
     out_dir = PROMPTS_DIR / slug
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / "public-domain-sources.txt"
+    out_path = out_dir / "image-sources.txt"
 
     search_tool = TavilySearchResults(max_results=5)
     queries = [
         ("WIKIMEDIA", f"{title} {designer} site:commons.wikimedia.org"),
         ("MUSEUMS", f"{title} {designer} site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk"),
         ("ARCHIVES", f"{title} {designer} site:archive.org OR site:loc.gov"),
+        ("MANUFACTURERS", f"{title} {designer} site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com"),
     ]
 
     lines = [
-        f"Public-domain discovery for: {title} [{slug}]",
+        f"Image source discovery for: {title} [{slug}]",
+        "",
+        "Notes:",
+        "- Reference usage can include any license class; preserve provenance and license notes.",
+        "- Blog publication still requires explicit frontmatter license/source metadata per selected image.",
         "",
     ]
 
@@ -617,8 +641,187 @@ def collect_public_domain_sources(page: dict) -> Path:
         lines.append("")
 
     out_path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
-    log.info("Public-domain sources written: %s", out_path)
+    legacy_path = out_dir / "public-domain-sources.txt"
+    if not legacy_path.exists():
+        legacy_path.write_text(out_path.read_text(encoding="utf-8"), encoding="utf-8")
+
+    log.info("Image sources written: %s", out_path)
     return out_path
+
+
+def _extract_urls(text: str) -> list[str]:
+    """Extract unique URLs from free-form text while preserving order."""
+    seen: set[str] = set()
+    urls: list[str] = []
+    for match in re.findall(r"https?://\S+", text):
+        cleaned = match.strip().rstrip(")]}>,.;")
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            urls.append(cleaned)
+    return urls
+
+
+def _wikimedia_direct_file_url(page_url: str) -> Optional[str]:
+    """
+    Convert a Wikimedia Commons file page URL into a direct file endpoint.
+
+    Example:
+      https://commons.wikimedia.org/wiki/File:Example.jpg
+      -> https://commons.wikimedia.org/wiki/Special:FilePath/Example.jpg
+    """
+    parsed = urlparse(page_url)
+    if "commons.wikimedia.org" not in parsed.netloc:
+        return None
+
+    marker = "/wiki/File:"
+    if marker not in parsed.path:
+        return None
+
+    filename = parsed.path.split(marker, 1)[1]
+    if not filename:
+        return None
+
+    # Keep path separators encoded, as titles may contain UTF-8 and punctuation.
+    return f"https://commons.wikimedia.org/wiki/Special:FilePath/{quote(unquote(filename), safe='')}"
+
+
+def _is_direct_image_url(url: str) -> bool:
+    """Return True when URL appears to target an image file directly."""
+    lowered = url.lower().split("?", 1)[0]
+    return lowered.endswith((".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff"))
+
+
+def _direct_image_url(source_url: str) -> Optional[str]:
+    """
+    Resolve a source URL into a direct image URL when possible.
+    Supports Wikimedia file pages and already-direct image asset URLs.
+    """
+    wiki_url = _wikimedia_direct_file_url(source_url)
+    if wiki_url:
+        return wiki_url
+    if _is_direct_image_url(source_url):
+        return source_url
+    return None
+
+
+def _download_binary(url: str, out_path: Path, timeout_seconds: int = 20) -> bool:
+    """Download a binary asset to disk with a browser-like User-Agent."""
+    req = Request(url, headers={"User-Agent": "chairs-reference-harvester/1.0"})
+    with urlopen(req, timeout=timeout_seconds) as response:
+        content_type = (response.headers.get("Content-Type") or "").lower()
+        payload = response.read()
+
+    # Some redirects resolve to HTML pages; keep only plausible image payloads.
+    if "text/html" in content_type:
+        return False
+    if len(payload) < 1024:
+        return False
+
+    out_path.write_bytes(payload)
+    return True
+
+
+def collect_reference_images(page: dict, sources_path: Path) -> Path:
+    """
+    Build a local reference-image set for AI ideation plus provenance metadata.
+
+    Output structure:
+      public/images/reference/<slug>-reference/
+        - ref-001.jpg ...
+        - reference-metadata.json
+    """
+    slug = page["slug"]
+    ref_dir = REFERENCE_IMAGES_DIR / f"{slug}-reference"
+    ref_dir.mkdir(parents=True, exist_ok=True)
+
+    metadata_path = ref_dir / "reference-metadata.json"
+    if not sources_path.exists():
+        metadata_path.write_text(
+            json.dumps(
+                {
+                    "slug": slug,
+                    "title": page.get("title", ""),
+                    "status": "no-source-file",
+                    "items": [],
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return metadata_path
+
+    raw = sources_path.read_text(encoding="utf-8")
+    urls = _extract_urls(raw)
+    max_refs = 8
+    ref_items: list[dict] = []
+    downloaded = 0
+
+    for index, source_url in enumerate(urls[: max_refs * 2], start=1):
+        if len(ref_items) >= max_refs:
+            break
+
+        direct_url = _direct_image_url(source_url)
+        ext = ".jpg"
+        if direct_url:
+            lowered = direct_url.lower()
+            for candidate in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".tif", ".tiff"):
+                if candidate in lowered:
+                    ext = ".jpg" if candidate == ".jpeg" else candidate
+                    break
+
+        item = {
+            "id": f"ref-{index:03d}",
+            "sourcePage": source_url,
+            "downloadUrl": direct_url,
+            "localPath": None,
+            "license": "unknown",
+            "origin": "mixed_license_reference",
+            "status": "metadata-only",
+            "notes": "Direct image download unavailable for this source URL.",
+        }
+
+        if direct_url:
+            local_name = f"ref-{index:03d}{ext}"
+            out_file = ref_dir / local_name
+            try:
+                if _download_binary(direct_url, out_file):
+                    item["localPath"] = str(out_file.relative_to(ROOT)).replace("\\", "/")
+                    item["status"] = "downloaded"
+                    if "commons.wikimedia.org" in direct_url:
+                        item["notes"] = "Downloaded from Wikimedia Special:FilePath endpoint."
+                    else:
+                        item["notes"] = "Downloaded from direct image URL (license not inferred; verify before publication)."
+                    downloaded += 1
+                else:
+                    item["notes"] = "Direct URL resolved to non-image content; kept as metadata-only."
+            except Exception as exc:
+                item["notes"] = f"Download failed: {exc}"
+
+        ref_items.append(item)
+
+    metadata = {
+        "slug": slug,
+        "title": page.get("title", ""),
+        "referenceFolder": str(ref_dir.relative_to(ROOT)).replace("\\", "/"),
+        "collectedAt": date.today().isoformat(),
+        "downloadedCount": downloaded,
+        "totalCount": len(ref_items),
+        "items": ref_items,
+    }
+
+    metadata_path.write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    log.info(
+        "Reference image metadata written: %s (downloaded %d/%d)",
+        metadata_path,
+        downloaded,
+        len(ref_items),
+    )
+    return metadata_path
 
 
 def extract_and_save(result, page: dict) -> Path:
@@ -653,6 +856,789 @@ def extract_and_save(result, page: dict) -> Path:
     ensure_placeholder_images(slug)
 
     return article_path
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    """Parse a truthy/falsey environment variable."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _safe_int_env(name: str, default: int) -> int:
+    """Read an integer env var with fallback when parsing fails."""
+    value = os.getenv(name, "").strip()
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
+def _now_iso_utc() -> str:
+    """Return UTC timestamp in ISO-8601 format."""
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _safe_relpath(path: Path) -> str:
+    """Return a workspace-relative path string with POSIX separators."""
+    return str(path.relative_to(ROOT)).replace("\\", "/")
+
+
+def _normalize_match_text(value: str) -> str:
+    """Normalize free text for simple heuristic matching."""
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+
+def _file_sha256(path: Path) -> str:
+    """Compute SHA-256 for a file path."""
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _read_prompt_bundle(slug: str) -> dict[str, str]:
+    """Read slot prompt files from public/images/generated-prompts/<slug>."""
+    prompt_dir = PROMPTS_DIR / slug
+    prompts: dict[str, str] = {}
+    for slot, filename in IMAGE_SLOT_PROMPT_FILES:
+        prompt_path = prompt_dir / filename
+        if prompt_path.exists():
+            text = prompt_path.read_text(encoding="utf-8").strip()
+            if text:
+                prompts[slot] = text
+    return prompts
+
+
+def _load_reference_bank_urls(slug: str) -> list[str]:
+    """Load the broad reference-bank URLs used for AI guidance and provenance."""
+    urls: list[str] = []
+    seen: set[str] = set()
+
+    prompt_dir = PROMPTS_DIR / slug
+    for filename in ("image-sources.txt", "public-domain-sources.txt"):
+        path = prompt_dir / filename
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for url in _extract_urls(text):
+            if url not in seen:
+                seen.add(url)
+                urls.append(url)
+
+    metadata_path = REFERENCE_IMAGES_DIR / f"{slug}-reference" / "reference-metadata.json"
+    if metadata_path.exists():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            metadata = {}
+        for item in metadata.get("items", []):
+            for url in (item.get("downloadUrl"), item.get("sourcePage")):
+                if isinstance(url, str) and url.startswith("http") and url not in seen:
+                    seen.add(url)
+                    urls.append(url)
+
+    return urls
+
+
+def _build_style_prompt(base_prompt: str, page: dict, slot: str) -> str:
+    """Wrap a slot prompt with shared style and fidelity constraints."""
+    title = page.get("title", "furniture piece")
+    designer = page.get("designer", "")
+    header = f"Photorealistic museum-catalog image of {title}"
+    if designer:
+        header += f" by {designer}"
+    return (
+        f"{header}. Slot intent: {slot}. "
+        f"{base_prompt.strip()}\n\n{STYLE_PROMPT_SUFFIX}"
+    )
+
+
+def _normalize_image_size(raw_size: str) -> str:
+    """Normalize image size value into an accepted WxH pattern."""
+    size = raw_size.strip().lower()
+    if re.fullmatch(r"\d+x\d+", size):
+        return size
+    return "1024x1024"
+
+
+def _has_real_openai_key() -> bool:
+    """Return True when an actual OpenAI API key is configured."""
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        return False
+    if api_key == "your_openai_api_key_here":
+        return False
+    return True
+
+
+def _download_image_url(url: str, out_path: Path, timeout_seconds: int) -> None:
+    """Download an image URL to disk, validating that payload is binary content."""
+    if not _download_binary(url, out_path, timeout_seconds=timeout_seconds):
+        raise RuntimeError("Image URL resolved to non-image payload")
+
+
+def _generate_with_openai(
+    prompt: str,
+    negative_prompt: str,
+    size: str,
+    model: str,
+    timeout_seconds: int,
+) -> dict:
+    """Generate one image via OpenAI image APIs."""
+    from openai import OpenAI
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is required for OpenAI image generation")
+
+    client = OpenAI(api_key=api_key, timeout=timeout_seconds)
+    prompt_text = f"{prompt}\n\nNegative prompt: {negative_prompt}"
+    response = client.images.generate(
+        model=model,
+        prompt=prompt_text,
+        size=size,
+        response_format="url",
+    )
+
+    if not getattr(response, "data", None):
+        raise RuntimeError("OpenAI image API returned no image data")
+
+    first = response.data[0]
+    image_url = getattr(first, "url", None)
+    image_b64 = getattr(first, "b64_json", None)
+    revised_prompt = getattr(first, "revised_prompt", None)
+    return {
+        "image_url": image_url,
+        "image_bytes": base64.b64decode(image_b64) if image_b64 else None,
+        "revised_prompt": revised_prompt,
+        "raw": response.model_dump() if hasattr(response, "model_dump") else str(response),
+    }
+
+
+def _generate_with_fal(
+    prompt: str,
+    negative_prompt: str,
+    size: str,
+    model: str,
+    reference_url: Optional[str],
+) -> dict:
+    """Generate one image via fal-client if available."""
+    try:
+        fal_client = importlib.import_module("fal_client")
+    except ImportError as exc:
+        raise RuntimeError(
+            "fal-client is not installed; install it to use FURNITURE_IMAGE_PROVIDER=fal"
+        ) from exc
+
+    if not os.getenv("FAL_KEY"):
+        raise RuntimeError("FAL_KEY is required for FAL image generation")
+
+    arguments = {
+        "prompt": prompt,
+        "negative_prompt": negative_prompt,
+        "image_size": size,
+    }
+    if reference_url:
+        arguments["image_url"] = reference_url
+
+    if hasattr(fal_client, "run"):
+        response = fal_client.run(model, arguments=arguments)
+    elif hasattr(fal_client, "subscribe"):
+        response = fal_client.subscribe(model, arguments=arguments)
+    else:
+        raise RuntimeError("Unsupported fal-client version; expected run() or subscribe()")
+
+    if not isinstance(response, dict):
+        raise RuntimeError("FAL response format is not a dictionary")
+
+    image_url = None
+    if isinstance(response.get("images"), list) and response["images"]:
+        first = response["images"][0]
+        if isinstance(first, dict):
+            image_url = first.get("url")
+    if not image_url and isinstance(response.get("image"), dict):
+        image_url = response["image"].get("url")
+    if not image_url and isinstance(response.get("url"), str):
+        image_url = response.get("url")
+
+    if not image_url:
+        raise RuntimeError("FAL did not return an image URL")
+
+    return {
+        "image_url": image_url,
+        "image_bytes": None,
+        "revised_prompt": None,
+        "raw": response,
+    }
+
+
+def _provider_and_model() -> tuple[str, str]:
+    """Resolve configured image provider and model values."""
+    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "fal").strip().lower()
+    if provider not in {"fal", "openai"}:
+        provider = "fal"
+
+    if provider == "openai":
+        model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
+    else:
+        model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
+    return provider, model
+
+
+def _reference_origin_for_source(source_url: str) -> str:
+    """Map a source URL to the closest supported origin enum value."""
+    if "commons.wikimedia.org" in source_url:
+        return "public_domain"
+    return "licensed"
+
+
+def _slot_matches_value(slot: str, value: str) -> bool:
+    """Return True when a slot alias appears in a candidate id/src string."""
+    lowered = value.lower()
+    return any(alias in lowered for alias in SLOT_ALIASES.get(slot, [slot]))
+
+
+def _extract_source_url(source_value: str) -> Optional[str]:
+    """Extract the first URL from a free-form source string."""
+    matches = re.findall(r"https?://\S+", source_value)
+    if not matches:
+        return None
+    return matches[0].rstrip(")]}>,.;")
+
+
+def _load_reference_fallbacks(slug: str) -> list[dict]:
+    """Return downloaded reference items available for explicit display fallback use."""
+    metadata_path = REFERENCE_IMAGES_DIR / f"{slug}-reference" / "reference-metadata.json"
+    if not metadata_path.exists():
+        return []
+
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    candidates: list[dict] = []
+    for item in metadata.get("items", []):
+        local_path = item.get("localPath")
+        if item.get("status") != "downloaded" or not local_path:
+            continue
+        source_path = ROOT / Path(local_path)
+        if not source_path.exists():
+            continue
+        candidates.append(
+            {
+                "sourcePath": source_path,
+                "sourcePage": item.get("sourcePage") or "",
+                "license": item.get("license") or "unknown",
+                "origin": _reference_origin_for_source(item.get("sourcePage") or ""),
+                "matchText": _normalize_match_text(item.get("sourcePage") or ""),
+            }
+        )
+    return candidates
+
+
+def _load_display_selection_file(slug: str) -> dict[str, dict]:
+    """Load an optional explicit slot-to-source display selection manifest."""
+    path = PROMPTS_DIR / slug / "selected-display-images.json"
+    if not path.exists():
+        return {}
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    selections: dict[str, dict] = {}
+    for slot, payload in data.items():
+        if slot not in dict(IMAGE_SLOT_PROMPT_FILES):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        source_value = str(payload.get("source") or payload.get("sourceUrl") or "")
+        source_url = _extract_source_url(source_value) or source_value.strip()
+        if not source_url.startswith("http"):
+            continue
+        selections[slot] = {
+            "sourceUrl": source_url,
+            "source": payload.get("source") or source_url,
+            "license": payload.get("license") or "unknown",
+            "origin": payload.get("origin") or _reference_origin_for_source(source_url),
+        }
+    return selections
+
+
+def _load_article_reference_preferences(article_path: Path) -> dict[str, dict]:
+    """Load already-selected source URLs from article frontmatter when present."""
+    if not article_path.exists():
+        return {}
+
+    try:
+        import yaml
+    except ImportError:
+        return {}
+
+    raw = article_path.read_text(encoding="utf-8")
+    match = re.match(r"^---\n(.*?)\n---\n", raw, flags=re.DOTALL)
+    if not match:
+        return {}
+
+    data = yaml.safe_load(match.group(1)) or {}
+    preferences: dict[str, dict] = {}
+
+    hero_source = str(data.get("heroImageSource") or "")
+    hero_url = _extract_source_url(hero_source)
+    if hero_url:
+        preferences["hero"] = {
+            "sourceUrl": hero_url,
+            "source": hero_source,
+            "license": data.get("heroImageLicense") or "unknown",
+            "origin": data.get("heroImageOrigin") or _reference_origin_for_source(hero_url),
+        }
+
+    images = data.get("images")
+    if isinstance(images, list):
+        for entry in images:
+            if not isinstance(entry, dict):
+                continue
+            source_value = str(entry.get("source") or "")
+            source_url = _extract_source_url(source_value)
+            if not source_url:
+                continue
+            candidate_keys = [str(entry.get("id") or ""), str(entry.get("src") or "")]
+            for slot in IMAGE_SLOT_PROMPT_FILES:
+                slot_name = slot[0]
+                if any(_slot_matches_value(slot_name, value) for value in candidate_keys):
+                    preferences[slot_name] = {
+                        "sourceUrl": source_url,
+                        "source": source_value,
+                        "license": entry.get("license") or "unknown",
+                        "origin": entry.get("origin") or _reference_origin_for_source(source_url),
+                    }
+                    break
+
+    return preferences
+
+
+def _load_curated_reference_preferences(slug: str) -> dict[str, str]:
+    """Load slot-to-source hints from a curated image source block when present."""
+    prompt_dir = PROMPTS_DIR / slug
+    for filename in ("image-sources.txt", "public-domain-sources.txt"):
+        path = prompt_dir / filename
+        if not path.exists():
+            continue
+
+        lines = path.read_text(encoding="utf-8").splitlines()
+        preferences: dict[str, str] = {}
+        in_selected_block = False
+        for raw_line in lines:
+            line = raw_line.strip()
+            if not line:
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                in_selected_block = line == "[SELECTED FOR BLOG]"
+                continue
+            if not in_selected_block or not line.startswith("-"):
+                continue
+
+            body = line[1:].strip()
+            if ":" not in body:
+                continue
+            label, hint = body.split(":", 1)
+            label_norm = _normalize_match_text(label)
+            hint_norm = _normalize_match_text(hint)
+
+            if "hero" in label_norm:
+                preferences["hero"] = hint_norm
+            elif "material" in label_norm:
+                preferences["detail-material"] = hint_norm
+            elif "structure" in label_norm:
+                preferences["detail-structure"] = hint_norm
+            elif "silhouette" in label_norm or "context" in label_norm or "profile" in label_norm:
+                preferences["detail-silhouette"] = hint_norm
+
+        if preferences:
+            return preferences
+
+    return {}
+
+
+def _build_display_fallback_plan(slug: str, article_path: Path) -> dict[str, dict]:
+    """Build a slot-to-original fallback plan using explicit selections only."""
+    candidates = _load_reference_fallbacks(slug)
+    if not candidates:
+        return {}
+
+    plan: dict[str, dict] = {}
+    used_indexes: set[int] = set()
+    file_preferences = _load_display_selection_file(slug)
+    article_preferences = _load_article_reference_preferences(article_path)
+    curated_preferences = _load_curated_reference_preferences(slug)
+
+    def assign_by_source_url(slot: str, source_url: str, metadata: Optional[dict] = None) -> None:
+        normalized_url = source_url.rstrip("/")
+        for index, candidate in enumerate(candidates):
+            if index in used_indexes:
+                continue
+            if candidate.get("sourcePage", "").rstrip("/") == normalized_url:
+                used_indexes.add(index)
+                plan[slot] = {
+                    **candidate,
+                    **(metadata or {}),
+                    "source": (metadata or {}).get("source") or candidate.get("sourcePage", ""),
+                    "license": (metadata or {}).get("license") or candidate.get("license") or "unknown",
+                    "origin": (metadata or {}).get("origin") or candidate.get("origin") or "licensed",
+                }
+                return
+
+    def assign_by_hint(slot: str, hint: str) -> None:
+        normalized_hint = _normalize_match_text(hint)
+        if not normalized_hint:
+            return
+        matches: list[int] = []
+        for index, candidate in enumerate(candidates):
+            if index in used_indexes:
+                continue
+            if normalized_hint in candidate.get("matchText", ""):
+                matches.append(index)
+
+        if len(matches) == 1:
+            index = matches[0]
+            used_indexes.add(index)
+            plan[slot] = {
+                **candidates[index],
+                "source": candidates[index].get("sourcePage", ""),
+            }
+
+    for slot, metadata in file_preferences.items():
+        assign_by_source_url(slot, metadata["sourceUrl"], metadata=metadata)
+    for slot, metadata in article_preferences.items():
+        if slot not in plan:
+            assign_by_source_url(slot, metadata["sourceUrl"], metadata=metadata)
+
+    for slot, hint in curated_preferences.items():
+        if slot in plan:
+            continue
+        assign_by_hint(slot, hint)
+
+    return plan
+
+
+def _select_ai_reference_url(slug: str, article_path: Path) -> Optional[str]:
+    """Select a primary reference URL for AI guidance without requiring downloads."""
+    file_preferences = _load_display_selection_file(slug)
+    article_preferences = _load_article_reference_preferences(article_path)
+
+    for source in (
+        file_preferences.get("hero", {}).get("sourceUrl"),
+        article_preferences.get("hero", {}).get("sourceUrl"),
+    ):
+        if isinstance(source, str) and source.startswith("http"):
+            return source
+
+    urls = _load_reference_bank_urls(slug)
+    return urls[0] if urls else None
+
+
+def _use_reference_image_fallback(
+    slug: str,
+    slot: str,
+    fallback_item: dict,
+) -> dict:
+    """Copy a downloaded reference image into the page slot when AI generation is unavailable."""
+    out_file = IMAGES_DIR / f"{slug}-{slot}.jpg"
+    shutil.copyfile(fallback_item["sourcePath"], out_file)
+    return {
+        "slot": slot,
+        "status": "reference_fallback",
+        "file": _safe_relpath(out_file),
+        "hash": f"sha256:{_file_sha256(out_file)}",
+        "source": fallback_item.get("sourcePage") or "",
+        "license": fallback_item.get("license") or "unknown",
+        "origin": fallback_item.get("origin") or "licensed",
+    }
+
+
+def _apply_image_metadata(article_path: Path, slot_updates: dict[str, dict]) -> bool:
+    """Update frontmatter image provenance fields for successfully resolved slots."""
+    if not slot_updates or not article_path.exists():
+        return False
+
+    raw = article_path.read_text(encoding="utf-8")
+    match = re.match(r"^---\n(.*?)\n---\n(.*)$", raw, flags=re.DOTALL)
+    if not match:
+        return False
+
+    try:
+        import yaml
+    except ImportError:
+        return False
+
+    frontmatter_raw = match.group(1)
+    body = match.group(2)
+    data = yaml.safe_load(frontmatter_raw) or {}
+
+    hero_update = slot_updates.get("hero")
+    if hero_update:
+        if hero_update.get("source"):
+            data["heroImageSource"] = hero_update["source"]
+        if hero_update.get("license"):
+            data["heroImageLicense"] = hero_update["license"]
+        if hero_update.get("origin"):
+            data["heroImageOrigin"] = hero_update["origin"]
+
+    images = data.get("images")
+    if isinstance(images, list):
+        for entry in images:
+            if not isinstance(entry, dict):
+                continue
+            candidate_keys = [str(entry.get("id") or ""), str(entry.get("src") or "")]
+            for slot, update in slot_updates.items():
+                if any(_slot_matches_value(slot, value) for value in candidate_keys):
+                    if update.get("source"):
+                        entry["source"] = update["source"]
+                    if update.get("license"):
+                        entry["license"] = update["license"]
+                    if update.get("origin"):
+                        entry["origin"] = update["origin"]
+                    break
+
+    serialized = yaml.safe_dump(data, sort_keys=False, allow_unicode=False).strip()
+    article_path.write_text(f"---\n{serialized}\n---\n{body.lstrip()}", encoding="utf-8")
+    return True
+
+
+def generate_and_log_images(page: dict, article_path: Path) -> dict:
+    """Generate page slot images via configured provider and write provenance JSON."""
+    slug = page["slug"]
+    prompts = _read_prompt_bundle(slug)
+    prompt_dir = PROMPTS_DIR / slug
+    prompt_dir.mkdir(parents=True, exist_ok=True)
+    provenance_path = prompt_dir / "provenance-generated.json"
+
+    provider, model = _provider_and_model()
+    fallback_model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
+    can_use_openai_fallback = _has_real_openai_key()
+    size = _normalize_image_size(os.getenv("FURNITURE_IMAGE_SIZE", "1024x1024"))
+    timeout_seconds = _safe_int_env("FURNITURE_IMAGE_TIMEOUT_SECONDS", 60)
+    max_images = max(1, min(_safe_int_env("FURNITURE_IMAGE_MAX_PER_PAGE", 4), 4))
+    reference_url = _select_ai_reference_url(slug, article_path)
+    reference_bank_urls = _load_reference_bank_urls(slug)
+    reference_fallback_plan = _build_display_fallback_plan(slug, article_path)
+
+    results: list[dict] = []
+    generated_files: list[Path] = []
+    resolved_slots: dict[str, dict] = {}
+
+    for slot, _filename in IMAGE_SLOT_PROMPT_FILES[:max_images]:
+        base_prompt = prompts.get(slot)
+        if not base_prompt:
+            results.append(
+                {
+                    "slot": slot,
+                    "status": "skipped",
+                    "reason": "missing prompt file",
+                }
+            )
+            continue
+
+        final_prompt = _build_style_prompt(base_prompt, page, slot)
+        out_file = IMAGES_DIR / f"{slug}-{slot}.jpg"
+        response_payload = None
+
+        try:
+            used_provider = provider
+            used_model = model
+            if provider == "openai":
+                response_payload = _generate_with_openai(
+                    prompt=final_prompt,
+                    negative_prompt=STYLE_NEGATIVE_PROMPT,
+                    size=size,
+                    model=model,
+                    timeout_seconds=timeout_seconds,
+                )
+            else:
+                try:
+                    response_payload = _generate_with_fal(
+                        prompt=final_prompt,
+                        negative_prompt=STYLE_NEGATIVE_PROMPT,
+                        size=size,
+                        model=model,
+                        reference_url=reference_url,
+                    )
+                except Exception as fal_exc:
+                    if can_use_openai_fallback:
+                        log.warning(
+                            "FAL generation failed for slot '%s'; trying OpenAI fallback: %s",
+                            slot,
+                            fal_exc,
+                        )
+                        response_payload = _generate_with_openai(
+                            prompt=final_prompt,
+                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            size=size,
+                            model=fallback_model,
+                            timeout_seconds=timeout_seconds,
+                        )
+                        used_provider = "openai"
+                        used_model = fallback_model
+                    else:
+                        raise RuntimeError(
+                            f"FAL generation failed and no OpenAI fallback key is configured: {fal_exc}"
+                        )
+
+            image_bytes = response_payload.get("image_bytes") if response_payload else None
+            image_url = response_payload.get("image_url") if response_payload else None
+
+            if image_bytes:
+                out_file.write_bytes(image_bytes)
+            elif image_url:
+                _download_image_url(image_url, out_file, timeout_seconds=timeout_seconds)
+            else:
+                raise RuntimeError("No image URL or bytes returned by provider")
+
+            generated_files.append(out_file)
+            resolved_slots[slot] = {
+                "source": f"AI generated via {used_provider}/{used_model}",
+                "license": "ai_generated",
+                "origin": "ai_generated",
+            }
+            results.append(
+                {
+                    "slot": slot,
+                    "status": "success",
+                    "file": _safe_relpath(out_file),
+                    "hash": f"sha256:{_file_sha256(out_file)}",
+                    "provider": used_provider,
+                    "model": used_model,
+                    "prompt": final_prompt,
+                    "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                    "referenceUrl": reference_url,
+                    "response": response_payload.get("raw") if response_payload else None,
+                    "revisedPrompt": response_payload.get("revised_prompt") if response_payload else None,
+                }
+            )
+            log.info("Generated image slot '%s': %s", slot, out_file)
+        except Exception as exc:
+            fallback_item = reference_fallback_plan.get(slot)
+            if fallback_item:
+                fallback_result = _use_reference_image_fallback(
+                    slug=slug,
+                    slot=slot,
+                    fallback_item=fallback_item,
+                )
+                generated_files.append(ROOT / fallback_result["file"])
+                resolved_slots[slot] = {
+                    "source": fallback_result["source"],
+                    "license": fallback_result["license"],
+                    "origin": fallback_result["origin"],
+                }
+                results.append(
+                    {
+                        "slot": slot,
+                        "status": "reference_fallback",
+                        "reason": str(exc),
+                        "file": fallback_result["file"],
+                        "hash": fallback_result["hash"],
+                        "source": fallback_result["source"],
+                        "license": fallback_result["license"],
+                        "origin": fallback_result["origin"],
+                        "prompt": final_prompt,
+                        "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                        "referenceUrl": reference_url,
+                    }
+                )
+                log.warning(
+                    "Image generation failed for slot '%s'; using downloaded reference fallback: %s",
+                    slot,
+                    exc,
+                )
+            else:
+                results.append(
+                    {
+                        "slot": slot,
+                        "status": "failed",
+                        "reason": str(exc),
+                        "prompt": final_prompt,
+                        "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                        "referenceUrl": reference_url,
+                    }
+                )
+                log.warning("Image generation failed for slot '%s' (non-blocking): %s", slot, exc)
+
+    budget = os.getenv("FURNITURE_IMAGE_BUDGET_USD", "")
+    metadata = {
+        "slug": slug,
+        "title": page.get("title", ""),
+        "generatedAt": _now_iso_utc(),
+        "provider": provider,
+        "model": model,
+        "imageSize": size,
+        "maxImages": max_images,
+        "budgetUsd": budget or None,
+        "referenceBankUrls": reference_bank_urls,
+        "aiReferenceUrl": reference_url,
+        "results": results,
+        "summary": {
+            "generatedCount": len(generated_files),
+            "referenceFallbackCount": sum(1 for item in results if item.get("status") == "reference_fallback"),
+            "failedCount": sum(1 for item in results if item.get("status") == "failed"),
+            "skippedCount": sum(1 for item in results if item.get("status") == "skipped"),
+        },
+    }
+    provenance_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    log.info("Generated image provenance written: %s", provenance_path)
+
+    return {
+        "provenance_path": provenance_path,
+        "generated_files": generated_files,
+        "resolved_slots": resolved_slots,
+        "generated_count": len(generated_files),
+    }
+
+
+def maybe_auto_commit(page: dict, paths: list[Path]) -> bool:
+    """Create one local commit for generated artifacts when enabled by env."""
+    if not _env_bool("FURNITURE_AUTO_COMMIT", default=False):
+        return False
+
+    existing_paths: list[str] = []
+    seen: set[str] = set()
+    for path in paths:
+        if not path:
+            continue
+        if not path.exists():
+            continue
+        rel = _safe_relpath(path)
+        if rel in seen:
+            continue
+        seen.add(rel)
+        existing_paths.append(rel)
+
+    if not existing_paths:
+        log.info("Auto-commit enabled but no artifact paths found.")
+        return False
+
+    subprocess.run(["git", "add", "--", *existing_paths], cwd=ROOT, check=True)
+    message = f"auto({page['slug']}): generate page and image artifacts"
+    commit = subprocess.run(
+        ["git", "commit", "-m", message],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if commit.returncode != 0:
+        log.warning("Auto-commit skipped: %s", (commit.stderr or commit.stdout).strip())
+        return False
+
+    log.info("Auto-commit created for slug '%s'.", page["slug"])
+    return True
 
 
 # ── Environment validation ─────────────────────────────────────────────────
@@ -737,18 +1723,62 @@ def run_build() -> None:
     concept = CONCEPT.read_text(encoding="utf-8")
 
     try:
+        artifact_paths: list[Path] = [BACKLOG]
+        sources_file: Optional[Path] = None
+        reference_metadata_path: Optional[Path] = None
+        generated_meta_path: Optional[Path] = None
+
         crew = build_crew(page, concept)
         result = crew.kickoff()
-        extract_and_save(result, page)
+        article_path = extract_and_save(result, page)
+        artifact_paths.append(article_path)
         mark_done(backlog, page["slug"])
 
-        # Phase 2: non-blocking discovery of public-domain source links.
+        # Phase 2: non-blocking discovery of mixed-license source links.
         try:
-            collect_public_domain_sources(page)
-        except Exception as pd_exc:
+            sources_file = collect_image_sources(page)
+            artifact_paths.append(sources_file)
+        except Exception as source_exc:
             log.warning(
-                "Public-domain source discovery failed (non-blocking): %s",
-                pd_exc,
+                "Image source discovery failed (non-blocking): %s",
+                source_exc,
+            )
+
+        # Phase 3: non-blocking reference image harvesting for AI ideation.
+        try:
+            if sources_file:
+                reference_metadata_path = collect_reference_images(page, sources_file)
+                artifact_paths.append(reference_metadata_path)
+        except Exception as ref_exc:
+            log.warning(
+                "Reference image harvesting failed (non-blocking): %s",
+                ref_exc,
+            )
+
+        # Phase 4: non-blocking AI image generation + provenance.
+        try:
+            image_result = generate_and_log_images(page, article_path)
+            generated_meta_path = image_result.get("provenance_path")
+            if generated_meta_path:
+                artifact_paths.append(generated_meta_path)
+            artifact_paths.extend(image_result.get("generated_files", []))
+
+            resolved_slots = image_result.get("resolved_slots", {})
+            if _apply_image_metadata(article_path, resolved_slots):
+                artifact_paths.append(article_path)
+        except Exception as gen_exc:
+            log.warning(
+                "Image generation pipeline failed (non-blocking): %s",
+                gen_exc,
+            )
+
+        # Phase 5: optional local auto-commit (never pushes).
+        try:
+            maybe_auto_commit(page, artifact_paths)
+        except Exception as commit_exc:
+            log.warning(
+                "Local auto-commit failed (non-blocking): %s",
+                commit_exc,
             )
 
         print(
@@ -757,6 +1787,13 @@ def run_build() -> None:
         )
     except Exception as exc:
         log.error("Build failed for '%s': %s", page["slug"], exc)
+        use_github_models = os.getenv("GITHUB_MODELS", "").strip().lower() in ("1", "true", "yes")
+        err_text = str(exc)
+        if use_github_models and ("401" in err_text or "Bad credentials" in err_text):
+            log.error(
+                "GitHub Models authentication failed. Verify GITHUB_TOKEN has Models read permission, "
+                "has not expired/revoked, and matches the token in .env."
+            )
         # Write raw output for manual inspection
         fallback = ROOT / f"{page['slug']}-raw-output.txt"
         try:

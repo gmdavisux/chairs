@@ -1,0 +1,29 @@
+Public-domain discovery for: Eames Lounge Chair [eames-lounge-chair]
+
+[WIKIMEDIA QUERY]
+Eames Lounge Chair Charles Ray Eames site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Eameslounch.jpg
+   https://commons.wikimedia.org/wiki/File:Eameslounch.jpg
+2. Exploded Eames Lounge Chair and Ottoman (2006) Sculpture designed by Vincent Faust...
+   https://commons.wikimedia.org/wiki/File:Exploded_Eames_Lounge_Chair_and_Ottoman_(2006)_Sculpture_designed_by_Vincent_Faust._Components_made_by_Herman_Miller._Chair_designed_by_Ray_%26_Charles_Eames_(ID2008.7.1)_-_Fully_Furnished_-_Historic_Furniture_Exhibit_-_Henry_Ford_Museum.jpg
+3. Eames LCW shock mount.jpg
+   https://commons.wikimedia.org/wiki/File:Eames_LCW_shock_mount.jpg
+4. Jens Semjan auf einem historischen Eames Lounge Chair .jpg
+   https://commons.wikimedia.org/wiki/File:Jens_Semjan_auf_einem_historischen_Eames_Lounge_Chair_.jpg
+5. Eames Lounge Chair - side.jpg
+   https://commons.wikimedia.org/wiki/File:Eames_Lounge_Chair_-_side.jpg
+
+[LICENSE NOTES]
+1. File:Eameslounch.jpg -> Public domain (LicenseShortName: Public domain)
+2. File:Exploded...Henry_Ford_Museum.jpg -> CC BY-SA 2.0
+3. File:Eames_LCW_shock_mount.jpg -> CC BY-SA 3.0
+4. File:Jens_Semjan_auf_einem_historischen_Eames_Lounge_Chair_.jpg -> CC BY-SA 4.0
+5. File:Eames_Lounge_Chair_-_side.jpg -> CC BY 2.0
+
+[SELECTED FOR BLOG]
+- Hero: File:Eameslounch.jpg
+- Structure detail: File:Exploded...Henry_Ford_Museum.jpg
+- Material detail: File:Eames_LCW_shock_mount.jpg
+- Context/usage detail: File:Jens_Semjan_auf_einem_historischen_Eames_Lounge_Chair_.jpg

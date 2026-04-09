@@ -4,6 +4,10 @@ A slow-growing, authoritative static website documenting timeless furniture desi
 
 > **Editorial standard:** Every page reads like a high-end design museum catalog — warm, expert, accurate, properly cited. See [site_concept.md](site_concept.md) for the full editorial constitution.
 
+> **Automation requirements:** Technical contracts for image generation, normalization, provenance, and review gates are documented in [docs/automation-requirements.md](docs/automation-requirements.md).
+
+> **Photographic style guide:** Prompt and refinement constraints are documented in [docs/photographic-style-guide.md](docs/photographic-style-guide.md).
+
 ---
 
 ## How to Run the Furniture Agent
@@ -83,7 +87,23 @@ Review the page in the browser, check the citations, then run again for the next
 
 - **Article:** `src/content/blog/[slug].md` — edit freely before deploying
 - **Image prompts:** `public/images/generated-prompts/[slug]/` — seven `.txt` files ready to paste into DALL-E, Midjourney, Firefly, or any image generator
+- **Reference images for AI ideation (all licenses):** `public/images/reference/[slug]-reference/` — downloaded reference files (when available) plus `reference-metadata.json` with source/provenance notes
 - **Backlog status:** `backlog.json` — reorder or add pages by editing this file directly
+
+### 7. Image automation policy
+
+- The project is moving to a provider-agnostic image pipeline.
+- Default target provider is FLUX via fal.ai, with OpenAI image APIs as fallback.
+- Image failures are non-blocking: pages still complete with placeholder/proposed metadata.
+- Final deployment still requires human review, even when image generation is automated.
+
+If you set `FURNITURE_IMAGE_PROVIDER=fal`, install the optional client package in your venv:
+
+```sh
+pip install fal-client
+```
+
+If fal is unavailable at runtime, the pipeline attempts an OpenAI image fallback when `OPENAI_API_KEY` is present.
 
 ### Giving feedback to the agent
 
@@ -139,6 +159,8 @@ chairs/
 ├── public/
 │   └── images/
 │       └── generated-prompts/[slug]/  ← Image prompts from agent
+│       └── reference/[slug]-reference/ ← Non-display reference images + provenance metadata
+│       └── generated-prompts/[slug]/image-sources.txt ← Mixed-license source discovery (Commons, museums, archives, manufacturers)
 ├── furniture_agent.py       ← Autonomous page builder
 ├── site_concept.md          ← Editorial constitution (agent reads this)
 ├── backlog.json             ← Page queue (auto-created on first --plan run)
@@ -198,16 +220,19 @@ All commands are run from the root of the project:
 
 This repo is configured to deploy with GitHub Actions to:
 
-- `https://gmdavisux.github.io/chairs/`
+- `https://chairs.usersimple.com/`
 
 One-time GitHub setup:
 
-1. Make the repository public (GitHub Pages for project sites is simplest on public repos).
-2. In GitHub, open **Settings -> Pages**.
-3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-4. Push to `main` to trigger deployment.
+1. Make the repository public.
+2. In Namecheap Advanced DNS, add a **CNAME Record** with host `chairs` pointing to `gmdavisux.github.io`.
+3. In GitHub, open **Settings -> Pages**.
+4. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+5. Under **Custom domain**, set `chairs.usersimple.com`.
+6. Push to `main` or re-run the deploy workflow.
+7. Enable **Enforce HTTPS** after GitHub finishes provisioning the certificate.
 
-After the action succeeds, the site is available at the URL above.
+After DNS propagation and a successful action run, the site is available at the URL above.
 
 ## Credit
 
