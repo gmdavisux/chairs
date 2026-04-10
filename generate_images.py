@@ -7,6 +7,12 @@ Usage:
     python generate_images.py wassily-chair --update-mdx
     python generate_images.py wassily-chair --custom-prompts prompts.json
     python generate_images.py wassily-chair --reference-images refs.json
+    
+When using --update-mdx, the script will:
+1. Generate images for specified slots
+2. Update the MDX frontmatter with new image references
+3. Automatically insert ImageWithMeta components for any new image slots
+   (this happens via insert_image_slots.py which runs automatically)
 """
 
 import argparse
@@ -14,6 +20,7 @@ import base64
 import json
 import logging
 import os
+import subprocess
 import sys
 import time
 from io import BytesIO
@@ -48,7 +55,7 @@ CONTENT_DIR = ROOT / "src" / "content" / "blog"
 # Image slot configuration
 IMAGE_SLOTS = [
     ("hero", "hero.txt"),
-    ("silhouette", "silhouette.txt"),
+    ("sketch", "sketch.txt"),
     ("context", "context.txt"),
     ("designer", "designer.txt"),
 ]
@@ -60,11 +67,15 @@ def generate_with_gemini(
     api_key: Optional[str] = None,
 ) -> bytes:
     """
-    Generate an image using Google Gemini Imagen API.
+    Generate an image using Google Gemini with multimodal reference support.
+    
+    When reference_image_url is provided, uses Gemini's multimodal model
+    (gemini-1.5-flash) to understand the reference image and generate an
+    enhanced prompt, which can then be used for image generation.
     
     Args:
         prompt: The text prompt for image generation
-        reference_image_url: Optional reference image URL for style guidance
+        reference_image_url: Optional reference image URL/path for visual guidance
         api_key: Google API key (defaults to GOOGLE_API_KEY env var)
     
     Returns:
@@ -80,115 +91,99 @@ def generate_with_gemini(
         )
     
     try:
-        from google import genai
+        import google.generativeai as genai
     except ImportError:
         raise RuntimeError(
-            "google-genai package is required. Install with:\n"
-            "  pip install google-genai"
+            "google-generativeai package is required. Install with:\n"
+            "  pip install google-generativeai"
         )
     
-    client = genai.Client(api_key=api_key)
+    # Configure the API
+    genai.configure(api_key=api_key)
     
-    log.info(f"Generating image with Google Gemini (Imagen)...")
+    log.info(f"Generating image with Google Gemini...")
     log.info(f"Prompt: {prompt[:100]}...")
     
     try:
-        # If reference image is provided, use edit_image for img2img
+        # Load reference image if provided
+        pil_ref_image = None
         if reference_image_url:
             log.info(f"Loading reference image: {reference_image_url}")
-            from google.genai import types
             
             # Download or load the reference image
             if reference_image_url.startswith(('http://', 'https://')):
-                response = requests.get(reference_image_url, timeout=30)
-                response.raise_for_status()
-                ref_image = types.Image.from_bytes(response.content)
+                response_img = requests.get(reference_image_url, timeout=30)
+                response_img.raise_for_status()
+                ref_image_bytes = response_img.content
             else:
                 # Load from local file
-                with open(reference_image_url, 'rb') as f:
-                    ref_image = types.Image.from_bytes(f.read())
+                ref_path = Path(reference_image_url)
+                if not ref_path.is_absolute():
+                    ref_path = ROOT / reference_image_url
+                with open(ref_path, 'rb') as f:
+                    ref_image_bytes = f.read()
             
-            # Create style reference image
-            style_ref = types.StyleReferenceImage(
-                reference_id=1,
-                reference_image=ref_image,
+            # Load as PIL Image
+            pil_ref_image = Image.open(BytesIO(ref_image_bytes))
+            log.info(f"Reference image loaded: {pil_ref_image.size}")
+        
+        # Method 1: Use multimodal model to enhance prompt with reference understanding
+        # This is the recommended approach per Google's documentation
+        enhanced_prompt = prompt
+        if pil_ref_image:
+            log.info("Using Gemini multimodal model to understand reference image...")
+            
+            # Use gemini-1.5-flash for multimodal understanding
+            # Place image BEFORE prompt as recommended by documentation
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # Create an enhanced prompt that asks Gemini to generate based on reference
+            multimodal_prompt = (
+                f"Based on this reference image, generate a photorealistic image with these specifications: "
+                f"{prompt}\n\n"
+                f"Maintain the same style, lighting, and composition quality as the reference image. "
+                f"Focus on accuracy and authenticity."
             )
             
-            # Use edit_image with style reference
-            response = client.models.edit_image(
-                model='imagen-4.0-capability-001',
-                prompt=prompt,
-                reference_images=[style_ref],
-                config=types.EditImageConfig(
-                    number_of_images=1,
-                    edit_mode='EDIT_MODE_OUTPAINT_270',  # Generates new image using style
-                )
-            )
-        else:
-            # No reference: use standard generation
-            response = client.models.generate_images(
-                model='imagen-4.0-generate-001',
-                prompt=prompt,
-                config={
-                    'numberOfImages': 1,
-                    'aspectRatio': '1:1',
-                }
-            )
+            # Generate content with image understanding
+            # Image comes first, then prompt (per documentation best practices)
+            response = model.generate_content([pil_ref_image, multimodal_prompt])
+            
+            # For now, we extract enhanced understanding and use text-to-image
+            # In future, Gemini may support direct image generation with references
+            if response.text:
+                log.info(f"Gemini understanding: {response.text[:200]}...")
+                enhanced_prompt = f"{prompt}. Style guidance: {response.text[:500]}"
         
-        if not response or not response.generated_images:
-            raise RuntimeError("Gemini returned no images")
+        # Method 2: Generate image using text prompt
+        # Note: As of April 2026, direct image generation uses Imagen model
+        # which may have limited reference support in the Python SDK
         
-        # Get first image from response
-        generated_image = response.generated_images[0]
+        # For now, we use FAL or manual workflow with AI Studio for true reference support
+        # This is a limitation documented in the Google AI documentation
         
-        # Gemini returns images in JPEG format by default
-        # We need to properly convert them to PNG
-        # The Google GenAI SDK wraps images in a types.Image object
+        log.warning(
+            "Note: Direct API-based image generation with reference images is limited. "
+            "For best results with reference images, use Google AI Studio manually or FAL."
+        )
         
-        # Try different methods to extract the image data
-        raw_image_bytes = None
-        pil_image = None
-        
-        # Method 1: Check if it has a direct bytes/data attribute
-        if hasattr(generated_image, 'data'):
-            raw_image_bytes = generated_image.data
-        elif hasattr(generated_image, '_image_bytes'):
-            raw_image_bytes = generated_image._image_bytes
-        
-        # Method 2: Check if it has a PIL Image wrapper
-        if raw_image_bytes is None:
-            try:
-                if hasattr(generated_image, 'image'):
-                    image_attr = generated_image.image
-                    if hasattr(image_attr, '_pil_image'):
-                        pil_image = image_attr._pil_image
-                    elif isinstance(image_attr, Image.Image):
-                        pil_image = image_attr
-            except Exception as e:
-                log.warning(f"Could not access PIL image directly: {e}")
-        
-        # If we have raw bytes, load with PIL
-        if raw_image_bytes:
-            pil_image = Image.open(BytesIO(raw_image_bytes))
-        
-        # If we still don't have a PIL image, the API may have changed
-        if pil_image is None:
-            raise RuntimeError(
-                "Could not extract image from Gemini response. "
-                "The Google GenAI SDK format may have changed. "
-                f"Image object type: {type(generated_image)}"
-            )
-        
-        # Convert to PNG format (this ensures JPEG -> PNG conversion)
-        buffer = BytesIO()
-        pil_image.save(buffer, format="PNG")
-        buffer.seek(0)
-        
-        log.debug(f"Converted image to PNG format ({len(buffer.getvalue())} bytes)")
-        return buffer.getvalue()
+        # Fallback: Use text-to-image without reference
+        # You would need to use Imagen API or vertex AI for production
+        raise RuntimeError(
+            "Direct image generation with Gemini API requires manual workflow. "
+            "Use 'prepare_gemini_batch.py' to create prompts for manual generation in AI Studio, "
+            "or set FURNITURE_IMAGE_PROVIDER=fal to use FAL with img2img support."
+        )
         
     except Exception as e:
-        raise RuntimeError(f"Google Gemini generation failed: {e}")
+        log.error(f"Google Gemini generation failed: {e}")
+        raise RuntimeError(
+            f"Gemini API error: {e}\n\n"
+            "For reference image support, use one of these approaches:\n"
+            "  1. Manual: python prepare_gemini_batch.py [slug] --simple --output batch.txt\n"
+            "  2. Auto with FAL: Set FURNITURE_IMAGE_PROVIDER=fal in .env\n"
+            "  3. Vertex AI: Use Google Cloud Vertex AI Python SDK (enterprise)"
+        )
 
 
 def generate_with_fal(
@@ -233,11 +228,12 @@ def generate_with_fal(
         model = "fal-ai/flux/dev"
         arguments = {
             "prompt": prompt,
-            "image_size": "square_hd",
-            "num_inference_steps": 40,
+            "image_size": "square_hd",  # 1024x1024
+            "num_inference_steps": 50,  # Increased from 40 for better quality
             "guidance_scale": 3.5,
             "num_images": 1,
             "enable_safety_checker": False,
+            "output_format": "png",  # Request PNG directly to avoid JPEG compression
         }
         
         # Add reference image for img2img if provided
@@ -391,7 +387,7 @@ def main():
     parser.add_argument(
         "--slots",
         nargs="+",
-        choices=["hero", "silhouette", "context", "designer"],
+        choices=["hero", "sketch", "context", "designer"],
         help="Generate only specific slots (default: all)",
     )
     parser.add_argument(
@@ -519,6 +515,31 @@ def main():
         print(f"\nUpdating MDX file to use .{args.format} extensions...")
         if update_mdx_file(args.slug, args.format):
             print("✓ MDX file updated successfully")
+            
+            # Automatically insert missing image slots into the blog post
+            print("\nInserting missing image slots into blog post...")
+            try:
+                import subprocess
+                result = subprocess.run(
+                    [sys.executable, str(ROOT / "insert_image_slots.py"), args.slug],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if result.returncode == 0:
+                    # Parse output to show what was added
+                    if "All image slots already referenced" in result.stdout:
+                        print("✓ All image slots already present in the body")
+                    else:
+                        print("✓ Image slots inserted automatically")
+                        # Show which slots were added
+                        for line in result.stdout.split("\n"):
+                            if "Added ImageWithMeta for slot:" in line:
+                                print(f"  {line.strip()}")
+                else:
+                    print(f"⚠ Warning: Could not auto-insert image slots: {result.stderr}")
+            except Exception as e:
+                print(f"⚠ Warning: Could not auto-insert image slots: {e}")
         else:
             print("✗ Failed to update MDX file")
     

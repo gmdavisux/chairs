@@ -1,0 +1,15 @@
+{
+  "slug": "tulip-chair",
+  "timestamp": "2026-04-10T12:30:38.296108",
+  "images": [
+    {
+      "slot": "sketch",
+      "filename": "sketch.png",
+      "size": 211030,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/tulip-chair-sketch.png",
+      "provider": "fal",
+      "prompt": "Industrial design marker rendering of Tulip Chair. Clean technical drawing on white paper showing side profile with precise proportions. 1960s design studio aesthetic using black markers for pedestal base, subtle gray tones for shell volume. Emphasize the revolutionary single-stem support and organic shell geometry. Pure design sketch showing essential sculptural form.",
+      "reference_url": null
+    }
+  ]
+}

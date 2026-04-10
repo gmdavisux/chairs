@@ -8,13 +8,15 @@ A single, consistent visual language for generated and normalized images that fe
 
 ### Lighting
 - Soft, diffused warm illumination at approximately 2700-3000 K.
-- Gentle highlights and subtle shadows.
-- Avoid cool daylight, fluorescent cast, and dramatic high-contrast styling.
+- Gentle highlights with well-defined but not harsh shadows.
+- Fuller tonal range utilizing both shadow detail and highlight clarity.
+- Avoid cool daylight, fluorescent cast, and artificial dramatic high-contrast styling.
 
 ### Color and Mood
 - Restrained warmth and natural color rendering.
-- Moderate contrast preserving tactile detail.
-- No artificial oversaturation or synthetic HDR appearance.
+- Rich contrast with full tonal range from true blacks to clean whites.
+- Preserve shadow detail and highlight texture to enhance material depth.
+- No artificial oversaturation, synthetic HDR appearance, or overprocessed edges.
 
 ### Composition
 - Furniture is the clear focal subject.
@@ -47,15 +49,15 @@ Reject outputs that violate any of the above.
 
 Use this structure for text-to-image generation:
 
-Photorealistic museum-catalog photograph of [precise furniture description with designer, model, materials, colorway, and viewing angle]. The scene is lit with soft, diffused warm incandescent light at dusk (about 2800 K), producing gentle amber warmth and subtle natural shadows. [Optional minimal context clause with era-appropriate architecture and no more than three structural features.] Shallow depth of field with sharp texture detail on material grain, stitching, and hardware; natural color grading; clean negative space; zero extraneous props or distractions.
+Photorealistic museum-catalog photograph of [precise furniture description with designer, model, materials, colorway, and viewing angle]. The scene is lit with soft, diffused warm incandescent light at dusk (about 2800 K), producing gentle amber warmth with well-defined natural shadows and rich tonal depth. [Optional minimal context clause with era-appropriate architecture and no more than three structural features.] Full tonal range from deep shadows to clean highlights; shallow depth of field with sharp texture detail on material grain, stitching, and hardware; enhanced contrast preserving shadow and highlight detail; natural color grading; clean negative space; zero extraneous props or distractions.
 
 ## Negative Prompt Baseline
 
-harsh shadows, cool lighting, daylight, fluorescent, oversaturated colors, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, modern anachronistic elements, cartoonish, painterly, low resolution, blur, motion blur
+harsh shadows, cool lighting, daylight, fluorescent, oversaturated colors, blown highlights, crushed blacks, muddy mid-tones, flat lighting, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, modern anachronistic elements, cartoonish, painterly, synthetic HDR halos, overprocessed, low resolution, blur, motion blur
 
 ## Refinement Prompt Template
 
-Refine this image to the Classic Furniture Archives style: soft diffused warm illumination (2700-3000 K), natural color balance, enhanced material texture realism, and subtle dimensional shadows without altering object structure. If background replacement is requested, use a minimalist era-appropriate architectural setting and remove all extraneous objects. Preserve historical accuracy and signature geometry.
+Refine this image to the Classic Furniture Archives style: soft diffused warm illumination (2700-3000 K), natural color balance with rich tonal depth, enhanced material texture realism with visible grain and surface detail, and well-defined dimensional shadows that preserve both shadow and highlight detail without altering object structure. Increase contrast to achieve fuller tonal range while maintaining warm museum aesthetic. If background replacement is requested, use a minimalist era-appropriate architectural setting and remove all extraneous objects. Preserve historical accuracy and signature geometry.
 
 ## Image-to-Image Parameter Guidance
 
@@ -67,7 +69,41 @@ Preferred strength/denoise range: 0.35-0.55.
 
 ## Slot-Specific Intent
 
+### Photorealistic Slots
 - Hero: full object readability and iconic silhouette
 - Detail Material: grain, leather, textile, or finish authenticity
 - Detail Structure: joints, frame transitions, hardware logic
-- Detail Silhouette: profile geometry and stance clarity
+- Context: era-appropriate environmental anchoring
+- Designer: portrait or archival photograph
+
+### Sketch Slot - Marker Rendering Style
+
+The sketch slot uses professional industrial design marker rendering technique instead of photorealism.
+
+**PROVIDER NOTE:** Currently using FAL (FLUX) as primary provider. Google Gemini Imagen produces higher resolution but tends to hallucinate non-existent chair details when reference images are not supported. FAL with increased inference steps (50+) provides good quality while maintaining accuracy to the actual chair design.
+
+**CRITICAL: NOT A SILHOUETTE** - Avoid flat side-profile views. Use dynamic three-quarter or perspective angles that show sculptural form and dimensional depth.
+
+**Visual Characteristics:**
+- Cool gray Prismacolor or Copic markers (20%, 30%, 50% gray tones) as primary shading
+- Always include judicious selective color accents - single or limited hues to highlight key features or materials
+- Confident, sketchy black ink construction lines that extend beyond the form with skeletal quality
+- Multiple overlapping line strokes showing drawing process - not tight technical drawing
+- Lines can overshoot corners and edges, emphasizing gesture and construction over precision
+- Smooth graduated marker tones showing dimensional form
+- White or subtly tinted paper background (pale blue, warm beige, or neutral tone)
+- Dynamic three-quarter or perspective view emphasizing sculptural geometry (NOT flat profile)
+
+**Background Treatment:**
+- Abstract geometric shapes, color blocks, or marker splashes behind subject
+- Color washes in pale blue, warm beige, orange, or teal as design presentation accents
+- Construction lines and gestural marks that extend beyond the object form
+- Background elements add visual interest without competing with subject
+- Keeps professional presentation while adding energy and humanity
+
+**Core Requirements:**
+- No signature, text, annotations, or dimension lines
+- Sketchy, loose linework showing drawing confidence and process
+- Emphasize pure form and sculptural form through shading
+- Selective strategic color use to enhance form, not decorate
+- Balance between technical precision and hand-drawn spontaneity

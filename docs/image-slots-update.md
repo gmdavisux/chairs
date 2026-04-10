@@ -7,11 +7,11 @@ The image generation system now uses **four new slot types** instead of detail s
 ### Old Slots (Deprecated)
 - ❌ `detail-material` - Close-up of materials (hallucinated textures)
 - ❌ `detail-structure` - Close-up of joinery (invented hardware)
-- ❌ `detail-silhouette` - Profile view (now renamed)
+- ❌ `detail-silhouette` - Profile view (renamed to `sketch`)
 
 ### New Slots
 - ✅ `hero` - Photorealistic museum view (unchanged)
-- ✅ `silhouette` - Industrial design marker rendering
+- ✅ `sketch` - Industrial design marker rendering
 - ✅ `context` - Chair in period-appropriate interior setting
 - ✅ `designer` - Archival portrait of designer (optional)
 
@@ -20,7 +20,7 @@ The image generation system now uses **four new slot types** instead of detail s
 **Problem**: AI generates close-up detail shots with **invented structural details** - fake screws, non-existent joinery, wrong materials. This is historically inaccurate.
 
 **Solution**: 
-- **Silhouette rendering** = Abstract away details, show pure form
+- **Marker sketch** = Abstract away details, show pure form
 - **Context/lifestyle** = Focus on composition, not details
 - **Designer portrait** = Use actual archival photos, no fabrication
 
@@ -32,7 +32,7 @@ The image generation system now uses **four new slot types** instead of detail s
 # Generate all 4 new slot types
 FURNITURE_IMAGE_MAX_PER_PAGE=4
 
-# Generate hero + silhouette + context (skip designer)
+# Generate hero + sketch + context (skip designer)
 FURNITURE_IMAGE_MAX_PER_PAGE=3
 
 # Hero only (safest, no hallucinations)
@@ -45,7 +45,7 @@ Create these in `public/images/generated-prompts/{slug}/`:
 
 ### Required
 - `hero.txt` - Photorealistic chair view
-- `silhouette.txt` - Marker rendering style
+- `sketch.txt` - Marker rendering style
 - `context.txt` - Interior/lifestyle setting
 
 ### Optional
@@ -87,7 +87,8 @@ python generate_images.py wassily-chair --update-mdx
 ## Backwards Compatibility
 
 Old slot names still work via aliases:
-- `detail-silhouette` → `silhouette`
+- `detail-silhouette` → `sketch`
+- `silhouette` → `sketch`
 - `detail-context` → `context`
 
 But `detail-material` and `detail-structure` are deprecated (use `hero` instead).
@@ -107,7 +108,7 @@ But `detail-material` and `detail-structure` are deprecated (use `hero` instead)
 echo "GOOGLE_API_KEY=your_key" >> .env
 
 # 2. Set image slots
-echo "FURNITURE_IMAGE_MAX_PER_PAGE=3" >> .env  # hero + silhouette + context
+echo "FURNITURE_IMAGE_MAX_PER_PAGE=3" >> .env  # hero + sketch + context
 
 # 3. Run agent
 python furniture_agent.py

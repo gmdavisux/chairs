@@ -1,0 +1,15 @@
+{
+  "slug": "tulip-chair",
+  "timestamp": "2026-04-10T13:24:23.055687",
+  "images": [
+    {
+      "slot": "sketch",
+      "filename": "sketch.png",
+      "size": 1488411,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/tulip-chair-sketch.png",
+      "provider": "google",
+      "prompt": "Industrial design marker rendering of Tulip Chair by Eero Saarinen. Professional 1960s design studio aesthetic showing three-quarter view that emphasizes the chair's iconic sculptural form: smooth fiberglass shell seat flowing into single pedestal base.\n\nUse confident sketchy black ink construction lines that extend past edges with skeletal quality, multiple overlapping strokes showing hand-drawn process. Cool gray Prismacolor markers (20%, 30%, 50% tones) for volumetric shading on shell and base. Add judicious color accents: soft pale blue or warm beige background wash, with selective orange or teal highlight touches on key curves and features.\n\nCapture the chair's revolutionary single-stem support, organic flowing geometry from seat to base, and the distinctive tulip-like silhouette. Construction lines should emphasize the sculptural three-dimensional form, not a flat profile. Balance technical precision with spontaneous marker sketch energy.",
+      "reference_url": null
+    }
+  ]
+}

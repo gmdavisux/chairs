@@ -1,0 +1,24 @@
+{
+  "slug": "egg-chair",
+  "timestamp": "2026-04-10T15:15:05.251202",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 885227,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/egg-chair-hero.png",
+      "provider": "fal",
+      "prompt": "Egg Chair by Arne Jacobsen, three-quarter view showing the distinctive curved shell form and sculptural pedestal base. The chair's organic enveloping shape is upholstered in wool fabric, photographed in soft warm 2700K studio lighting against a clean neutral background. Professional museum catalog photograph emphasizing the chair's sculptural presence and iconic mid-century modern design. The egg-like form creates a sense of privacy and comfort while maintaining visual elegance.",
+      "reference_url": null
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1135737,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/egg-chair-context.png",
+      "provider": "fal",
+      "prompt": "Egg Chair by Arne Jacobsen in the lobby of the SAS Royal Hotel Copenhagen. The chair is positioned in an elegant mid-century modern interior with warm lighting, showing how the enveloping form creates an intimate space within the larger public setting. Architectural photography capturing the relationship between the sculptural furniture and the modernist interior design. Subtle warm lighting at 2700K emphasizes both the chair's organic curves and the refined hotel atmosphere.",
+      "reference_url": null
+    }
+  ]
+}

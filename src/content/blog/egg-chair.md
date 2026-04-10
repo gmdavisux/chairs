@@ -1,43 +1,59 @@
 ---
-title: "Egg Chair"
-description: "The Egg Chair by Arne Jacobsen: A Masterpiece of Modernist Design A quiet corner of the SAS Royal Hotel lobby in Copenhagen, 1960."
+title: Egg Chair
+description: 'The Egg Chair by Arne Jacobsen: A Masterpiece of Modernist Design A
+  quiet corner of the SAS Royal Hotel lobby in Copenhagen, 1960.'
 pubDate: 2026-04-09
-heroImage: /images/egg-chair-hero.jpg
-heroImageAlt: "Proposed hero image for Egg Chair highlighting form and materials"
-heroImageAltStatus: proposed
-heroImageCaption: "TBD"
-heroImageSource: "TBD"
-heroImageLicense: unknown
-heroImageOrigin: placeholder
+heroImage: /images/egg-chair-sketch.png
+heroImageAlt: Industrial design marker rendering of Egg Chair
+heroImageAltStatus: actual
+heroImageCaption: Marker rendering highlighting the chair's organic sculptural geometry
+heroImageSource: Original composition for the Classic Furniture Archives
+heroImageLicense: ai_generated
+heroImageOrigin: ai_generated
 images:
-  - id: egg-chair-hero
-    src: /images/egg-chair-hero.jpg
-    alt: "Proposed hero image for Egg Chair highlighting form and materials"
-    altStatus: proposed
-    caption:  "TBD"
-    source: "TBD"
-    license: unknown
-    origin: placeholder
-  - id: egg-chair-silhouette
-    src: /images/egg-chair-silhouette.jpg
-    alt: "Proposed industrial design marker rendering showing Egg Chair profile"
-    altStatus: proposed
-    caption: "TBD"
-    source: "TBD"
-    license: unknown
-    origin: placeholder
-  - id: egg-chair-context
-    src: /images/egg-chair-context.jpg
-    alt: "Proposed Egg Chair in mid-century modern interior setting"
-    altStatus: proposed
-    caption: "TBD"
-    source: "TBD"
-    license: unknown
-    origin: placeholder
-designer: "Arne Jacobsen"
-era: "Mid-Century Modern"
-category: "Iconic Chairs"
+- id: egg-chair-hero
+  src: /images/egg-chair-hero.png
+  alt: Egg Chair by Arne Jacobsen, three-quarter view
+  altStatus: proposed
+  caption: The Egg Chair in three-quarter view showing its enveloping form
+  source: Placeholder - awaiting final photography
+  license: unknown
+  origin: placeholder
+- id: egg-chair-sketch
+  src: /images/egg-chair-sketch.png
+  alt: Industrial design marker rendering of Egg Chair
+  altStatus: actual
+  caption: Marker rendering highlighting the chair's organic sculptural geometry
+  source: Original composition for the Classic Furniture Archives
+  license: ai_generated
+  origin: ai_generated
+- id: egg-chair-context
+  src: /images/egg-chair-context.png
+  alt: Egg Chair in hotel lobby setting
+  altStatus: proposed
+  caption: The Egg Chair in its original SAS Royal Hotel context
+  source: Placeholder - awaiting final photography
+  license: unknown
+  origin: placeholder
+- id: egg-chair-silhouette
+  src: /images/egg-chair-silhouette.png
+  alt: Egg Chair, profile view capturing distinctive proportions and geometry
+  altStatus: actual
+  caption: Profile view capturing distinctive proportions and geometry
+  source: Generated for Classic Furniture Archives
+  license: ai_generated
+  origin: ai_generated
+designer: Arne Jacobsen
+designerBio: Danish architect and designer, key figure in Scandinavian modernism.
+  Master of 'total design' who created the SAS Royal Hotel and its iconic furniture
+  including the Egg, Swan, and Series 7 chairs.
+designerYears: 1902–1971
+designerImage: /images/egg-chair-designer.jpg
+era: Mid-Century Modern
+category: Iconic Chairs
 ---
+import ImageWithMeta from '../../components/ImageWithMeta.astro';
+
 
 The Egg Chair by Arne Jacobsen: A Masterpiece of Modernist Design  
 
@@ -90,6 +106,23 @@ Moreover, the Egg Chair exemplifies the best of mid-century modernism, a design 
 The Egg Chair is more than a piece of furniture; it is a work of art, a cultural icon, and a testament to the power of thoughtful design. As it continues to grace living rooms, lobbies, and museums around the world, it serves as a reminder of Arne Jacobsen’s unparalleled ability to marry form and function, creating objects that are as timeless as they are innovative.  
 
 {/* AFFILIATE: Original/authenticated replica purchase links */}
+
+
+
+<ImageWithMeta
+  src="/images/egg-chair-silhouette.jpg"
+  alt="Egg Chair, profile view capturing distinctive proportions and geometry"
+  caption="Profile view capturing distinctive proportions and geometry"
+/>
+
+
+
+<ImageWithMeta
+  src="/images/egg-chair-context.png"
+  alt="Egg Chair in hotel lobby setting"
+  caption="The Egg Chair in its original SAS Royal Hotel context"
+  source="Placeholder - awaiting final photography"
+/>
 
 ## References  
 

@@ -5,17 +5,31 @@ import ImageWithMeta from '../../components/ImageWithMeta.astro';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+	const sortedPosts = posts.sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	);
+	
+	return sortedPosts.map((post, index) => {
+		const prevPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
+		const nextPost = index > 0 ? sortedPosts[index - 1] : null;
+		
+		return {
+			params: { slug: post.id },
+			props: { post, prevPost, nextPost },
+		};
+	});
 }
-type Props = CollectionEntry<'blog'>;
 
-const post = Astro.props;
+type Props = {
+	post: CollectionEntry<'blog'>;
+	prevPost: CollectionEntry<'blog'> | null;
+	nextPost: CollectionEntry<'blog'> | null;
+};
+
+const { post, prevPost, nextPost } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data}>
+<BlogPost {...post.data} prevPost={prevPost} nextPost={nextPost}>
 	<Content components={{ ImageWithMeta }} entryImages={post.data.images ?? []} />
 </BlogPost>

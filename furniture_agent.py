@@ -60,6 +60,9 @@ _GITHUB_MODELS_DEFAULT_FALLBACK_CHAIN = [
 # session tokens don't silently override workspace configuration.
 load_dotenv(override=True)
 
+# ── Local imports ──────────────────────────────────────────────────────────
+from image_archive import archive_and_deploy_image, create_archive_directory
+
 # ── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
@@ -86,19 +89,20 @@ PLACEHOLDER_IMAGE_CANDIDATES = [
 ]
 PLACEHOLDER_SLOTS = [
     ("hero", "Hero view of the full chair profile"),
-    ("silhouette", "Technical silhouette or marker rendering"),
+    ("sketch", "Industrial design marker rendering (not silhouette)"),
     ("context", "Chair in home or interior setting"),
     ("designer", "Designer portrait or archival photo"),
 ]
 IMAGE_SLOT_PROMPT_FILES = [
     ("hero", "hero.txt"),
-    ("silhouette", "silhouette.txt"),
+    ("sketch", "sketch.txt"),
     ("context", "context.txt"),
     ("designer", "designer.txt"),
 ]
 SLOT_ALIASES = {
     "hero": ["hero"],
-    "silhouette": [
+    "sketch": [
+        "sketch",
         "silhouette",
         "detail-silhouette",
         "detail-3-silhouette",
@@ -125,9 +129,10 @@ SLOT_ALIASES = {
 # Slot-specific negative prompts and style guidance
 STYLE_NEGATIVE_PROMPTS = {
     "hero": (
-        "harsh shadows, cool lighting, over-saturated colors, cluttered background, "
+        "harsh shadows, cool lighting, over-saturated colors, blown highlights, crushed blacks, "
+        "muddy mid-tones, flat lighting, cluttered background, "
         "people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, "
-        "low resolution, blur, motion blur, incorrect colors, wrong materials, "
+        "low resolution, blur, motion blur, synthetic HDR halos, overprocessed, incorrect colors, wrong materials, "
         "fabricated details, invented finishes, altered proportions, modified geometry"
     ),
     "silhouette": (
@@ -135,7 +140,7 @@ STYLE_NEGATIVE_PROMPTS = {
         "cluttered, realistic materials, blur, motion blur, text, logos, watermark"
     ),
     "context": (
-        "harsh lighting, clutter, excessive decorative items, people, modern anachronisms, "
+        "harsh lighting, flat lighting, blown highlights, crushed blacks, clutter, excessive decorative items, people, modern anachronisms, "
         "text, logos, watermark, low resolution, blur, wrong era furniture"
     ),
     "designer": (
@@ -146,18 +151,22 @@ STYLE_NEGATIVE_PROMPTS = {
 
 STYLE_PROMPT_SUFFIXES = {
     "hero": (
-        "Use soft diffused warm light in the 2700-3000K range. Keep natural color grading, "
-        "moderate contrast, realistic material textures, and clean negative space. Preserve "
+        "Use soft diffused warm light in the 2700-3000K range with well-defined natural shadows. "
+        "Full tonal range from deep shadows to clean highlights, preserving both shadow and highlight detail. "
+        "Natural color grading with rich contrast and enhanced material depth. Realistic material textures "
+        "showing grain, surface detail, and dimensional quality. Clean negative space. Preserve "
         "historical fidelity: authentic silhouette, proportions, and era plausibility. "
         "CRITICAL: Use ONLY colors, materials, and finishes visible in the reference images. "
         "Do not invent or fabricate structural details. No people or clutter."
     ),
-    "silhouette": (
-        "Industrial design marker rendering style with clean lines and minimal shading. "
-        "Use precise technical drawing conventions with clean white or kraft paper background. "
-        "Show accurate proportions and form. Style should evoke 1960s-1980s design sketches "
-        "with markers and pencil. Emphasize the chair's distinctive profile and geometry. "
-        "No photorealistic details, no invented structural elements."
+    "sketch": (
+        "Industrial design marker rendering style with confident sketchy linework and dimensional shading. "
+        "Use cool gray markers (20%, 30%, 50% tones) with selective strategic color accents. "
+        "Dynamic three-quarter or perspective view (NOT flat side profile). Show sculptural form through "
+        "graduated marker tones. Clean white paper background with loose gestural marks. "
+        "Style evokes professional mid-century design sketches with visible hand-drawn character. "
+        "Multiple overlapping line strokes showing drawing process. Balance technical precision with spontaneity. "
+        "No tight technical drawing, no annotations, no dimensions."
     ),
     "context": (
         "Place chair in period-appropriate interior setting matching the design era. "
@@ -329,8 +338,8 @@ images:
     source: "TBD"
     license: unknown
     origin: placeholder
-  - id: {slug}-silhouette
-    src: /images/{slug}-silhouette.jpg
+  - id: {slug}-sketch
+    src: /images/{slug}-sketch.jpg
     alt: "Proposed industrial design marker rendering showing {title} profile"
     altStatus: proposed
     caption: "TBD"
@@ -1109,7 +1118,7 @@ def _build_style_prompt(base_prompt: str, page: dict, slot: str) -> str:
     designer = page.get("designer", "")
     
     # Build slot-specific header
-    if slot == "silhouette":
+    if slot == "sketch":
         header = f"Industrial design marker rendering of {title}"
     elif slot == "context":
         header = f"Interior photograph showing {title}"
@@ -1516,7 +1525,7 @@ def _load_curated_reference_preferences(slug: str) -> dict[str, str]:
             elif "structure" in label_norm:
                 preferences["detail-structure"] = hint_norm
             elif "silhouette" in label_norm or "context" in label_norm or "profile" in label_norm:
-                preferences["detail-silhouette"] = hint_norm
+                preferences["sketch"] = hint_norm
 
         if preferences:
             return preferences
@@ -1593,7 +1602,7 @@ def _select_ai_reference_url(slug: str, article_path: Path, slot: Optional[str] 
         ref_images = sorted(ref_dir.glob("ref-*.jpg"))
         if ref_images:
             # Rotate through available references for variety
-            slot_index = {"hero": 0, "detail-material": 0, "detail-structure": 1, "detail-silhouette": 1}
+            slot_index = {"hero": 0, "detail-material": 0, "detail-structure": 1, "sketch": 1}
             idx = slot_index.get(slot, 0) if slot else 0
             selected = ref_images[idx % len(ref_images)]
             log.info("Using local reference image for slot %s: %s", slot or "default", selected.name)
@@ -1708,6 +1717,10 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
     reference_bank_urls = _load_reference_bank_urls(slug)
     reference_fallback_plan = _build_display_fallback_plan(slug, article_path)
 
+    # Create archive directory for this generation batch
+    archive_dir = create_archive_directory(slug)
+    log.info(f"Created archive directory: {archive_dir}")
+
     results: list[dict] = []
     generated_files: list[Path] = []
     resolved_slots: dict[str, dict] = {}
@@ -1724,7 +1737,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
             
             default_prompts = {
                 "hero": f"Professional product photography of {title} designed by {designer}. Three-quarter view showing the chair's full form, sculptural qualities, and distinctive design features. Studio lighting with soft shadows on a neutral background. High contrast, sharp focus, museum-quality documentation style.",
-                "silhouette": f"Technical industrial design marker rendering of {title}. Side profile silhouette showing the chair's distinctive geometry and proportions. Clean line drawing style with subtle gray markers on white paper. Professional architecture sketch aesthetic.",
+                "sketch": f"Technical industrial design marker rendering of {title}. Dynamic three-quarter view showing the chair's distinctive geometry and proportions. Clean line drawing style with subtle gray markers and selective color accents on white paper. Professional architecture sketch aesthetic with visible hand-drawn character.",
                 "context": f"{title} by {designer} in an elegant mid-century modern interior. The chair positioned in a sophisticated living room or office setting with period-appropriate furniture and décor. Natural daylight, architectural photography style, showing the chair in its intended environment.",
                 "designer": f"Portrait photograph of {designer}, the designer of {title}. Professional archival photograph showing the designer at work or in their studio. Black and white or period color photography. Documentary style capturing the designer's creative presence.",
             }
@@ -1836,12 +1849,35 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
             image_bytes = response_payload.get("image_bytes") if response_payload else None
             image_url = response_payload.get("image_url") if response_payload else None
 
-            if image_bytes:
-                out_file.write_bytes(image_bytes)
-            elif image_url:
-                _download_image_url(image_url, out_file, timeout_seconds=timeout_seconds)
-            else:
+            # Get image bytes from URL if needed
+            if not image_bytes and image_url:
+                # Download image to bytes first
+                req = Request(image_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urlopen(req, timeout=timeout_seconds) as resp:
+                    image_bytes = resp.read()
+            
+            if not image_bytes:
                 raise RuntimeError("No image URL or bytes returned by provider")
+            
+            # Archive and deploy the generated image
+            archive_info = archive_and_deploy_image(
+                slug=slug,
+                slot=slot,
+                image_bytes=image_bytes,
+                display_path=out_file,
+                metadata={
+                    "provider": used_provider,
+                    "model": used_model,
+                    "prompt": final_prompt,
+                    "negative_prompt": negative_prompt,
+                    "reference_url": reference_url,
+                    "revised_prompt": response_payload.get("revised_prompt") if response_payload else None,
+                },
+                archive_dir=archive_dir,
+                extension="jpg",
+            )
+            
+            log.info("Archived and deployed image slot '%s': %s", slot, archive_info["archive_path"])
 
             generated_files.append(out_file)
             resolved_slots[slot] = {
@@ -1854,6 +1890,7 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                     "slot": slot,
                     "status": "success",
                     "file": _safe_relpath(out_file),
+                    "archive_path": _safe_relpath(Path(archive_info["archive_path"])),
                     "hash": f"sha256:{_file_sha256(out_file)}",
                     "provider": used_provider,
                     "model": used_model,
@@ -1864,7 +1901,6 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
                     "revisedPrompt": response_payload.get("revised_prompt") if response_payload else None,
                 }
             )
-            log.info("Generated image slot '%s': %s", slot, out_file)
         except Exception as exc:
             fallback_item = reference_fallback_plan.get(slot)
             if fallback_item:
@@ -2034,6 +2070,88 @@ def run_plan_only() -> None:
             )
     else:
         log.info("All pages complete! Add entries to backlog.json to continue.")
+
+
+def _print_completion_summary(page: dict, image_result: dict) -> None:
+    """Print a comprehensive end-of-run summary with next-step guidance."""
+    slug = page["slug"]
+    title = page["title"]
+    
+    print(f"\n{'='*70}")
+    print(f"✅ PAGE COMPLETE: {slug}")
+    print(f"{'='*70}")
+    print(f"\nTitle: {title}")
+    print(f"Review: http://localhost:4321/blog/{slug}")
+    
+    # Image status summary
+    summary = image_result.get("summary", {})
+    generated = summary.get("generatedCount", 0)
+    ref_fallback = summary.get("referenceFallbackCount", 0)
+    failed = summary.get("failedCount", 0)
+    skipped = summary.get("skippedCount", 0)
+    
+    print(f"\n📊 IMAGE STATUS:")
+    print(f"  ✓ AI Generated:     {generated}")
+    print(f"  ↻ Ref Fallbacks:    {ref_fallback}")
+    print(f"  ✗ Failed/Placeholder: {failed}")
+    if skipped > 0:
+        print(f"  ⊘ Skipped:          {skipped}")
+    
+    # Next steps guidance
+    if failed > 0 or ref_fallback > 0:
+        print(f"\n📝 NEXT STEPS:")
+        
+        if ref_fallback > 0:
+            print(f"  • {ref_fallback} slot(s) automatically used downloaded references")
+            print(f"    (AI generation failed or unavailable)")
+        
+        # Check if references were downloaded but not used
+        ref_dir = REFERENCE_IMAGES_DIR / f"{slug}-reference"
+        ref_metadata = ref_dir / "reference-metadata.json"
+        has_references = ref_metadata.exists()
+        
+        if has_references and failed > 0:
+            try:
+                metadata = json.loads(ref_metadata.read_text(encoding="utf-8"))
+                refs_with_files = sum(1 for item in metadata.get("items", []) if item.get("localPath"))
+                
+                if refs_with_files > 0:
+                    print(f"  • {refs_with_files} reference images are available in:")
+                    print(f"    {ref_dir}/")
+                    print(f"  • To replace remaining placeholders with references:")
+                    print(f"    python use_reference_images.py {slug}")
+            except (OSError, json.JSONDecodeError):
+                pass
+        
+        if failed > 0:
+            provenance_path = PROMPTS_DIR / slug / "provenance-generated.json"
+            if provenance_path.exists():
+                print(f"  • Check failure details in:")
+                print(f"    {provenance_path}")
+                
+                try:
+                    prov = json.loads(provenance_path.read_text(encoding="utf-8"))
+                    failed_results = [r for r in prov.get("results", []) if r.get("status") == "failed"]
+                    if failed_results:
+                        reasons = set(r.get("reason", "unknown") for r in failed_results)
+                        if any("API key" in r or "authentication" in r.lower() for r in reasons):
+                            print(f"  • Configure image generation API keys in .env:")
+                            print(f"    GOOGLE_API_KEY=... (for Google Gemini)")
+                            print(f"    FAL_KEY=...        (for FAL/FLUX)")
+                            print(f"    OPENAI_API_KEY=... (for OpenAI DALL-E)")
+                except (OSError, json.JSONDecodeError):
+                    pass
+        
+        print(f"  • Edit image metadata in:")
+        print(f"    src/content/blog/{slug}.md")
+        print(f"  • Update 'TBD' captions and verify license info")
+    
+    else:
+        print(f"\n✨ All images generated successfully!")
+        print(f"  • Review and update captions in src/content/blog/{slug}.md")
+        print(f"  • Change altStatus from 'proposed' to 'actual' when satisfied")
+    
+    print(f"\n{'='*70}\n")
 
 
 def run_build() -> None:
@@ -2215,10 +2333,9 @@ def run_build() -> None:
                 commit_exc,
             )
 
-        print(
-            f"\n✅ PAGE COMPLETE: {page['slug']} — "
-            f"Review at http://localhost:4321/blog/{page['slug']}"
-        )
+        # Print comprehensive completion summary
+        _print_completion_summary(page, image_result)
+
     except Exception as exc:
         log.error("Build failed for '%s': %s", page["slug"], exc)
         use_github_models = os.getenv("GITHUB_MODELS", "").strip().lower() in ("1", "true", "yes")

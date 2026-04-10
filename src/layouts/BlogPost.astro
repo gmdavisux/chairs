@@ -5,7 +5,10 @@ import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & {
+	prevPost?: CollectionEntry<'blog'> | null;
+	nextPost?: CollectionEntry<'blog'> | null;
+};
 
 const {
 	title,
@@ -20,8 +23,13 @@ const {
 	heroImageLicense,
 	heroImageOrigin,
 	designer,
+	designerBio,
+	designerYears,
+	designerImage,
 	era,
 	category,
+	prevPost,
+	nextPost,
 } = Astro.props;
 
 const heroAlt =
@@ -64,58 +72,15 @@ const showHeroMetadata =
 				border-radius: 12px;
 				box-shadow: var(--box-shadow);
 			}
-			.hero-meta {
-				margin: -1rem auto 2rem;
+			.hero-caption {
+				margin: 0.5rem auto 2rem;
 				max-width: 1020px;
-				padding: 0.8rem 1rem;
-				border: 1px solid rgba(200, 121, 65, 0.18);
-				border-left: 4px solid var(--accent);
-				border-radius: 6px;
-				background: rgba(200, 121, 65, 0.05);
+				text-align: center;
 				font-family: "Lato", sans-serif;
-				font-size: 0.82rem;
-				line-height: 1.55;
-				color: rgb(var(--gray-dark));
-			}
-			.hero-meta p {
-				margin: 0.2rem 0;
-			}
-			.hero-meta strong {
-				font-size: 0.72rem;
-				text-transform: uppercase;
-				letter-spacing: 0.07em;
-				color: var(--accent-dark);
-			}
-			.hero-meta .hero-meta-placeholder {
+				font-size: 0.875rem;
 				font-style: italic;
-				color: rgb(var(--gray));
-			}
-			.hero-meta .hero-origin-public_domain,
-			.hero-meta .hero-origin-licensed,
-			.hero-meta .hero-origin-ai_generated,
-			.hero-meta .hero-origin-placeholder {
-				padding: 0.05rem 0.35rem;
-				border-radius: 3px;
-				font-size: 0.72rem;
-				font-weight: 700;
-				text-transform: uppercase;
-				letter-spacing: 0.05em;
-			}
-			.hero-meta .hero-origin-public_domain {
-				background: rgba(82, 126, 72, 0.18);
-				color: #3f5f36;
-			}
-			.hero-meta .hero-origin-licensed {
-				background: rgba(67, 105, 166, 0.15);
-				color: #314f7d;
-			}
-			.hero-meta .hero-origin-ai_generated {
-				background: rgba(147, 89, 35, 0.16);
-				color: #7b4b1e;
-			}
-			.hero-meta .hero-origin-placeholder {
-				background: rgba(120, 120, 120, 0.14);
-				color: #565656;
+				color: rgb(var(--gray-dark));
+				cursor: help;
 			}
 			/* Two-column grid: prose | sidebar */
 			.article-body {
@@ -244,6 +209,128 @@ const showHeroMetadata =
 				color: rgb(var(--gray));
 				font-style: italic;
 			}
+			
+			/* Designer info section */
+			.designer-info {
+				margin-top: 1.5rem;
+				padding-top: 1.5rem;
+				border-top: 1px solid rgba(200, 121, 65, 0.2);
+			}
+			.designer-heading {
+				font-family: "Lato", sans-serif;
+				font-size: 0.62rem;
+				font-weight: 700;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--accent);
+				margin: 0 0 0.75rem 0;
+				padding-bottom: 0.3rem;
+				border-bottom: 1px solid rgba(200, 121, 65, 0.22);
+			}
+			.designer-image {
+				width: 100%;
+				border-radius: 6px;
+				margin-bottom: 0.75rem;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			}
+			.designer-name {
+				font-family: "Playfair Display", Georgia, serif;
+				font-size: 1rem;
+				font-weight: 600;
+				margin: 0 0 0.5rem 0;
+				color: rgb(var(--black));
+			}
+			.designer-years {
+				font-size: 0.875rem;
+				font-weight: 400;
+				color: rgb(var(--gray));
+			}
+			.designer-bio {
+				font-size: 0.875rem;
+				line-height: 1.55;
+				color: rgb(var(--gray-dark));
+				margin: 0;
+			}
+			
+			/* Post Navigation */
+			.post-navigation {
+				margin: 4rem auto 2rem;
+				max-width: 1020px;
+				padding-top: 2rem;
+				border-top: 2px solid rgba(200, 121, 65, 0.2);
+			}
+			.nav-wrapper {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 1.5rem;
+			}
+			@media (min-width: 768px) {
+				.nav-wrapper {
+					grid-template-columns: 1fr 1fr;
+				}
+			}
+			.nav-link {
+				display: block;
+				text-decoration: none;
+				border: 1px solid rgba(200, 121, 65, 0.18);
+				border-radius: 8px;
+				padding: 1.25rem;
+				background: rgba(200, 121, 65, 0.05);
+				transition: all 0.2s ease;
+			}
+			.nav-link:hover {
+				background: rgba(200, 121, 65, 0.1);
+				border-color: var(--accent);
+				box-shadow: 0 4px 12px rgba(200, 121, 65, 0.15);
+			}
+			.nav-link.next {
+				text-align: right;
+			}
+			.nav-direction {
+				font-family: "Lato", sans-serif;
+				font-size: 0.75rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				color: var(--accent);
+				margin-bottom: 0.75rem;
+			}
+			.nav-content {
+				display: flex;
+				align-items: center;
+				gap: 1rem;
+			}
+			.nav-link.next .nav-content {
+				flex-direction: row-reverse;
+			}
+			.nav-thumb {
+				width: 80px;
+				height: 80px;
+				object-fit: cover;
+				border-radius: 6px;
+				flex-shrink: 0;
+			}
+			.nav-title {
+				font-family: "Playfair Display", Georgia, serif;
+				font-size: 1rem;
+				font-weight: 600;
+				color: rgb(var(--black));
+				line-height: 1.3;
+			}
+			
+			/* Affiliate Links Placeholder */
+			.affiliate-section {
+				margin: 3rem auto 2rem;
+				max-width: 1020px;
+				padding: 1.5rem;
+				background: rgba(200, 121, 65, 0.05);
+				border: 1px dashed rgba(200, 121, 65, 0.3);
+				border-radius: 8px;
+				text-align: center;
+				font-size: 0.875rem;
+				color: rgb(var(--gray));
+				font-style: italic;
+			}
 		</style>
 	</head>
 
@@ -251,33 +338,12 @@ const showHeroMetadata =
 		<Header />
 		<main>
 			<article class="article-outer">
-				<div class="hero-image">
+				<div class="hero-image" title={heroImageSource}>
 					{heroImage && <img width={1020} height={510} src={heroImage} alt={heroAlt} />}
+					{heroImageCaption && (
+						<p class="hero-caption">{heroImageCaption}</p>
+					)}
 				</div>
-				{heroImage && (
-					<div class="hero-meta">
-						{heroImageCaption ? (
-							<p><strong>Caption:</strong> {heroImageCaption}</p>
-						) : (
-							<p class="hero-meta-placeholder"><strong>Caption:</strong> TBD</p>
-						)}
-						<p>
-							<strong>Source:</strong>{' '}
-							{heroImageSource ? heroSourceLabel : <span class="hero-meta-placeholder">{heroSourceLabel}</span>}
-						</p>
-						<p>
-							<strong>License:</strong>{' '}
-							{heroImageLicense ? heroLicenseLabel : <span class="hero-meta-placeholder">{heroLicenseLabel}</span>}
-						</p>
-						<p>
-							<strong>Origin:</strong>{' '}
-							<span class={`hero-origin-${heroOriginLabel}`}>{heroOriginLabel}</span>
-						</p>
-						<p>
-							<strong>Alt Status:</strong>{' '}
-							{heroImageAltStatus ? heroAltStatusLabel : <span class="hero-meta-placeholder">{heroAltStatusLabel}</span>}
-						</p>
-						{!showHeroMetadata && (
 							<p class="hero-meta-placeholder">
 								Add image provenance fields in frontmatter to replace placeholders.
 							</p>
@@ -310,8 +376,49 @@ const showHeroMetadata =
 								{category && <span class="sidebar-tag">{category}</span>}
 							</div>
 						)}
+						{designer && (
+							<div class="designer-info">
+								<h3 class="designer-heading">Meet the Designer</h3>
+								{designerImage && (
+									<img src={designerImage} alt={designer} class="designer-image" />
+								)}
+								<p class="designer-name">
+									{designer}
+									{designerYears && <span class="designer-years"> ({designerYears})</span>}
+								</p>
+								{designerBio && <p class="designer-bio">{designerBio}</p>}
+							</div>
+						)}
 					</aside>
 				</div>
+				{(prevPost || nextPost) && (
+					<nav class="post-navigation">
+						<div class="nav-wrapper">
+							{prevPost && (
+								<a href={`/blog/${prevPost.id}/`} class="nav-link prev">
+									<div class="nav-direction">← Previous</div>
+									<div class="nav-content">
+										{prevPost.data.heroImage && (
+											<img src={prevPost.data.heroImage} alt="" class="nav-thumb" />
+										)}
+										<div class="nav-title">{prevPost.data.title}</div>
+									</div>
+								</a>
+							)}
+							{nextPost && (
+								<a href={`/blog/${nextPost.id}/`} class="nav-link next">
+									<div class="nav-direction">Next →</div>
+									<div class="nav-content">
+										{nextPost.data.heroImage && (
+											<img src={nextPost.data.heroImage} alt="" class="nav-thumb" />
+										)}
+										<div class="nav-title">{nextPost.data.title}</div>
+									</div>
+								</a>
+							)}
+						</div>
+					</nav>
+				)}
 			</article>
 		</main>
 		<Footer />
