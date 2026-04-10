@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-generate_images_gemini.py - Generate furniture images using Google Gemini
+generate_images.py - Generate furniture images using AI providers (Gemini, FAL)
 
 Usage:
-    python generate_images_gemini.py wassily-chair
-    python generate_images_gemini.py wassily-chair --update-mdx
-    python generate_images_gemini.py wassily-chair --custom-prompts prompts.json
-    python generate_images_gemini.py wassily-chair --reference-images refs.json
+    python generate_images.py wassily-chair
+    python generate_images.py wassily-chair --update-mdx
+    python generate_images.py wassily-chair --custom-prompts prompts.json
+    python generate_images.py wassily-chair --reference-images refs.json
 """
 
 import argparse
@@ -25,6 +25,8 @@ import requests
 import yaml
 from dotenv import load_dotenv
 from PIL import Image
+
+from image_archive import archive_and_deploy_image, create_archive_directory
 
 # Load environment variables
 load_dotenv(override=False)  # Command line env vars take precedence
@@ -136,12 +138,53 @@ def generate_with_gemini(
         if not response or not response.generated_images:
             raise RuntimeError("Gemini returned no images")
         
-        # Get first image
-        image = response.generated_images[0]
+        # Get first image from response
+        generated_image = response.generated_images[0]
         
-        # Convert PIL Image to PNG bytes
+        # Gemini returns images in JPEG format by default
+        # We need to properly convert them to PNG
+        # The Google GenAI SDK wraps images in a types.Image object
+        
+        # Try different methods to extract the image data
+        raw_image_bytes = None
+        pil_image = None
+        
+        # Method 1: Check if it has a direct bytes/data attribute
+        if hasattr(generated_image, 'data'):
+            raw_image_bytes = generated_image.data
+        elif hasattr(generated_image, '_image_bytes'):
+            raw_image_bytes = generated_image._image_bytes
+        
+        # Method 2: Check if it has a PIL Image wrapper
+        if raw_image_bytes is None:
+            try:
+                if hasattr(generated_image, 'image'):
+                    image_attr = generated_image.image
+                    if hasattr(image_attr, '_pil_image'):
+                        pil_image = image_attr._pil_image
+                    elif isinstance(image_attr, Image.Image):
+                        pil_image = image_attr
+            except Exception as e:
+                log.warning(f"Could not access PIL image directly: {e}")
+        
+        # If we have raw bytes, load with PIL
+        if raw_image_bytes:
+            pil_image = Image.open(BytesIO(raw_image_bytes))
+        
+        # If we still don't have a PIL image, the API may have changed
+        if pil_image is None:
+            raise RuntimeError(
+                "Could not extract image from Gemini response. "
+                "The Google GenAI SDK format may have changed. "
+                f"Image object type: {type(generated_image)}"
+            )
+        
+        # Convert to PNG format (this ensures JPEG -> PNG conversion)
         buffer = BytesIO()
-        image.image._pil_image.save(buffer, format="PNG")
+        pil_image.save(buffer, format="PNG")
+        buffer.seek(0)
+        
+        log.debug(f"Converted image to PNG format ({len(buffer.getvalue())} bytes)")
         return buffer.getvalue()
         
     except Exception as e:
@@ -215,10 +258,20 @@ def generate_with_fal(
         # Get first image URL
         image_url = response["images"][0]["url"]
         
-        # Download the image
+        # Download the image (FAL returns JPEG by default)
         response = requests.get(image_url, timeout=60)
         response.raise_for_status()
-        return response.content
+        image_bytes = response.content
+        
+        # Convert to PNG format as promised by the function signature
+        pil_image = Image.open(BytesIO(image_bytes))
+        
+        buffer = BytesIO()
+        pil_image.save(buffer, format="PNG")
+        buffer.seek(0)
+        
+        log.debug(f"Converted FAL image to PNG format ({len(buffer.getvalue())} bytes)")
+        return buffer.getvalue()
         
     except Exception as e:
         raise RuntimeError(f"FAL generation failed: {e}")
@@ -314,7 +367,7 @@ def update_mdx_file(slug: str, extension: str = "png") -> bool:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate furniture images using Google Gemini"
+        description="Generate furniture images using AI providers (Gemini or FAL)"
     )
     parser.add_argument(
         "slug",
@@ -379,6 +432,10 @@ def main():
     provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "google").lower()
     log.info(f"Using provider: {provider}")
     
+    # Create archive directory for this generation batch
+    archive_dir = create_archive_directory(args.slug)
+    log.info(f"Archive directory: {archive_dir}")
+    
     # Generate images
     results = []
     for slot, _ in slots_to_generate:
@@ -401,14 +458,29 @@ def main():
                     reference_image_url=reference_url,
                 )
             
-            # Save to disk
-            output_path.write_bytes(image_bytes)
-            log.info(f"✓ Saved: {output_path} ({len(image_bytes)} bytes)")
+            # Archive and deploy image
+            archive_info = archive_and_deploy_image(
+                slug=args.slug,
+                slot=slot,
+                image_bytes=image_bytes,
+                display_path=output_path,
+                metadata={
+                    "provider": provider,
+                    "prompt": prompt,
+                    "reference_url": reference_url,
+                },
+                archive_dir=archive_dir,
+                extension=args.format,
+            )
+            
+            log.info(f"✓ Archived: {archive_info['archive_path']}")
+            log.info(f"✓ Deployed: {archive_info['display_path']} ({archive_info['size']} bytes)")
             
             results.append({
                 "slot": slot,
                 "status": "success",
                 "path": str(output_path),
+                "archive_path": archive_info['archive_path'],
                 "size": len(image_bytes),
             })
             
@@ -432,6 +504,10 @@ def main():
     
     print(f"Successful: {len(successful)}")
     print(f"Failed: {len(failed)}")
+    
+    if successful:
+        print(f"\n📁 Archive: {archive_dir}")
+        print("   Images have been archived and deployed to display locations.")
     
     if failed:
         print("\nFailed slots:")

@@ -14,7 +14,7 @@ pip install google-generativeai
 echo "GOOGLE_API_KEY=your_key_here" >> .env
 
 # Generate all images and update MDX
-python generate_images_gemini.py wassily-chair --update-mdx
+python generate_images.py wassily-chair --update-mdx
 ```
 
 ### Option 2: Semi-Automated (prepare batch for manual generation)
@@ -58,7 +58,7 @@ cat > my-refs.json << 'EOF'
 EOF
 
 # Option A: Generate automatically
-python generate_images_gemini.py wassily-chair \
+python generate_images.py wassily-chair \
   --custom-prompts my-prompts.json \
   --reference-images my-refs.json \
   --update-mdx
@@ -73,7 +73,7 @@ python update_mdx_images.py wassily-chair
 
 ## The Three Scripts
 
-### 1. `generate_images_gemini.py` - Fully Automated
+### 1. `generate_images.py` - Fully Automated
 
 **What it does:**
 - Reads prompts from `generated-prompts` folder or custom JSON
@@ -89,19 +89,19 @@ python update_mdx_images.py wassily-chair
 
 ```bash
 # Basic: use existing prompts
-python generate_images_gemini.py wassily-chair
+python generate_images.py wassily-chair
 
 # With custom prompts
-python generate_images_gemini.py wassily-chair --custom-prompts simple.json
+python generate_images.py wassily-chair --custom-prompts simple.json
 
 # With reference images
-python generate_images_gemini.py wassily-chair --reference-images refs.json
+python generate_images.py wassily-chair --reference-images refs.json
 
 # Generate only specific slots
-python generate_images_gemini.py wassily-chair --slots hero detail-material
+python generate_images.py wassily-chair --slots hero detail-material
 
 # Auto-update MDX after generation
-python generate_images_gemini.py wassily-chair --update-mdx
+python generate_images.py wassily-chair --update-mdx
 ```
 
 ### 2. `prepare_gemini_batch.py` - Batch Preparation Helper
@@ -248,7 +248,7 @@ If generation fails for some slots:
 python update_mdx_images.py wassily-chair --dry-run
 
 # Generate only missing slots
-python generate_images_gemini.py wassily-chair \
+python generate_images.py wassily-chair \
   --slots detail-material detail-structure
 ```
 

@@ -22,7 +22,7 @@ This script automates image generation using Google's Gemini AI (Imagen) as an a
 ### Basic Usage (uses prompts from generated-prompts folder)
 
 ```bash
-python generate_images_gemini.py wassily-chair
+python generate_images.py wassily-chair
 ```
 
 This will:
@@ -33,7 +33,7 @@ This will:
 ### With Custom Prompts
 
 ```bash
-python generate_images_gemini.py wassily-chair --custom-prompts my-prompts.json
+python generate_images.py wassily-chair --custom-prompts my-prompts.json
 ```
 
 **Example custom prompts file** (`my-prompts.json`):
@@ -49,7 +49,7 @@ python generate_images_gemini.py wassily-chair --custom-prompts my-prompts.json
 ### With Reference Images
 
 ```bash
-python generate_images_gemini.py wassily-chair --reference-images refs.json
+python generate_images.py wassily-chair --reference-images refs.json
 ```
 
 **Example reference images file** (`refs.json`):
@@ -65,7 +65,7 @@ python generate_images_gemini.py wassily-chair --reference-images refs.json
 ### Combined: Custom Prompts + Reference Images + Auto-update MDX
 
 ```bash
-python generate_images_gemini.py wassily-chair \
+python generate_images.py wassily-chair \
   --custom-prompts my-prompts.json \
   --reference-images refs.json \
   --update-mdx
@@ -76,7 +76,7 @@ The `--update-mdx` flag will automatically update the `.mdx` file to use `.png` 
 ### Generate Only Specific Slots
 
 ```bash
-python generate_images_gemini.py wassily-chair \
+python generate_images.py wassily-chair \
   --slots hero detail-material \
   --custom-prompts simple-prompts.json
 ```
@@ -109,7 +109,7 @@ Here's how to automate what you did manually:
 
 3. **Run the generation:**
    ```bash
-   python generate_images_gemini.py wassily-chair \
+   python generate_images.py wassily-chair \
      --custom-prompts simple-prompts.json \
      --reference-images my-refs.json \
      --update-mdx

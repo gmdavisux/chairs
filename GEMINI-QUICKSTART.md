@@ -11,13 +11,13 @@ python update_mdx_images.py wassily-chair
 
 ### Fully automated generation (if you have API)
 ```bash
-python generate_images_gemini.py wassily-chair --update-mdx
+python generate_images.py wassily-chair --update-mdx
 ```
 
 ### With custom simple prompts
 ```bash
 # Create prompts.json with your simple prompts
-python generate_images_gemini.py wassily-chair \
+python generate_images.py wassily-chair \
   --custom-prompts prompts.json \
   --update-mdx
 ```
@@ -33,7 +33,7 @@ python update_mdx_images.py wassily-chair
 
 ### Generate only specific images
 ```bash
-python generate_images_gemini.py wassily-chair \
+python generate_images.py wassily-chair \
   --slots hero detail-material
 ```
 

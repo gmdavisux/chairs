@@ -81,7 +81,7 @@ rm detail-1-material.txt detail-2-structure.txt detail-3-silhouette.txt
 
 3. **Regenerate images:**
 ```bash
-python generate_images_gemini.py wassily-chair --update-mdx
+python generate_images.py wassily-chair --update-mdx
 ```
 
 ## Backwards Compatibility
