@@ -91,17 +91,47 @@ def generate_with_gemini(
     log.info(f"Prompt: {prompt[:100]}...")
     
     try:
-        # Using the new google.genai API
-        # Note: Reference images are not supported in the basic imagen API
-        # They may require a different model or method
-        response = client.models.generate_images(
-            model='imagen-4.0-generate-001',
-            prompt=prompt,
-            config={
-                'numberOfImages': 1,
-                'aspectRatio': '1:1',
-            }
-        )
+        # If reference image is provided, use edit_image for img2img
+        if reference_image_url:
+            log.info(f"Loading reference image: {reference_image_url}")
+            from google.genai import types
+            
+            # Download or load the reference image
+            if reference_image_url.startswith(('http://', 'https://')):
+                response = requests.get(reference_image_url, timeout=30)
+                response.raise_for_status()
+                ref_image = types.Image.from_bytes(response.content)
+            else:
+                # Load from local file
+                with open(reference_image_url, 'rb') as f:
+                    ref_image = types.Image.from_bytes(f.read())
+            
+            # Create style reference image
+            style_ref = types.StyleReferenceImage(
+                reference_id=1,
+                reference_image=ref_image,
+            )
+            
+            # Use edit_image with style reference
+            response = client.models.edit_image(
+                model='imagen-4.0-capability-001',
+                prompt=prompt,
+                reference_images=[style_ref],
+                config=types.EditImageConfig(
+                    number_of_images=1,
+                    edit_mode='EDIT_MODE_OUTPAINT_270',  # Generates new image using style
+                )
+            )
+        else:
+            # No reference: use standard generation
+            response = client.models.generate_images(
+                model='imagen-4.0-generate-001',
+                prompt=prompt,
+                config={
+                    'numberOfImages': 1,
+                    'aspectRatio': '1:1',
+                }
+            )
         
         if not response or not response.generated_images:
             raise RuntimeError("Gemini returned no images")

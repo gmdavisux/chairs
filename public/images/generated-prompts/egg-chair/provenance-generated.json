@@ -1,0 +1,60 @@
+{
+  "slug": "egg-chair",
+  "title": "Egg Chair",
+  "generatedAt": "2026-04-09T23:45:19.035039Z",
+  "provider": "fal",
+  "model": "fal-ai/flux/dev",
+  "imageSize": "1024x1024",
+  "maxImages": 4,
+  "budgetUsd": null,
+  "referenceBankUrls": [
+    "https://commons.wikimedia.org/wiki/Category:Egg_chair_(Arne_Jacobsen",
+    "https://commons.wikimedia.org/wiki/File:Egg_chair_-_Arne_Jacobsen_(1958).jpg",
+    "https://commons.wikimedia.org/wiki/File:The_Egg_Chair.jpg",
+    "https://commons.wikimedia.org/wiki/File:Arne_Jacobsen_-_Drop,_Egg_and_Swan.jpg",
+    "https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen",
+    "https://www.fritzhansen.com/en/categories/products/popular-series/egg",
+    "https://www.danishdesignstore.com/products/jacobsen-egg-chair-fritz-hansen-egg-leather-featured?srsltid=AfmBOoqj2UH0-u3-2QV8PfehPmP-gYe-KGCigWjhUI-fpculxtv__OV1",
+    "https://collections.vam.ac.uk/item/O137614/egg-armchair-armchair-jacobsen-arne-emil/",
+    "https://www.iconeye.com/design/classic-egg-chair-arne-jacobsen-fritz-hansen",
+    "https://arnejacobsen.com/works/the-egg-2/",
+    "https://www.danishdesignstore.com/products/jacobsen-egg-chair-fritz-hansen-egg-leather-featured?srsltid=AfmBOopDNcBwTyvHgiq2M2UGrAFPdBnWajnPZAgx_vp9yfUh7briETW3",
+    "https://scholar.archive.org/work/6ac7b53r4rhbrmtlbijoj4xnge/access/wayback/http://pdf.blucher.com.br.s3-sa-east-1.amazonaws.com/designproceedings/icdhs2014/0042.pdf",
+    "https://www.fritzhansen.com/en/categories/by-series/egg/3316",
+    "https://www.fritzhansen.com/en/inspiration/designers/arne-jacobsen",
+    "https://www.fritzhansen.com/en/about-us/extraordinarydesign",
+    "https://www.fritzhansen.com/en/about-us/our-story/our-heritage",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Egg_chair_-_Arne_Jacobsen_%281958%29.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/The_Egg_Chair.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Arne_Jacobsen_-_Drop%2C_Egg_and_Swan.jpg"
+  ],
+  "aiReferenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Egg_chair_-_Arne_Jacobsen_%281958%29.jpg",
+  "results": [
+    {
+      "slot": "hero",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "silhouette",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "context",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "designer",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    }
+  ],
+  "summary": {
+    "generatedCount": 0,
+    "referenceFallbackCount": 0,
+    "failedCount": 0,
+    "skippedCount": 4
+  }
+}

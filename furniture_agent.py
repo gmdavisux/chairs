@@ -329,25 +329,25 @@ images:
     source: "TBD"
     license: unknown
     origin: placeholder
-  - id: {slug}-detail-material
-    src: /images/{slug}-detail-material.jpg
-    alt: "Proposed close-up of material texture on {title}"
+  - id: {slug}-silhouette
+    src: /images/{slug}-silhouette.jpg
+    alt: "Proposed industrial design marker rendering showing {title} profile"
     altStatus: proposed
     caption: "TBD"
     source: "TBD"
     license: unknown
     origin: placeholder
-  - id: {slug}-detail-structure
-    src: /images/{slug}-detail-structure.jpg
-    alt: "Proposed detail of visible joints, screws, or frame transitions"
+  - id: {slug}-context
+    src: /images/{slug}-context.jpg
+    alt: "Proposed {title} in mid-century modern interior setting"
     altStatus: proposed
     caption: "TBD"
     source: "TBD"
     license: unknown
     origin: placeholder
-  - id: {slug}-detail-silhouette
-    src: /images/{slug}-detail-silhouette.jpg
-    alt: "Proposed profile silhouette of {title} showing signature geometry"
+  - id: {slug}-designer
+    src: /images/{slug}-designer.jpg
+    alt: "Proposed portrait or archival photo of {designer}"
     altStatus: proposed
     caption: "TBD"
     source: "TBD"
@@ -568,8 +568,8 @@ def build_crew(
             "- A 'Meet the Designer' H2 section\n"
             "- A 'Why It Endures' or 'The Legacy' H2 section\n"
             "- Inline citations [1] [2] etc. throughout body text\n"
-            "- Affiliate placeholder comment at the very end of the body:\n"
-            "  `<!-- AFFILIATE: Original/authenticated replica purchase links -->`\n"
+            "- Affiliate placeholder comment at the very end of the body (MDX JSX syntax):\n"
+            "  `{/* AFFILIATE: Original/authenticated replica purchase links */}`\n"
             "- A '## References' section with numbered, formatted citations\n"
             "- Tone: warm, expert, museum-catalog quality — match the voice of the "
             "existing Eames Lounge Chair page on this site\n\n"
@@ -1716,15 +1716,34 @@ def generate_and_log_images(page: dict, article_path: Path) -> dict:
         # Select reference for this specific slot
         reference_url = _select_ai_reference_url(slug, article_path, slot=slot)
         base_prompt = prompts.get(slot)
+        
+        # Generate default prompt if missing
         if not base_prompt:
-            results.append(
-                {
-                    "slot": slot,
-                    "status": "skipped",
-                    "reason": "missing prompt file",
-                }
-            )
-            continue
+            title = page.get("title", "furniture piece")
+            designer = page.get("designer", "Unknown Designer")
+            
+            default_prompts = {
+                "hero": f"Professional product photography of {title} designed by {designer}. Three-quarter view showing the chair's full form, sculptural qualities, and distinctive design features. Studio lighting with soft shadows on a neutral background. High contrast, sharp focus, museum-quality documentation style.",
+                "silhouette": f"Technical industrial design marker rendering of {title}. Side profile silhouette showing the chair's distinctive geometry and proportions. Clean line drawing style with subtle gray markers on white paper. Professional architecture sketch aesthetic.",
+                "context": f"{title} by {designer} in an elegant mid-century modern interior. The chair positioned in a sophisticated living room or office setting with period-appropriate furniture and décor. Natural daylight, architectural photography style, showing the chair in its intended environment.",
+                "designer": f"Portrait photograph of {designer}, the designer of {title}. Professional archival photograph showing the designer at work or in their studio. Black and white or period color photography. Documentary style capturing the designer's creative presence.",
+            }
+            
+            base_prompt = default_prompts.get(slot)
+            if not base_prompt:
+                results.append(
+                    {
+                        "slot": slot,
+                        "status": "skipped",
+                        "reason": "missing prompt file and no default available",
+                    }
+                )
+                continue
+            
+            # Save the default prompt for future use
+            prompt_file = prompt_dir / _filename
+            prompt_file.write_text(base_prompt, encoding="utf-8")
+            log.info(f"Created default prompt file for slot '{slot}': {prompt_file}")
 
         final_prompt = _build_style_prompt(base_prompt, page, slot)
         negative_prompt = STYLE_NEGATIVE_PROMPTS.get(slot, STYLE_NEGATIVE_PROMPTS["hero"])

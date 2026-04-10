@@ -1,0 +1,65 @@
+Image source discovery for: Egg Chair [egg-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Egg Chair Arne Jacobsen site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/Category:Egg_chair_(Arne_Jacobsen)
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Egg_chair_-_Arne_Jacobsen_(1958).jpg
+3. Untitled
+   https://commons.wikimedia.org/wiki/File:The_Egg_Chair.jpg
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Arne_Jacobsen_-_Drop,_Egg_and_Swan.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen
+
+[MUSEUMS QUERY]
+Egg Chair Arne Jacobsen site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/egg
+2. Untitled
+   https://www.danishdesignstore.com/products/jacobsen-egg-chair-fritz-hansen-egg-leather-featured?srsltid=AfmBOoqj2UH0-u3-2QV8PfehPmP-gYe-KGCigWjhUI-fpculxtv__OV1
+3. Untitled
+   https://collections.vam.ac.uk/item/O137614/egg-armchair-armchair-jacobsen-arne-emil/
+4. Untitled
+   https://www.iconeye.com/design/classic-egg-chair-arne-jacobsen-fritz-hansen
+5. Untitled
+   https://arnejacobsen.com/works/the-egg-2/
+
+[ARCHIVES QUERY]
+Egg Chair Arne Jacobsen site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://www.iconeye.com/design/classic-egg-chair-arne-jacobsen-fritz-hansen
+2. Untitled
+   https://www.danishdesignstore.com/products/jacobsen-egg-chair-fritz-hansen-egg-leather-featured?srsltid=AfmBOopDNcBwTyvHgiq2M2UGrAFPdBnWajnPZAgx_vp9yfUh7briETW3
+3. Untitled
+   https://arnejacobsen.com/works/the-egg-2/
+4. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/egg
+5. Untitled
+   https://scholar.archive.org/work/6ac7b53r4rhbrmtlbijoj4xnge/access/wayback/http://pdf.blucher.com.br.s3-sa-east-1.amazonaws.com/designproceedings/icdhs2014/0042.pdf
+
+[MANUFACTURERS QUERY]
+Egg Chair Arne Jacobsen site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/egg
+2. Untitled
+   https://www.fritzhansen.com/en/categories/by-series/egg/3316
+3. Untitled
+   https://www.fritzhansen.com/en/inspiration/designers/arne-jacobsen
+4. Untitled
+   https://www.fritzhansen.com/en/about-us/extraordinarydesign
+5. Untitled
+   https://www.fritzhansen.com/en/about-us/our-story/our-heritage

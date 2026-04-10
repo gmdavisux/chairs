@@ -1,0 +1,90 @@
+{
+  "slug": "egg-chair",
+  "title": "Egg Chair",
+  "referenceFolder": "public/images/reference/egg-chair-reference",
+  "collectedAt": "2026-04-09",
+  "downloadedCount": 2,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Egg_chair_(Arne_Jacobsen",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Egg_chair_-_Arne_Jacobsen_(1958).jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Egg_chair_-_Arne_Jacobsen_%281958%29.jpg",
+      "localPath": "public/images/reference/egg-chair-reference/ref-002.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Egg_Chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/The_Egg_Chair.jpg",
+      "localPath": "public/images/reference/egg-chair-reference/ref-003.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Arne_Jacobsen_-_Drop,_Egg_and_Swan.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Arne_Jacobsen_-_Drop%2C_Egg_and_Swan.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://www.fritzhansen.com/en/categories/products/popular-series/egg",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "https://www.danishdesignstore.com/products/jacobsen-egg-chair-fritz-hansen-egg-leather-featured?srsltid=AfmBOoqj2UH0-u3-2QV8PfehPmP-gYe-KGCigWjhUI-fpculxtv__OV1",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://collections.vam.ac.uk/item/O137614/egg-armchair-armchair-jacobsen-arne-emil/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}
