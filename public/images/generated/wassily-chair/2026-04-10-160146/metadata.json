@@ -1,0 +1,15 @@
+{
+  "slug": "wassily-chair",
+  "timestamp": "2026-04-10T16:01:50.708343",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1059181,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/wassily-chair-hero.png",
+      "provider": "fal",
+      "prompt": "Marcel Breuer Wassily Chair (Model B3) from 1925, three-quarter view showing the iconic chrome-plated tubular steel frame with black leather straps forming the seat and backrest. Soft warm lighting at 2700K highlights the gleaming metal curves and rich leather texture. Clean minimal background with subtle era-appropriate architectural elements. Sharp focus on the chair's revolutionary cubic frame structure with four legs and Bauhaus geometry. Natural shadows emphasize the interplay between industrial steel and organic leather. Match the exact colors and materials from the reference images - chrome steel and black leather only. No people, no clutter, no text.",
+      "reference_url": null
+    }
+  ]
+}

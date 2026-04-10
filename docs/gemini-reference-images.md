@@ -509,6 +509,67 @@ response = client.models.generate_images(
 - [photographic-style-guide.md](./photographic-style-guide.md) - Image quality standards
 - [hallucination-issues.md](./hallucination-issues.md) - Accuracy problems and solutions
 
+## Reference Image Licensing
+
+### Important Distinction
+
+**Reference images used for AI generation do NOT need to be public domain.**
+
+There's a critical difference between:
+
+1. **Reference Images** (input to AI) - Used to guide AI generation
+   - Can use any image for reference purposes
+   - Not redistributed or published
+   - Fair use for machine learning/transformation
+   - Stored locally in `/public/images/reference/`
+
+2. **Generated Images** (output from AI) - Your final deliverable
+   - These ARE published on your website
+   - These are AI-generated, not copies of copyrighted works
+   - You own the rights to AI-generated content
+
+### Why This Matters
+
+Previously, we may have suggested using only public domain images from Wikimedia Commons. **This restriction is not necessary for reference images.**
+
+You can use:
+- ✅ Museum photographs
+- ✅ Product photos from manufacturers
+- ✅ High-quality retail images
+- ✅ Any clear photograph of the authentic furniture piece
+
+As long as you're using them as **reference input** for AI generation (not republishing the original images), this falls under transformative use.
+
+### Current Reference Image Sources
+
+The project includes reference images from various sources:
+
+```bash
+# Wassily Chair references
+public/images/reference/wassily-chair-reference/
+  - ref-001.jpg  # University museum photo (Wikimedia)
+  - ref-002.jpg  # Design archive photo (Wikimedia)
+
+# Egg Chair references  
+public/images/reference/egg-chair-reference/
+  - ref-002.jpg  # Historical design photo (Wikimedia)
+  - ref-003.jpg  # Authentic example (Wikimedia)
+```
+
+These are used solely as AI training references. The **final generated images** are new AI creations based on your prompts.
+
+### Best Practices
+
+1. **Collect multiple reference angles** - Different views, lighting conditions
+2. **Prefer authentic examples** - Museum pieces, authorized reproductions over modern knockoffs
+3. **High resolution helps** - Better input = better AI output
+4. **Document your sources** - Keep metadata.json files for reference tracking
+5. **Don't publish reference images** - They're internal workflow assets
+
+### Legal Note
+
+This is for educational and creative purposes. If you have concerns about specific images, consult legal counsel. However, using reference images for AI training and transformation is generally considered fair use and is standard practice in AI image generation.
+
 ## Conclusion
 
 While Google's Gemini API doesn't yet support direct image generation with reference images via the Python SDK, we can:
