@@ -6,6 +6,8 @@ A slow-growing, authoritative static website documenting timeless furniture desi
 
 > **Automation requirements:** Technical contracts for image generation, normalization, provenance, and review gates are documented in [docs/automation-requirements.md](docs/automation-requirements.md).
 
+> **Script reference:** All operational scripts, CLI arguments, and common workflows are documented in [docs/script-reference.md](docs/script-reference.md).
+
 > **Photographic style guide:** Prompt and refinement constraints are documented in [docs/photographic-style-guide.md](docs/photographic-style-guide.md).
 
 ---

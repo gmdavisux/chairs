@@ -12,10 +12,15 @@ export async function getStaticPaths() {
 	return sortedPosts.map((post, index) => {
 		const prevPost = index < sortedPosts.length - 1 ? sortedPosts[index + 1] : null;
 		const nextPost = index > 0 ? sortedPosts[index - 1] : null;
-		
+		const relatedByDesigner = post.data.designer
+			? sortedPosts.filter(
+					(p) => p.id !== post.id && p.data.designer === post.data.designer
+			  )
+			: [];
+
 		return {
 			params: { slug: post.id },
-			props: { post, prevPost, nextPost },
+			props: { post, prevPost, nextPost, relatedByDesigner },
 		};
 	});
 }
@@ -24,12 +29,13 @@ type Props = {
 	post: CollectionEntry<'blog'>;
 	prevPost: CollectionEntry<'blog'> | null;
 	nextPost: CollectionEntry<'blog'> | null;
+	relatedByDesigner: CollectionEntry<'blog'>[];
 };
 
-const { post, prevPost, nextPost } = Astro.props;
+const { post, prevPost, nextPost, relatedByDesigner } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data} prevPost={prevPost} nextPost={nextPost}>
+<BlogPost {...post.data} prevPost={prevPost} nextPost={nextPost} relatedByDesigner={relatedByDesigner}>
 	<Content components={{ ImageWithMeta }} entryImages={post.data.images ?? []} />
 </BlogPost>

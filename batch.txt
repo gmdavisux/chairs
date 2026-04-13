@@ -1,0 +1,171 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    AI STUDIO GENERATION PROMPTS                              ║
+║                                                                              ║
+║  Furniture: eames-lounge-chair                                               ║
+║  References: 4 available                                                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+WORKFLOW:
+1. Open https://aistudio.google.com/
+2. For each slot below:
+   a. Copy the entire boxed block (prompt + reference URLs)
+   b. Paste the PROMPT TEXT into AI Studio's prompt field
+   c. Click '+' to add each REFERENCE IMAGE URL one by one
+      - For sketches: Add style reference first, then chair references
+      - For other slots: Add 2-3 chair reference URLs
+   d. Click Generate and wait for result
+   e. Download image as PNG with the OUTPUT FILENAME shown
+3. After generating all images:
+   python update_mdx_images.py eames-lounge-chair
+
+
+================================================================================
+SLOT: HERO
+STATUS: ✓ Image exists
+OUTPUT FILENAME: eames-lounge-chair-hero.png
+================================================================================
+
+COPY THIS ENTIRE BLOCK INTO AI STUDIO:
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│ Photorealistic museum-catalog photograph of Charles and Ray Eames Eames      │
+│ Lounge Chair and Ottoman studio photograph showing molded plywood shells     │
+│ and black leather cushions. Soft, diffused warm illumination at 2700-3000K   │
+│ producing gentle highlights with well-defined natural shadows and rich       │
+│ tonal depth. Clean minimal background. Three-quarter view showing            │
+│ signature silhouette and geometry. Sharp focus on material texture, grain,   │
+│ and hardware detail. Full tonal range from deep shadows to clean             │
+│ highlights. Natural color grading. No people, no clutter, no text.           │
+│                                                                              │
+│ REFERENCE IMAGES:                                                            │
+│                                                                              │
+│ Chair References:                                                            │
+│ https://commons.wikimedia.org/wiki/File:Eameslounch.jpg                      │
+│ https://commons.wikimedia.org/wiki/File:Exploded_Eames_Lounge_Chair_and_Otto │
+│ man_(2006)_Sculpture_designed_by_Vincent_Faust._Components_made_by_Herman_Mi │
+│ ller._Chair_designed_by_Ray_%26_Charles_Eames_(ID2008.7.1)_-_Fully_Furnished │
+│ _-_Historic_Furniture_Exhibit_-_Henry_Ford_Museum.jpg                        │
+│ https://commons.wikimedia.org/wiki/File:Eames_LCW_shock_mount.jpg            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+→ In AI Studio: Paste prompt, then click '+' to add each reference URL
+
+
+================================================================================
+SLOT: SKETCH
+STATUS: ⚠️  NEEDS GENERATION
+OUTPUT FILENAME: eames-lounge-chair-sketch.png
+================================================================================
+
+COPY THIS ENTIRE BLOCK INTO AI STUDIO:
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│ Professional industrial design marker rendering of the Eames Lounge Chair.   │
+│ **CRITICAL: NOT A SILHOUETTE** - Use dynamic three-quarter or perspective    │
+│ angle showing sculptural form and dimensional depth, NOT flat side           │
+│ profile. Cool gray Prismacolor or Copic markers (20%, 30%, 50% gray tones)   │
+│ defining the form with smooth graduated shading. Always include judicious    │
+│ selective color accents - single or limited strategic hues highlighting      │
+│ key features or materials. Confident, sketchy black ink construction lines   │
+│ that extend beyond the form with skeletal quality - multiple overlapping     │
+│ line strokes showing the drawing process, not tight technical drawing.       │
+│ Lines can overshoot corners and edges, emphasizing gesture and               │
+│ construction over precision. White or subtly tinted paper background (pale   │
+│ blue, warm beige, or neutral tone). Background features abstract geometric   │
+│ shapes, color blocks, or marker splashes adding visual interest without      │
+│ competing with subject. Emphasize pure form through shading. Balance         │
+│ between technical precision and hand-drawn spontaneity. No signature,        │
+│ text, annotations, or dimension lines.                                       │
+│                                                                              │
+│ REFERENCE IMAGES:                                                            │
+│                                                                              │
+│ Style Reference (marker rendering):                                          │
+│ https://media.licdn.com/dms/image/v2/C5622AQEsWIESc2lxXA/feedshare-shrink_81 │
+│ 92/feedshare-shrink_8192/0/1547756609958?e=1777507200&v=beta&t=nOHIpJChD4qrQLIvoyYaAefHxR3caB007sifJ2i9slk │
+│                                                                              │
+│ Chair References:                                                            │
+│ https://commons.wikimedia.org/wiki/File:Eameslounch.jpg                      │
+│ https://commons.wikimedia.org/wiki/File:Exploded_Eames_Lounge_Chair_and_Otto │
+│ man_(2006)_Sculpture_designed_by_Vincent_Faust._Components_made_by_Herman_Mi │
+│ ller._Chair_designed_by_Ray_%26_Charles_Eames_(ID2008.7.1)_-_Fully_Furnished │
+│ _-_Historic_Furniture_Exhibit_-_Henry_Ford_Museum.jpg                        │
+│ https://commons.wikimedia.org/wiki/File:Eames_LCW_shock_mount.jpg            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+→ In AI Studio: Paste prompt, then click '+' to add each reference URL
+
+
+================================================================================
+SLOT: CONTEXT
+STATUS: ⚠️  NEEDS GENERATION
+OUTPUT FILENAME: eames-lounge-chair-context.png
+================================================================================
+
+COPY THIS ENTIRE BLOCK INTO AI STUDIO:
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│ The Eames Lounge Chair in an elegant mid-century modern interior setting.    │
+│ Positioned to show how the enveloping form creates presence within the       │
+│ architectural space. Warm lighting at 2700K emphasizing both the chair's     │
+│ form and the refined atmosphere. Architectural photography capturing the     │
+│ relationship between sculptural furniture and modernist interior design.     │
+│ Minimal era-appropriate context that anchors period authenticity without     │
+│ visual crowding. Clean negative space around the subject.                    │
+│                                                                              │
+│ REFERENCE IMAGES:                                                            │
+│                                                                              │
+│ Chair References:                                                            │
+│ https://commons.wikimedia.org/wiki/File:Eameslounch.jpg                      │
+│ https://commons.wikimedia.org/wiki/File:Exploded_Eames_Lounge_Chair_and_Otto │
+│ man_(2006)_Sculpture_designed_by_Vincent_Faust._Components_made_by_Herman_Mi │
+│ ller._Chair_designed_by_Ray_%26_Charles_Eames_(ID2008.7.1)_-_Fully_Furnished │
+│ _-_Historic_Furniture_Exhibit_-_Henry_Ford_Museum.jpg                        │
+│ https://commons.wikimedia.org/wiki/File:Eames_LCW_shock_mount.jpg            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+→ In AI Studio: Paste prompt, then click '+' to add each reference URL
+
+
+================================================================================
+SLOT: DESIGNER
+STATUS: ✓ Image exists
+OUTPUT FILENAME: eames-lounge-chair-designer.png
+================================================================================
+
+COPY THIS ENTIRE BLOCK INTO AI STUDIO:
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│ Black and white archival portrait photograph of Charles and Ray Eames from   │
+│ the mid-20th century. Professional architectural photographer style of the   │
+│ period. Clear, dignified composition typical of modernist designer           │
+│ portraits. Period clothing, natural lighting. Historical photography         │
+│ aesthetic.                                                                   │
+│                                                                              │
+│ REFERENCE IMAGES:                                                            │
+│                                                                              │
+│ Chair References:                                                            │
+│ https://commons.wikimedia.org/wiki/File:Eameslounch.jpg                      │
+│ https://commons.wikimedia.org/wiki/File:Exploded_Eames_Lounge_Chair_and_Otto │
+│ man_(2006)_Sculpture_designed_by_Vincent_Faust._Components_made_by_Herman_Mi │
+│ ller._Chair_designed_by_Ray_%26_Charles_Eames_(ID2008.7.1)_-_Fully_Furnished │
+│ _-_Historic_Furniture_Exhibit_-_Henry_Ford_Museum.jpg                        │
+│ https://commons.wikimedia.org/wiki/File:Eames_LCW_shock_mount.jpg            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+→ In AI Studio: Paste prompt, then click '+' to add each reference URL
+
+
+================================================================================
+SUMMARY
+================================================================================
+Prompts generated: 4
+Chair reference images available: 4
+
+TIPS:
+• Multiple reference images (2-3) produce significantly better results
+• For sketches: Style reference ensures marker rendering aesthetic
+• Copy entire boxed blocks for faster workflow

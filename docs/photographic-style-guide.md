@@ -80,7 +80,20 @@ Preferred strength/denoise range: 0.35-0.55.
 
 The sketch slot uses professional industrial design marker rendering technique instead of photorealism.
 
-**PROVIDER NOTE:** Currently using FAL (FLUX) as primary provider. Google Gemini Imagen produces higher resolution but tends to hallucinate non-existent chair details when reference images are not supported. FAL with increased inference steps (50+) provides good quality while maintaining accuracy to the actual chair design.
+**PROVIDER NOTE:** 
+- **Google AI Studio (Manual)**: Best quality with full multi-reference support - produces amazing results when using reference URLs manually in the web interface
+- **FAL (FLUX) (Automated)**: Good quality for automation but limited to ONE reference image per generation. Increased inference steps (50+) provides good quality while maintaining accuracy to the actual chair design
+- **Trade-off**: AI Studio (manual) = best quality with multiple references; FAL (automated) = good quality, single reference, fully scriptable
+
+**Reference Image Limitations:**
+- FAL img2img: Single `image_url` parameter only
+- Google AI Studio: Multiple reference URLs supported (but Python SDK doesn't expose this yet)
+- Workaround: Choose the best single reference per slot for FAL automation
+
+**Additional Style Refrences for sketching**
+- https://media.licdn.com/dms/image/v2/C5622AQEsWIESc2lxXA/feedshare-shrink_8192/feedshare-shrink_8192/0/1547756609958?e=1777507200&v=beta&t=nOHIpJChD4qrQLIvoyYaAefHxR3caB007sifJ2i9slk
+- https://media.licdn.com/dms/image/v2/C4E22AQFXGn2GGhnvzw/feedshare-shrink_2048_1536/feedshare-shrink_2048_1536/0/1578258065899?e=1777507200&v=beta&t=kb1AhRuWln-3uFCiTIBQrASb-5lNCMz_4wsSreqNZCs
+- https://media.licdn.com/dms/image/v2/C5622AQG5elUIxPCUcg/feedshare-shrink_8192/feedshare-shrink_8192/0/1563128324286?e=1777507200&v=beta&t=Ew0bYt9FqCXzLGLhzeMYLpZDvUTBRKYvjHca4NIoMOo
 
 **CRITICAL: NOT A SILHOUETTE** - Avoid flat side-profile views. Use dynamic three-quarter or perspective angles that show sculptural form and dimensional depth.
 

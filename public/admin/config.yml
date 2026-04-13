@@ -1,0 +1,76 @@
+backend:
+  name: git-gateway
+
+# Enables local editing without Netlify auth — run `npx decap-server` alongside `npm run dev`
+local_backend: true
+
+media_folder: "public/images"
+public_folder: "/images"
+
+collections:
+  - name: "blog"
+    label: "Chair Articles"
+    folder: "src/content/blog"
+    extension: "mdx"
+    format: "frontmatter"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      # ── Core ──────────────────────────────────────────────────────────────
+      - { label: "Title",        name: title,       widget: string }
+      - { label: "Description",  name: description, widget: text }
+      - label: "Publish Date"
+        name: pubDate
+        widget: datetime
+        date_format: "YYYY-MM-DD"
+        time_format: false
+      - label: "Updated Date"
+        name: updatedDate
+        widget: datetime
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        required: false
+
+      # ── Hero Image ────────────────────────────────────────────────────────
+      - { label: "Hero Image",        name: heroImage,        widget: image,  required: false }
+      - { label: "Hero Image Alt",    name: heroImageAlt,     widget: string, required: false }
+      - label: "Hero Image Alt Status"
+        name: heroImageAltStatus
+        widget: select
+        required: false
+        options: [proposed, actual]
+      - { label: "Hero Image Caption", name: heroImageCaption, widget: string, required: false }
+      - { label: "Hero Image Source",  name: heroImageSource,  widget: string, required: false }
+      - label: "Hero Image License"
+        name: heroImageLicense
+        widget: select
+        required: false
+        options: [public_domain, cc0, cc_by, cc_by_sa, licensed, rights_reserved, ai_generated, unknown]
+      - label: "Hero Image Origin"
+        name: heroImageOrigin
+        widget: select
+        required: false
+        options: [public_domain, licensed, ai_generated, placeholder]
+
+      # ── Designer ──────────────────────────────────────────────────────────
+      - { label: "Designer",       name: designer,      widget: string, required: false }
+      - { label: "Designer Years", name: designerYears, widget: string, required: false, hint: "e.g. 1902–1971" }
+      - { label: "Designer Bio",   name: designerBio,   widget: text,   required: false }
+      - { label: "Designer Image", name: designerImage, widget: image,  required: false }
+
+      # ── Taxonomy ──────────────────────────────────────────────────────────
+      - { label: "Era",      name: era,      widget: string, required: false }
+      - { label: "Category", name: category, widget: string, required: false }
+
+      # ── SEO ───────────────────────────────────────────────────────────────
+      - { label: "Manufacturer", name: manufacturer, widget: string, required: false, hint: "e.g. Fritz Hansen, Knoll, Herman Miller" }
+      - { label: "Year Designed", name: yearDesigned, widget: number, required: false, hint: "4-digit year, e.g. 1958" }
+      - label: "Keywords"
+        name: keywords
+        widget: list
+        required: false
+        hint: "SEO keywords — one per line"
+        field: { label: Keyword, name: keyword, widget: string }
+
+      # ── Body ──────────────────────────────────────────────────────────────
+      - { label: "Body", name: body, widget: markdown }

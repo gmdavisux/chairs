@@ -77,43 +77,40 @@ def parse_mdx_file(mdx_path: Path) -> tuple[dict, str, str]:
 
 def find_referenced_slots(body: str) -> set[str]:
     """
-    Find all image slots already referenced in the body via ImageWithMeta or image URLs.
+    Find all image slots already referenced in the body via ImageWithMeta components.
+    Detects both registry-first (id="...") and legacy inline (src="/images/...") forms.
     """
     slots = set()
-    
-    # Find ImageWithMeta src attributes
-    image_pattern = r'src="([^"]+)"'
-    for match in re.finditer(image_pattern, body):
+
+    # Registry-first: id="slug-slot" form — extract trailing slot name
+    for match in re.finditer(r'\bid="([^"]+)"', body):
+        img_id = match.group(1)
+        if "-" in img_id:
+            slot = img_id.split("-")[-1]
+            slots.add(slot)
+
+    # Legacy inline: src="/images/slug-slot.ext" form
+    for match in re.finditer(r'src="([^"]+)"', body):
         src = match.group(1)
-        # Extract slot from paths like /images/tulip-chair-sketch.png
         if "/images/" in src:
             filename = src.split("/")[-1]
-            # Remove extension
             name = filename.rsplit(".", 1)[0]
-            # Extract slot
             if "-" in name:
                 slot = name.split("-")[-1]
                 slots.add(slot)
-    
+
     return slots
 
 
 def generate_image_component(image_data: dict) -> str:
     """
-    Generate an ImageWithMeta component from image frontmatter data.
+    Generate a registry-first ImageWithMeta component from image frontmatter data.
+
+    Uses the image id to reference the frontmatter registry via the entryImages
+    variable, which is available in MDX body scope from [...slug].astro.
     """
-    src = image_data.get("src", "")
-    alt = image_data.get("alt", "")
-    caption = image_data.get("caption", "")
-    source = image_data.get("source", "")
-    
-    component = f'''<ImageWithMeta
-  src="{src}"
-  alt="{alt}"
-  caption="{caption}"
-  source="{source}"
-/>'''
-    return component
+    img_id = image_data.get("id", "")
+    return f'<ImageWithMeta id="{img_id}" images={{props.entryImages}} />'
 
 
 def insert_missing_slots(

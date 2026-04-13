@@ -1,0 +1,65 @@
+Image source discovery for: Swan Chair [swan-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Swan Chair Arne Jacobsen site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/Category:Swan_chair_(Arne_Jacobsen)
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:SAS_Royal_Hotel_furniture_in_Copenhagen.JPG
+3. Untitled
+   https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Ngv_design,_arne_jacobsen,_swan_chair,_1958.JPG
+5. Untitled
+   https://commons.wikimedia.org/wiki/File:Swan_chairs_-_Copenhagen_Airport.jpg
+
+[MUSEUMS QUERY]
+Swan Chair Arne Jacobsen site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://en.wikipedia.org/wiki/Swan_(chair)
+2. Untitled
+   https://www.danishdesignstore.com/products/fritz-hansen-swan-chair-design-arne-jacobsen?srsltid=AfmBOopeUZgCe9_bUvE2Ggr0Y78v7jb6u9-Mx3fE0cHqNqcO57YN5S2_
+3. Untitled
+   https://arnejacobsen.com/works/the-swan/
+4. Untitled
+   https://collections.vam.ac.uk/item/O144553/the-swan-armchair-jacobsen-arne-emil/
+5. Untitled
+   https://rarify.co/products/swan-chair-model-3320-arne-jacobsen-fritz-hansen-21082009?srsltid=AfmBOopyh7HWDE-uMEHhsAu0zPGmEvOY70YOEn5izhjT8DX2-oM0AB-D
+
+[ARCHIVES QUERY]
+Swan Chair Arne Jacobsen site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://arnejacobsen.com/works/the-swan/
+2. Untitled
+   https://rarify.co/products/swan-chair-model-3320-arne-jacobsen-fritz-hansen-21082009?srsltid=AfmBOoqbBU1D_evnu4y3PDR4VVm245z4Uvt8fGI_5ES0aQzRdhgfMIbg
+3. Untitled
+   https://www.danishdesignstore.com/products/fritz-hansen-swan-chair-design-arne-jacobsen?srsltid=AfmBOorqhOTdXSSc7f04EOrUr71wyFE0B9pXl5EGz9ZhiqZ8lFXSNf7M
+4. Untitled
+   https://www.dwr.com/living-lounge-chairs/swan-chair/7501.html?lang=en_US
+5. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/swan
+
+[MANUFACTURERS QUERY]
+Swan Chair Arne Jacobsen site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.fritzhansen.com/en/inspiration/designers/arne-jacobsen
+2. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/egg
+3. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/swan
+4. Untitled
+   https://www.fritzhansen.com/en/about-us/quality-and-craftmanship
+5. Untitled
+   https://www.fritzhansen.com/en/categories/by-series/swan/3320

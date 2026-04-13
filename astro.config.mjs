@@ -9,6 +9,9 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://chairs.usersimple.com',
+  redirects: {
+    '/admin': '/admin/index.html',
+  },
   integrations: [mdx(), sitemap()],
 
   vite: {

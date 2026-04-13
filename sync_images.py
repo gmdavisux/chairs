@@ -49,7 +49,7 @@ SLOT_DESCRIPTIONS = {
     "silhouette": "profile view capturing distinctive proportions and geometry",
     "material": "close-up detail showing surface texture and material quality",
     "structure": "structural detail of frame construction and joinery",
-    "designer": "portrait photograph of the designer",
+    "designer": "portrait of the designer",
 }
 
 
@@ -140,7 +140,7 @@ def create_image_metadata(slug: str, slot: str, image_path: Path, title: str) ->
         "alt": f"{title}, {description}",
         "altStatus": "actual",
         "caption": f"{description.capitalize()}",
-        "source": "Generated for Classic Furniture Archives",
+        "source": "Original image created based on reference materials",
         "license": "ai_generated",
         "origin": "ai_generated",
     }

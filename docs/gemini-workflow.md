@@ -21,8 +21,26 @@ python generate_images.py wassily-chair --update-mdx
 
 This is what you did manually, but automated:
 
+**NEW: Enhanced AI Studio Prompt Generator** ⭐
+
 ```bash
-# Step 1: Prepare a batch file with all prompts and references
+# Generate prompts with multiple reference URLs for AI Studio
+python generate_aistudio_prompts.py wassily-chair --output batch.txt
+
+# This creates a formatted batch file with:
+# - Each prompt optimized for AI Studio
+# - Multiple reference URLs per slot (2-3 for best results)
+# - Clear instructions for manual workflow
+# - Track which images are already generated
+
+# Then open the batch file and follow instructions
+open batch.txt
+```
+
+**Original workflow (still works)**:
+
+```bash
+# Step 1: Prepare a batch file with prompts and references
 python prepare_gemini_batch.py wassily-chair --simple --output gemini-batch.txt
 
 # Step 2: Open the batch file and use it to generate images in AI Studio
@@ -31,6 +49,12 @@ python prepare_gemini_batch.py wassily-chair --simple --output gemini-batch.txt
 # Step 3: After saving all PNGs, update your MDX file automatically
 python update_mdx_images.py wassily-chair
 ```
+
+**Why the new tool is better**:
+- Formats **multiple reference URLs** per slot (not just one)
+- Shows which images already exist (✓) vs need generation (⚠️)
+- Includes style guide integration
+- Better organized output for manual workflow
 
 ### Option 3: Custom Prompts + References
 

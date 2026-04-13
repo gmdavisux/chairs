@@ -1,0 +1,20 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T13:11:35.286197",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 754583,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-hero.png",
+      "provider": "google",
+      "prompt": "Architectural sketch drawing of the Barcelona Chair and ottoman in pen and ink style. Clean line work with minimal cross-hatching and shading to show form and volume. Three-quarter view showing the iconic X-frame structure, tufted leather cushions, and elegant proportions. Professional architectural illustration quality with precise perspective and attention to the chair's defining features. White or cream background. Simple, elegant linework reminiscent of mid-century furniture catalog illustrations.",
+      "reference_url": [
+        "https://media.licdn.com/dms/image/v2/C5622AQEsWIESc2lxXA/feedshare-shrink_8192/feedshare-shrink_8192/0/1547756609958?e=1777507200&v=beta&t=nOHIpJChD4qrQLIvoyYaAefHxR3caB007sifJ2i9slk",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    }
+  ]
+}

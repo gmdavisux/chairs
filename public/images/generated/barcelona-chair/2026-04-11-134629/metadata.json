@@ -1,0 +1,45 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T13:46:36.579699",
+  "images": [
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 997941,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Retouch the reference photograph: Do NOT change the structure or form of the Barcelona Chair shown in the reference image. Only improve: lighting (add soft backlit window light effect), color balance and exposure, professional framing with clean composition. Change the background to a minimal 20th century modern interior setting with neutral tones. Maintain the chair's exact proportions, frame structure, and cushion details from the reference. Professional photographic quality.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1192611,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-context.png",
+      "provider": "google",
+      "prompt": "Retouch the reference photograph: Do NOT change the structure or form of the Barcelona Chair shown in the reference image. Only improve: natural window lighting with soft shadows and warm ambiance, color balance and exposure, professional framing. Change the background to a 20th century modern living space or office setting (bookshelf, reading nook, or executive office context). Maintain the chair's exact proportions, frame structure, cushion patterns, and all physical details from the reference. Professional photographic quality.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    },
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 968937,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-designer.png",
+      "provider": "google",
+      "prompt": "Retouch the reference photograph: Do NOT change the structure or form of the Barcelona Chair shown in the reference image. Only improve: lighting to create a warm display presentation effect, color balance and exposure, professional museum-quality framing. Change the background to a clean 20th century modern gallery or design studio setting. Maintain the chair's exact proportions, frame structure, and all physical details from the reference. Professional catalog-quality photography.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    }
+  ]
+}

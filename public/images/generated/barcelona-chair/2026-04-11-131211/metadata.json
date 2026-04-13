@@ -1,0 +1,45 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T13:12:18.718253",
+  "images": [
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 904878,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Professional interior photography of a Barcelona Chair in silhouette against soft backlit window light in a modern residential or office space. Clean profile view emphasizing the signature X-frame curves and tufted cushion outline. Subtle rim lighting highlighting the chair's elegant proportions. Minimal contemporary interior setting with neutral tones. Photographic quality with proper depth of field and natural lighting. No people, no clutter.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1249286,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-context.png",
+      "provider": "google",
+      "prompt": "Professional lifestyle interior photograph of a Barcelona Chair and ottoman in a contemporary living space or modern office. Natural window lighting creating soft shadows and warm ambiance. Chair positioned in a typical usage context - perhaps near a bookshelf, reading nook, or executive office setting. Sharp focus on the chair showing leather texture and chrome frame details. Photorealistic quality with proper color grading and exposure. Sophisticated residential or professional environment. No people, minimal styling, authentic setting.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    },
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 1345346,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-designer.png",
+      "provider": "google",
+      "prompt": "Professional portrait photograph in warm sepia or black and white tones, showing a contemplative architectural designer from the Bauhaus era. Soft studio lighting with gentle gradation. Clean background. Period-appropriate formal attire. Thoughtful expression suggesting creativity and precision. Photographic quality reminiscent of 1920s-1930s portrait photography. No text, no props.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    }
+  ]
+}

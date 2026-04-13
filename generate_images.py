@@ -228,7 +228,7 @@ def generate_with_fal(
         model = "fal-ai/flux/dev"
         arguments = {
             "prompt": prompt,
-            "image_size": "square_hd",  # 1024x1024
+            "image_size": {"width": 1280, "height": 1024},  # 5:4 ratio
             "num_inference_steps": 50,  # Increased from 40 for better quality
             "guidance_scale": 3.5,
             "num_images": 1,

@@ -3,6 +3,46 @@
 **Date**: April 10, 2026  
 **Status**: Implemented (with limitations documented)
 
+## Key Finding: API vs AI Studio Feature Gap
+
+**Critical Discovery (April 10, 2026)**: Google AI Studio's web interface supports reference images and produces excellent results, but this feature is **not yet available** in the `google-genai` Python SDK (v1.47.0).
+
+### What Works
+
+✅ **Google AI Studio (Manual)**: Full reference image support, amazing quality  
+✅ **FAL API (Automated)**: img2img with reference images via Python  
+✅ **Basic Imagen generation**: Text-to-image without references works fine
+
+### What Doesn't Work
+
+❌ **google-genai Python SDK**: `GenerateImagesConfig` lacks `subject_reference_images` parameter  
+❌ **google-generativeai SDK**: Deprecated, being phased out  
+❌ **Programmatic referenceimages**: Not yet exposed in Python API
+
+### Tested Configuration
+
+```python
+# ✓ This works (basic generation)
+response = client.models.generate_images(
+    model='imagen-4.0-generate-001',
+    prompt='Wassily Chair',
+    config={'number_of_images': 1, 'aspect_ratio': '1:1'}
+)
+
+# ✗ This fails (reference not supported)
+config = types.GenerateImagesConfig(
+    number_of_images=1,
+    subject_reference_images=[ref]  # ← Not a valid parameter!
+)
+```
+
+Available `GenerateImagesConfig` parameters (as of SDK v1.47.0):
+- `number_of_images`, `aspect_ratio`, `image_size`
+- `safety_filter_level`, `person_generation`
+- `negative_prompt`, `seed`, `guidance_scale`
+- `add_watermark`, `output_mime_type`
+- **NO `subject_reference_images` or similar**
+
 ## Executive Summary
 
 This document explains how to use reference images with Google Gemini for more accurate image generation. After researching the official documentation and testing various approaches, we've identified the capabilities and limitations of the Gemini API for reference-based image generation.
@@ -187,6 +227,109 @@ images = model.generate_images(
 - More complex setup
 - Different pricing model
 - Overkill for small projects
+
+## Reference Image Capabilities Comparison
+
+### Single vs Multiple References
+
+**❌ FAL (FLUX) - Single Reference Only**
+```python
+# FAL img2img supports only ONE reference image
+arguments = {
+    "image_url": "https://example.com/ref.jpg",  # Single URL only
+    "strength": 0.6,
+    "prompt": "Generate based on this reference"
+}
+```
+
+**Limitations**:
+- `image_url` parameter accepts only one URL
+- Cannot pass arrays or multiple references
+- No built-in multi-image composition
+
+**Workarounds**:
+1. **Choose best single reference per slot** (Recommended)
+   ```json
+   {
+     "hero": "best-three-quarter-view.jpg",
+     "context": "environmental-shot.jpg",
+     "detail-material": "closeup-texture.jpg"
+   }
+   ```
+
+2. **Pre-composite references** (Advanced)
+   - Combine multiple reference images into one composite
+   - Use side-by-side or grid layout
+   - Give AI multiple angles in single image
+   - Requires image editing before generation
+
+3. **Generate multiple variations**
+   - Run generation with different references
+   - Pick best result
+   - More expensive but higher quality
+
+**✅ Google AI Studio (Manual) - Multiple References Supported**
+
+When using AI Studio web interface manually:
+- Upload or paste **multiple reference image URLs**
+- AI considers all references simultaneously
+- Better understanding of form from multiple angles
+- **This is why you get "amazing results" manually**
+
+Example manual workflow:
+```
+1. Open https://aistudio.google.com/
+2. Paste prompt
+3. Add multiple references:
+   - ref-001.jpg (three-quarter view)
+   - ref-002.jpg (side detail)
+   - ref-003.jpg (material closeup)
+4. Generate → Download
+```
+
+**Result**: Higher fidelity because AI sees multiple perspectives.
+
+### Quality Comparison Based on Testing
+
+| Feature | AI Studio (Manual) | FAL (Automated) |
+|---------|-------------------|-----------------|
+| **Reference Images** | Multiple URLs ✅ | Single URL only |
+| **Quality** | Excellent ⭐⭐⭐ | Good ⭐⭐ |
+| **Accuracy** | Best for authentic replicas | Good with right reference |
+| **Automation** | Manual process | Fully scriptable ✅ |
+| **Cost** | Free with API key | ~$0.05-0.10 per image |
+| **Speed** | 10-30 sec per image | 15-45 sec per image |
+| **Best For** | Hero images, critical shots | Batch processing, iterations |
+
+### Practical Recommendation
+
+**Hybrid Approach** (Best of Both):
+
+1. **Use AI Studio for critical images**:
+   - Hero shots
+   - Detail images where accuracy matters
+   - Use 2-3 reference URLs showing different angles
+   - Manual review ensures quality
+
+2. **Use FAL for batch/iteration work**:
+   - Context images
+   - Concept variations
+   - Quick iterations
+   - Use best single reference per slot
+   - Automate with [wassily-chair-references.json](../wassily-chair-references.json)
+
+3. **Quality workflow**:
+   ```bash
+   # Step 1: Auto-generate with FAL (fast)
+   export FURNITURE_IMAGE_PROVIDER=fal
+   python generate_images.py $SLUG \
+     --reference-images $SLUG-references.json \
+     --update-mdx
+   
+   # Step 2: Review results
+   # Step 3: Regenerate hero/critical images manually in AI Studio with multiple refs
+   # Step 4: Replace only the images that need better quality
+   ```
 
 ## Technical Details
 
@@ -382,25 +525,72 @@ For reference image support, use one of these approaches:
 
 ### For Your Use Case (Furniture Design Images)
 
-**Best Approach**: Hybrid Workflow
+**Best Approach Based on Testing**: Hybrid Workflow
 
-1. **Use FAL for automation**:
+#### 1. **Use FAL for automated batch processing** ⭐ RECOMMENDED
    ```bash
    export FURNITURE_IMAGE_PROVIDER=fal
-   python generate_images.py [slug] \
-     --reference-images refs.json \
+   python generate_images.py wassily-chair \
+     --reference-images wassily-chair-references.json \
      --update-mdx
    ```
+   - ✅ Fully automated
+   - ✅ True img2img with references
+   - ✅ Works reliably via Python
+   - ⚠️ Costs per image (but reasonable)
 
-2. **Use AI Studio for quality control**:
-   - Generate batch files with `prepare_gemini_batch.py`
-   - Manually review and regenerate problematic images
-   - Fine-tune prompts in real-time
+#### 2. **Use AI Studio for quality control** ⭐ BEST QUALITY
+   
+   **NEW: AI Studio Prompt Generator** - Streamlined workflow:
+   ```bash
+   # Generate formatted prompts with multiple reference URLs
+   python generate_aistudio_prompts.py wassily-chair --output batch.txt
+   
+   # Open and follow instructions
+   open batch.txt
+   
+   # The tool provides:
+   # - Optimized prompts for each slot
+   # - 2-3 reference URLs per slot (for multi-angle understanding)
+   # - Status indicators (✓ exists, ⚠️ needs generation)
+   # - Clear step-by-step instructions
+   # - Integration with update_mdx_images.py
+   ```
+   
+   **Manual workflow in AI Studio**:
+   1. Open https://aistudio.google.com/
+   2. For each slot in the generated file:
+      - Copy the PROMPT text
+      - Paste into AI Studio
+      - Click + to add each REFERENCE IMAGE URL (2-3 recommended)
+      - Click Generate
+      - Download as PNG with the suggested filename
+   3. After all images generated:
+      ```bash
+      python update_mdx_images.py wassily-chair
+      ```
+   
+   **Why this is best**:
+   - ✅ Best quality results (you confirmed this!)
+   - ✅ Multiple reference URLs (2-3 angles)
+   - ✅ Free with API key
+   - ✅ Now streamlined with prompt generator
+   - ⚠️ Still manual, but much more efficient
+   - 💡 Use for hero/critical images
 
-3. **Use Gemini multimodal for research**:
-   - Extract accurate descriptions from reference images
-   - Validate generated images match references
-   - Create custom prompts based on visual analysis
+#### 3. **Python SDK reference support**: Wait for Google update
+   - The `google-genai` SDK will likely add this feature
+   - Monitor: https://github.com/google/generative-ai-python
+   - When available, we can automate Google-based generation
+
+### Why You Get Amazing Results in AI Studio
+
+AI Studio uses Google's internal APIs that have more features than the public Python SDK. Specifically:
+- Reference image upload and processing
+- Advanced style transfer capabilities  
+- Better prompt understanding with visual context
+
+**Your workflow is correct** - AI Studio manual generation is currently the best way to use Google with references!
 
 ### Configuration
 
@@ -572,21 +762,66 @@ This is for educational and creative purposes. If you have concerns about specif
 
 ## Conclusion
 
-While Google's Gemini API doesn't yet support direct image generation with reference images via the Python SDK, we can:
+While Google's Gemini API doesn't yet support direct image generation with reference images via the Python SDK, we have effective workflows:
 
-1. ✅ Use Gemini's multimodal model to understand references
-2. ✅ Generate enhanced prompts from visual analysis
-3. ✅ Use AI Studio for manual generation with full reference support
-4. ✅ Use FAL for automated img2img generation
-5. ✅ Plan for future Imagen reference support
+1. ✅ **AI Studio (Manual)**: Best quality with multi-reference support - use `generate_aistudio_prompts.py` tool
+2. ✅ Use Gemini's multimodal model to understand references
+3. ✅ Generate enhanced prompts from visual analysis
+4. ✅ Use FAL for automated img2img generation (single reference)
+5. ✅ Plan for future Imagen reference support in Python SDK
 
-The updated `generate_images.py` now:
-- Uses the correct `google-generativeai` SDK
-- Supports multimodal reference understanding
-- Provides clear guidance on recommended workflows
-- Documents limitations transparently
+### Updated Tooling
 
-**Recommendation**: Use FAL with `FURNITURE_IMAGE_PROVIDER=fal` for automated generation with reference images until Google adds native support to the Python SDK.
+**NEW: `generate_aistudio_prompts.py`** - Streamlines the manual AI Studio workflow:
+```bash
+# Generate prompts with multiple reference URLs
+python generate_aistudio_prompts.py wassily-chair --output batch.txt
+
+# Features:
+# - Multiple reference URLs per slot (2-3 recommended)
+# - Status indicators (✓ exists, ⚠️ needs generation)
+# - Optimized prompts for AI Studio
+# - Clear step-by-step instructions
+# - Integration with update_mdx_images.py
+```
+
+**Example output**:
+```
+SLOT: HERO
+OUTPUT FILENAME: wassily-chair-hero.png
+
+PROMPT:
+[Optimized prompt text]
+
+REFERENCE IMAGES (2 available):
+  1. https://commons.wikimedia.org/.../ref-001.jpg
+  2. https://commons.wikimedia.org/.../ref-002.jpg
+
+TIP: Add 2-3 references for best results
+```
+
+**Existing tools**:
+- `generate_images.py`: Automated generation (FAL, single reference)
+- `prepare_gemini_batch.py`: Simple batch file generation
+- `update_mdx_images.py`: Update MDX files after generation
+
+### Recommendations
+
+**For Best Quality** (Hero images, critical shots):
+- Use AI Studio manually with `generate_aistudio_prompts.py` tool
+- Add 2-3 reference URLs showing different angles
+- Manual review ensures authenticity
+
+**For Automation** (Batch processing, iterations):
+- Use FAL with `FURNITURE_IMAGE_PROVIDER=fal`
+- Single reference per slot via `-references.json` files
+- Good quality, fully scriptable
+
+**Hybrid Approach** (Recommended):
+1. Generate batch with FAL for speed
+2. Review results
+3. Regenerate critical images manually in AI Studio with multiple references
+4. Combine best results
 
 ---
 

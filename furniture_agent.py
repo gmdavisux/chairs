@@ -264,7 +264,9 @@ def init_backlog() -> dict:
 
 def get_existing_slugs() -> set:
     """Return the set of slugs that already exist as published markdown files."""
-    return {p.stem for p in CONTENT_DIR.glob("*.md")}
+    md_slugs = {p.stem for p in CONTENT_DIR.glob("*.md")}
+    mdx_slugs = {p.stem for p in CONTENT_DIR.glob("*.mdx")}
+    return md_slugs | mdx_slugs
 
 
 def pick_next_page(backlog: dict) -> Optional[dict]:
@@ -365,6 +367,13 @@ images:
 designer: "{designer}"
 era: "{era}"
 category: "{category}"
+manufacturer: "TBD"
+yearDesigned: null
+keywords:
+  - "{title}"
+  - "{designer}"
+  - "{era}"
+  - iconic chairs
 ---
 
 """
@@ -975,7 +984,7 @@ def extract_and_save(result, page: dict, pubdate: str) -> Path:
 
     # Write the article
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
-    article_path = CONTENT_DIR / f"{slug}.md"
+    article_path = CONTENT_DIR / f"{slug}.mdx"
     article_path.write_text(full_markdown.strip() + "\n", encoding="utf-8")
     log.info("Article written: %s", article_path)
 
@@ -1238,7 +1247,7 @@ def _generate_with_google(
             prompt=full_prompt,
             config={
                 'numberOfImages': 1,
-                'aspectRatio': '1:1',
+                'aspectRatio': '4:3',
             }
         )
         
@@ -1282,10 +1291,10 @@ def _generate_with_fal(
     if not os.getenv("FAL_KEY"):
         raise RuntimeError("FAL_KEY is required for FAL image generation")
 
-    # Convert "1024x1024" format to FAL preset format
-    fal_size = "square_hd"  # default
+    # Convert "1024x1024" format to FAL size format
+    fal_size: dict | str = {"width": 1280, "height": 1024}  # default 5:4
     if size in ["1024x1024", "square"]:
-        fal_size = "square_hd"
+        fal_size = {"width": 1280, "height": 1024}  # 5:4 instead of square
     elif "landscape" in size or size in ["1920x1080", "1280x720"]:
         fal_size = "landscape_16_9"
     elif "portrait" in size or size in ["1080x1920", "720x1280"]:
@@ -1595,19 +1604,33 @@ def _build_display_fallback_plan(slug: str, article_path: Path) -> dict[str, dic
 
 
 def _select_ai_reference_url(slug: str, article_path: Path, slot: Optional[str] = None) -> Optional[str]:
-    """Select reference URL for AI guidance, preferring local downloaded images."""
-    # First, try locally downloaded reference images
+    """Select reference URL for AI guidance, preferring local downloaded images.
+
+    Each slot receives a different reference image by rotating the index, so the
+    AI provider (Gemini/Imagen) generates varied compositions rather than copying
+    the same source for every slot.
+    """
+    # Designer images should never use chair reference images.
+    if slot == "designer":
+        return None
+
+    # Map current slot names → preferred reference index.
+    # Different indices mean each slot starts from a distinct image in the sorted list.
+    SLOT_INDEX: dict[str, int] = {
+        "hero": 0,
+        "sketch": 1,
+        "context": 2,
+    }
+    preferred_idx = SLOT_INDEX.get(slot, 0) if slot else 0
+
+    # Prefer locally downloaded reference images (avoid network calls during generation).
     ref_dir = REFERENCE_IMAGES_DIR / f"{slug}-reference"
     if ref_dir.exists():
         ref_images = sorted(ref_dir.glob("ref-*.jpg"))
         if ref_images:
-            # Rotate through available references for variety
-            slot_index = {"hero": 0, "detail-material": 0, "detail-structure": 1, "sketch": 1}
-            idx = slot_index.get(slot, 0) if slot else 0
-            selected = ref_images[idx % len(ref_images)]
+            selected = ref_images[preferred_idx % len(ref_images)]
             log.info("Using local reference image for slot %s: %s", slot or "default", selected.name)
-            # FAL needs a URL - we'll need to handle file upload differently
-            # For now, fall through to URL-based approach
+            return str(selected)  # absolute path — accepted by _generate_with_google prompt injection
     
     file_preferences = _load_display_selection_file(slug)
     article_preferences = _load_article_reference_preferences(article_path)
@@ -1622,13 +1645,13 @@ def _select_ai_reference_url(slug: str, article_path: Path, slot: Optional[str] 
                 return direct_url
 
     urls = _load_reference_bank_urls(slug)
-    # Find first URL that can be resolved to a direct image URL
-    for url in urls:
-        direct_url = _direct_image_url(url)
-        if direct_url:
-            log.info("Using reference image for AI generation (slot %s): %s", slot or "default", direct_url)
-            return direct_url
-    
+    # Resolve direct image URLs and rotate by slot for variety
+    direct_urls = [u for u in (_direct_image_url(url) for url in urls) if u]
+    if direct_urls:
+        selected_url = direct_urls[preferred_idx % len(direct_urls)]
+        log.info("Using reference URL for AI generation (slot %s): %s", slot or "default", selected_url)
+        return selected_url
+
     return None
 
 
@@ -2143,12 +2166,12 @@ def _print_completion_summary(page: dict, image_result: dict) -> None:
                     pass
         
         print(f"  • Edit image metadata in:")
-        print(f"    src/content/blog/{slug}.md")
+        print(f"    src/content/blog/{slug}.mdx")
         print(f"  • Update 'TBD' captions and verify license info")
     
     else:
         print(f"\n✨ All images generated successfully!")
-        print(f"  • Review and update captions in src/content/blog/{slug}.md")
+        print(f"  • Review and update captions in src/content/blog/{slug}.mdx")
         print(f"  • Change altStatus from 'proposed' to 'actual' when satisfied")
     
     print(f"\n{'='*70}\n")

@@ -45,11 +45,11 @@ const blog = defineCollection({
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.string().optional(),
 			heroImageAlt: z.string().optional(),
-			heroImageAltStatus: imageAltStatusEnum.optional(),
+			heroImageAltStatus: imageAltStatusEnum.nullish(),
 			heroImageCaption: z.string().optional(),
 			heroImageSource: z.string().optional(),
 			heroImageLicense: imageLicenseEnum.optional(),
-			heroImageOrigin: imageOriginEnum.optional(),
+			heroImageOrigin: imageOriginEnum.nullish(),
 			images: z.array(imageRecordSchema).optional(),
 			designer: z.string().optional(),
 			designerBio: z.string().optional(),
@@ -57,6 +57,10 @@ const blog = defineCollection({
 			designerImage: z.string().optional(),
 			era: z.string().optional(),
 			category: z.string().optional(),
+			// SEO / AI-SEO
+			manufacturer: z.string().optional(),
+			yearDesigned: z.number().optional(),
+			keywords: z.array(z.string()).optional(),
 		}),
 });
 

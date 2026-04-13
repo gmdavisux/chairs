@@ -7,6 +7,11 @@ Usage:
     python generate_images_gemini.py wassily-chair --update-mdx
     python generate_images_gemini.py wassily-chair --custom-prompts prompts.json
     python generate_images_gemini.py wassily-chair --reference-images refs.json
+    python generate_images_gemini.py wassily-chair --use-reference-metadata
+    
+The --use-reference-metadata flag will automatically include reference image URLs
+from the reference-metadata.json file in the prompts (includes URLs in a "References:"
+section, which Gemini can use for style guidance).
 """
 
 import argparse
@@ -18,13 +23,13 @@ import sys
 import time
 from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from urllib.request import Request, urlopen
 
 import requests
 import yaml
 from dotenv import load_dotenv
-from PIL import Image
+from PIL import Image, ImageOps
 
 from image_archive import archive_and_deploy_image, create_archive_directory
 
@@ -51,20 +56,25 @@ IMAGE_SLOTS = [
     ("silhouette", "silhouette.txt"),
     ("context", "context.txt"),
     ("designer", "designer.txt"),
+    ("sketch", "sketch.txt"),
 ]
 
 
 def generate_with_gemini(
     prompt: str,
-    reference_image_url: Optional[str] = None,
+    reference_image_url: Optional[Union[str, list]] = None,
     api_key: Optional[str] = None,
 ) -> bytes:
     """
-    Generate an image using Google Gemini Imagen API.
+    Generate an image using Google Gemini with up to 14 reference images.
+    
+    Uses gemini-3.1-flash-image-preview model which supports multi-reference
+    image generation according to official Google documentation.
     
     Args:
         prompt: The text prompt for image generation
-        reference_image_url: Optional reference image URL for style guidance
+        reference_image_url: Optional reference image URL(s) or local file path(s).
+                           Can be a single path/URL string or a list of up to 14.
         api_key: Google API key (defaults to GOOGLE_API_KEY env var)
     
     Returns:
@@ -81,6 +91,7 @@ def generate_with_gemini(
     
     try:
         from google import genai
+        from google.genai import types
     except ImportError:
         raise RuntimeError(
             "google-genai package is required. Install with:\n"
@@ -89,102 +100,126 @@ def generate_with_gemini(
     
     client = genai.Client(api_key=api_key)
     
-    log.info(f"Generating image with Google Gemini (Imagen)...")
+    log.info(f"Generating image with Google Gemini...")
     log.info(f"Prompt: {prompt[:100]}...")
     
     try:
-        # If reference image is provided, use edit_image for img2img
+        # Build contents array: [prompt, image1, image2, ...]
+        contents = [prompt]
+        
+        # Load reference images if provided
         if reference_image_url:
-            log.info(f"Loading reference image: {reference_image_url}")
-            from google.genai import types
+            # Handle both single path/URL and list
+            paths = reference_image_url if isinstance(reference_image_url, list) else [reference_image_url]
             
-            # Download or load the reference image
-            if reference_image_url.startswith(('http://', 'https://')):
-                response = requests.get(reference_image_url, timeout=30)
-                response.raise_for_status()
-                ref_image = types.Image.from_bytes(response.content)
-            else:
-                # Load from local file
-                with open(reference_image_url, 'rb') as f:
-                    ref_image = types.Image.from_bytes(f.read())
+            # Limit to 14 reference images per Google documentation
+            if len(paths) > 14:
+                log.warning(f"Limiting from {len(paths)} to 14 reference images (API maximum)")
+                paths = paths[:14]
             
-            # Create style reference image
-            style_ref = types.StyleReferenceImage(
-                reference_id=1,
-                reference_image=ref_image,
-            )
+            log.info(f"Loading {len(paths)} reference image(s)...")
             
-            # Use edit_image with style reference
-            response = client.models.edit_image(
-                model='imagen-4.0-capability-001',
-                prompt=prompt,
-                reference_images=[style_ref],
-                config=types.EditImageConfig(
-                    number_of_images=1,
-                    edit_mode='EDIT_MODE_OUTPAINT_270',  # Generates new image using style
-                )
+            for path in paths:
+                try:
+                    # Check if it's a local file path or URL
+                    if path.startswith(('http://', 'https://')):
+                        # Download from URL
+                        req = Request(path, headers={'User-Agent': 'Mozilla/5.0'})
+                        with urlopen(req, timeout=30) as response:
+                            img_data = response.read()
+                        ref_image = Image.open(BytesIO(img_data))
+                    else:
+                        # Load from local file
+                        ref_path = Path(path) if not Path(path).is_absolute() else Path(path)
+                        if not ref_path.exists():
+                            # Try relative to ROOT
+                            ref_path = ROOT / path
+                        ref_image = Image.open(ref_path)
+                    
+                    # Convert to RGB if needed (remove alpha channel)
+                    if ref_image.mode in ('RGBA', 'LA', 'P'):
+                        ref_image = ref_image.convert('RGB')
+                    
+                    contents.append(ref_image)
+                    log.debug(f"Loaded reference: {path}")
+                    
+                except Exception as e:
+                    log.warning(f"Failed to load reference image {path}: {e}")
+        
+        # Use Gemini 3.1 Flash Image model with generate_content
+        # This model supports up to 14 reference images according to official docs
+        response = client.models.generate_content(
+            model='gemini-3.1-flash-image-preview',
+            contents=contents,
+            config=types.GenerateContentConfig(
+                response_modalities=['IMAGE'],  # Image only, no text
+                image_config=types.ImageConfig(
+                    aspect_ratio='4:3',
+                ),
             )
-        else:
-            # No reference: use standard generation
-            response = client.models.generate_images(
-                model='imagen-4.0-generate-001',
-                prompt=prompt,
-                config={
-                    'numberOfImages': 1,
-                    'aspectRatio': '1:1',
-                }
-            )
+        )
         
-        if not response or not response.generated_images:
-            raise RuntimeError("Gemini returned no images")
+        # Extract the generated image from response
+        if not response or not response.parts:
+            raise RuntimeError("Gemini returned no response parts")
         
-        # Get first image from response
-        generated_image = response.generated_images[0]
-        
-        # Gemini returns images in JPEG format by default
-        # We need to properly convert them to PNG
-        # The Google GenAI SDK wraps images in a types.Image object
-        
-        # Try different methods to extract the image data
-        raw_image_bytes = None
+        # Find the image part
         pil_image = None
+        for part in response.parts:
+            # Try as_image() method first (returns google.genai.types.Image)
+            if hasattr(part, 'as_image'):
+                try:
+                    genai_image = part.as_image()
+                    if genai_image:
+                        # Convert genai Image to PIL Image
+                        # The genai Image object has a _pil_image attribute
+                        if hasattr(genai_image, '_pil_image'):
+                            pil_image = genai_image._pil_image
+                        elif hasattr(genai_image, 'to_pil'):
+                            pil_image = genai_image.to_pil()
+                        else:
+                            # Try to get bytes and convert
+                            img_bytes = genai_image._image_bytes if hasattr(genai_image, '_image_bytes') else None
+                            if img_bytes:
+                                pil_image = Image.open(BytesIO(img_bytes))
+                        if pil_image:
+                            break
+                except Exception as e:
+                    log.debug(f"Could not extract image via as_image(): {e}")
+                    
+            # Try inline_data
+            if hasattr(part, 'inline_data') and part.inline_data:
+                try:
+                    img_bytes = part.inline_data.data
+                    if isinstance(img_bytes, str):
+                        # Base64 encoded
+                        img_bytes = base64.b64decode(img_bytes)
+                    pil_image = Image.open(BytesIO(img_bytes))
+                    break
+                except Exception as e:
+                    log.debug(f"Could not extract from inline_data: {e}")
         
-        # Method 1: Check if it has a direct bytes/data attribute
-        if hasattr(generated_image, 'data'):
-            raw_image_bytes = generated_image.data
-        elif hasattr(generated_image, '_image_bytes'):
-            raw_image_bytes = generated_image._image_bytes
-        
-        # Method 2: Check if it has a PIL Image wrapper
-        if raw_image_bytes is None:
-            try:
-                if hasattr(generated_image, 'image'):
-                    image_attr = generated_image.image
-                    if hasattr(image_attr, '_pil_image'):
-                        pil_image = image_attr._pil_image
-                    elif isinstance(image_attr, Image.Image):
-                        pil_image = image_attr
-            except Exception as e:
-                log.warning(f"Could not access PIL image directly: {e}")
-        
-        # If we have raw bytes, load with PIL
-        if raw_image_bytes:
-            pil_image = Image.open(BytesIO(raw_image_bytes))
-        
-        # If we still don't have a PIL image, the API may have changed
         if pil_image is None:
+            # Last resort: dump response structure for debugging
+            parts_info = []
+            for i, part in enumerate(response.parts):
+                attrs = [attr for attr in dir(part) if not attr.startswith('_')]
+                parts_info.append(f"Part {i}: {type(part).__name__}, attrs={attrs}")
             raise RuntimeError(
-                "Could not extract image from Gemini response. "
-                "The Google GenAI SDK format may have changed. "
-                f"Image object type: {type(generated_image)}"
+                f"Could not extract image from Gemini response.\n"
+                f"Response has {len(response.parts)} parts:\n" + "\n".join(parts_info)
             )
         
-        # Convert to PNG format (this ensures JPEG -> PNG conversion)
+        # Ensure RGB mode for PNG
+        if pil_image.mode in ('RGBA', 'LA', 'P'):
+            pil_image = pil_image.convert('RGB')
+        
+        # Convert to PNG format
         buffer = BytesIO()
         pil_image.save(buffer, format="PNG")
         buffer.seek(0)
         
-        log.debug(f"Converted image to PNG format ({len(buffer.getvalue())} bytes)")
+        log.info(f"Generated image: {pil_image.size[0]}x{pil_image.size[1]} -> {len(buffer.getvalue())} bytes")
         return buffer.getvalue()
         
     except Exception as e:
@@ -233,7 +268,7 @@ def generate_with_fal(
         model = "fal-ai/flux/dev"
         arguments = {
             "prompt": prompt,
-            "image_size": "square_hd",
+            "image_size": {"width": 1280, "height": 1024},  # 5:4 ratio
             "num_inference_steps": 40,
             "guidance_scale": 3.5,
             "num_images": 1,
@@ -302,6 +337,93 @@ def load_reference_images(refs_file: Path) -> dict[str, str]:
     """Load reference image URLs from a JSON file."""
     with open(refs_file, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_reference_metadata(slug: str) -> list[str]:
+    """
+    Load reference image paths from the reference-metadata.json file.
+    
+    Returns a list of local file paths for successfully downloaded reference images.
+    These can be directly loaded as PIL Images and passed to Gemini.
+    """
+    ref_dir = IMAGES_DIR / "reference" / f"{slug}-reference"
+    metadata_path = ref_dir / "reference-metadata.json"
+    
+    if not metadata_path.exists():
+        log.warning(f"No reference metadata found at: {metadata_path}")
+        return []
+    
+    try:
+        with open(metadata_path, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+        
+        paths = []
+        for item in metadata.get("items", []):
+            # Only include items that have been successfully downloaded
+            if item.get("status") == "downloaded" and item.get("localPath"):
+                local_path = item["localPath"]
+                # Convert to absolute path from ROOT
+                full_path = ROOT / local_path
+                if full_path.exists():
+                    paths.append(str(full_path))
+                else:
+                    log.warning(f"Reference file not found: {full_path}")
+        
+        log.info(f"Found {len(paths)} downloaded reference images for {slug}")
+        return paths
+        
+    except (OSError, json.JSONDecodeError) as e:
+        log.warning(f"Failed to load reference metadata: {e}")
+        return []
+
+
+def get_references_for_slot(slot: str, all_references: list[str]) -> list[str]:
+    """
+    Return all reference images reordered so the preferred one is first.
+
+    Gemini favors the first image in the list, so rotating which reference
+    leads ensures each slot draws from a different primary source.
+    FAL callers should take only the first element (single-image limit).
+
+    Args:
+        slot: Image slot name (hero, silhouette, context, designer, sketch)
+        all_references: List of all available reference image paths
+
+    Returns:
+        Reordered list with the preferred reference first, or [] for designer/empty.
+    """
+    if not all_references:
+        return []
+
+    # Designer slot should NOT use chair reference images
+    if slot == "designer":
+        return []
+
+    # Map each slot to a different starting index so every slot begins
+    # from a distinct reference — Gemini will weight that first image most.
+    slot_preferences = {
+        "hero": 0,        # First reference — typically primary product shot
+        "silhouette": 1,  # Second reference — different angle/view
+        "context": 2,     # Third reference — architectural or setting shot
+        "sketch": 3,      # Fourth reference — distinct source when 4+ refs available
+    }
+
+    preferred_index = slot_preferences.get(slot, 0) % len(all_references)
+
+    # Rotate the list so the preferred reference is first
+    rotated = all_references[preferred_index:] + all_references[:preferred_index]
+    log.info(
+        f"Slot '{slot}': using {len(rotated)} reference(s), leading with "
+        f"{Path(rotated[0]).name}"
+    )
+    return rotated
+
+
+# Keep old name as thin alias so external callers aren't broken.
+def select_reference_for_slot(slot: str, all_references: list[str]) -> Optional[str]:
+    """Deprecated alias — returns only the preferred (first) reference path."""
+    refs = get_references_for_slot(slot, all_references)
+    return refs[0] if refs else None
 
 
 def update_mdx_file(slug: str, extension: str = "png") -> bool:
@@ -384,6 +506,11 @@ def main():
         help="Path to JSON file with reference image URLs (format: {slot: url})",
     )
     parser.add_argument(
+        "--use-reference-metadata",
+        action="store_true",
+        help="Automatically include reference image URLs from reference-metadata.json",
+    )
+    parser.add_argument(
         "--update-mdx",
         action="store_true",
         help="Update MDX file to use .png extensions",
@@ -391,7 +518,7 @@ def main():
     parser.add_argument(
         "--slots",
         nargs="+",
-        choices=["hero", "silhouette", "context", "designer"],
+        choices=["hero", "silhouette", "context", "designer", "sketch"],
         help="Generate only specific slots (default: all)",
     )
     parser.add_argument(
@@ -413,9 +540,15 @@ def main():
     
     # Load reference images
     reference_images = {}
+    reference_urls_from_metadata = []
+    
     if args.reference_images:
         log.info(f"Loading reference images from: {args.reference_images}")
         reference_images = load_reference_images(args.reference_images)
+    
+    if args.use_reference_metadata:
+        log.info(f"Loading reference URLs from metadata for {args.slug}")
+        reference_urls_from_metadata = load_reference_metadata(args.slug)
     
     # Filter slots if specified
     slots_to_generate = [(s, f) for s, f in IMAGE_SLOTS if s in prompts]
@@ -440,23 +573,51 @@ def main():
     results = []
     for slot, _ in slots_to_generate:
         prompt = prompts[slot]
-        reference_url = reference_images.get(slot)
-        output_path = IMAGES_DIR / f"{args.slug}-{slot}.{args.format}"
         
+        # Determine reference(s) to use for this slot.
+        # slot_refs is a list (may be empty); for Gemini we pass the full list
+        # so it sees all references with the preferred one leading.
+        # For FAL (single-image limit) we pass only the first element.
+        explicit_ref = reference_images.get(slot)
+        if explicit_ref:
+            slot_refs = [explicit_ref]
+        elif reference_urls_from_metadata:
+            slot_refs = get_references_for_slot(slot, reference_urls_from_metadata)
+        else:
+            slot_refs = []
+
+        output_path = IMAGES_DIR / f"{args.slug}-{slot}.{args.format}"
+
         try:
             log.info(f"Generating {slot}...")
-            
+
             # Generate image with selected provider
             if provider == "fal":
+                # FAL supports only one reference image
+                fal_ref = slot_refs[0] if slot_refs else None
                 image_bytes = generate_with_fal(
                     prompt=prompt,
-                    reference_image_url=reference_url,
+                    reference_image_url=fal_ref,
                 )
-            else:  # default to google/gemini
+            else:  # default to google/gemini — pass full rotated list
                 image_bytes = generate_with_gemini(
                     prompt=prompt,
-                    reference_image_url=reference_url,
+                    reference_image_url=slot_refs if slot_refs else None,
                 )
+
+            # Enforce grayscale for designer slot
+            if slot == "designer":
+                # Archive original color image before converting
+                original_path = archive_dir / f"designer-original.{args.format}"
+                original_path.write_bytes(image_bytes)
+                log.info(f"Archived original color designer image: {original_path}")
+                # Convert to grayscale
+                _img = Image.open(BytesIO(image_bytes))
+                _img = ImageOps.grayscale(_img).convert("RGB")
+                _buf = BytesIO()
+                _img.save(_buf, format="PNG")
+                image_bytes = _buf.getvalue()
+                log.info("Converted designer image to grayscale")
             
             # Archive and deploy image
             archive_info = archive_and_deploy_image(
@@ -467,7 +628,8 @@ def main():
                 metadata={
                     "provider": provider,
                     "prompt": prompt,
-                    "reference_url": reference_url,
+                    "reference_urls": slot_refs,
+                    "primary_reference": slot_refs[0] if slot_refs else None,
                 },
                 archive_dir=archive_dir,
                 extension=args.format,
@@ -519,9 +681,20 @@ def main():
         print(f"\nUpdating MDX file to use .{args.format} extensions...")
         if update_mdx_file(args.slug, args.format):
             print("✓ MDX file updated successfully")
+            # Auto-insert any missing ImageWithMeta slots (registry-first format)
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "insert_image_slots.py"), args.slug],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                print("✓ Image slots inserted/verified")
+            else:
+                print(f"⚠ insert_image_slots.py exited {result.returncode}: {result.stderr.strip()}")
         else:
             print("✗ Failed to update MDX file")
-    
+
     return 0 if not failed else 1
 
 

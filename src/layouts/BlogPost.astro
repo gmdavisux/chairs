@@ -4,10 +4,12 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
 
 type Props = CollectionEntry<'blog'>['data'] & {
 	prevPost?: CollectionEntry<'blog'> | null;
 	nextPost?: CollectionEntry<'blog'> | null;
+	relatedByDesigner?: CollectionEntry<'blog'>[];
 };
 
 const {
@@ -28,8 +30,12 @@ const {
 	designerImage,
 	era,
 	category,
+	manufacturer,
+	yearDesigned,
+	keywords,
 	prevPost,
 	nextPost,
+	relatedByDesigner,
 } = Astro.props;
 
 const heroAlt =
@@ -45,11 +51,107 @@ const showHeroMetadata =
 	Boolean(heroImageLicense) ||
 	Boolean(heroImageOrigin) ||
 	Boolean(heroImageAlt);
+
+// ── JSON-LD structured data (schema.org @graph) ───────────────────────────────
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const heroImageAbsolute = heroImage ? new URL(heroImage, Astro.site).href : undefined;
+
+// Parse designer birth/death years from strings like "1902–1971" or "1902-1971"
+let designerBirthDate: string | undefined;
+let designerDeathDate: string | undefined;
+if (designerYears) {
+	const yearMatch = designerYears.match(/(\d{4})[–\-](\d{4})/);
+	if (yearMatch) {
+		designerBirthDate = yearMatch[1];
+		designerDeathDate = yearMatch[2];
+	}
+}
+
+const jsonLdGraph: object[] = [];
+
+// Article node
+const articleNode: Record<string, unknown> = {
+	'@type': 'Article',
+	'@id': `${canonicalURL}#article`,
+	headline: title,
+	description,
+	url: canonicalURL.href,
+	datePublished: pubDate.toISOString(),
+	...(updatedDate ? { dateModified: updatedDate.toISOString() } : {}),
+	...(heroImageAbsolute ? { image: heroImageAbsolute } : {}),
+	author: { '@type': 'Organization', name: SITE_TITLE },
+	publisher: { '@type': 'Organization', name: SITE_TITLE },
+	...(keywords && keywords.length > 0 ? { keywords: keywords.join(', ') } : {}),
+	speakable: {
+		'@type': 'SpeakableSpecification',
+		cssSelector: ['.prose > p:first-of-type'],
+	},
+};
+if (designer) {
+	articleNode.about = { '@id': `${canonicalURL}#product` };
+}
+jsonLdGraph.push(articleNode);
+
+// Product node
+if (title) {
+	const productNode: Record<string, unknown> = {
+		'@type': 'Product',
+		'@id': `${canonicalURL}#product`,
+		name: title,
+		description,
+		category: category || 'Furniture',
+		...(heroImageAbsolute ? { image: heroImageAbsolute } : {}),
+		...(yearDesigned ? { productionDate: String(yearDesigned) } : {}),
+	};
+	if (designer) {
+		productNode.brand = { '@id': `${canonicalURL}#designer` };
+	}
+	if (manufacturer) {
+		productNode.manufacturer = { '@type': 'Organization', name: manufacturer };
+	}
+	jsonLdGraph.push(productNode);
+}
+
+// Person node (designer)
+if (designer) {
+	const personNode: Record<string, unknown> = {
+		'@type': 'Person',
+		'@id': `${canonicalURL}#designer`,
+		name: designer,
+		...(designerBio ? { description: designerBio } : {}),
+		...(designerBirthDate ? { birthDate: designerBirthDate } : {}),
+		...(designerDeathDate ? { deathDate: designerDeathDate } : {}),
+	};
+	jsonLdGraph.push(personNode);
+}
+
+// BreadcrumbList node
+jsonLdGraph.push({
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{ '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+		{ '@type': 'ListItem', position: 2, name: 'Blog', item: new URL('/blog/', Astro.site).href },
+		{ '@type': 'ListItem', position: 3, name: title, item: canonicalURL.href },
+	],
+});
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@graph': jsonLdGraph,
+};
 ---
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead
+			title={title}
+			description={description}
+			type="article"
+			pubDate={pubDate}
+			author={designer}
+			keywords={keywords}
+		/>
+		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 		<style>
 			/* Override global main width to allow the wider article+sidebar layout */
 			main {
@@ -251,6 +353,33 @@ const showHeroMetadata =
 				color: rgb(var(--gray-dark));
 				margin: 0;
 			}
+			.designer-related {
+				margin-top: 1.5rem;
+				padding-top: 1.5rem;
+				border-top: 1px solid rgba(200, 121, 65, 0.2);
+			}
+			.related-list {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+			}
+			.related-list li {
+				padding: 0.3rem 0;
+				border-bottom: 1px solid rgba(155, 135, 118, 0.12);
+				font-family: "Playfair Display", Georgia, serif;
+				font-size: 0.875rem;
+			}
+			.related-list li:last-child {
+				border-bottom: none;
+			}
+			.related-list a {
+				color: rgb(var(--black));
+				text-decoration: none;
+				transition: color 0.18s ease;
+			}
+			.related-list a:hover {
+				color: var(--accent-dark);
+			}
 			
 			/* Post Navigation */
 			.post-navigation {
@@ -344,12 +473,6 @@ const showHeroMetadata =
 						<p class="hero-caption">{heroImageCaption}</p>
 					)}
 				</div>
-							<p class="hero-meta-placeholder">
-								Add image provenance fields in frontmatter to replace placeholders.
-							</p>
-						)}
-					</div>
-				)}
 				<div class="article-body">
 					<div class="prose">
 						<div class="title">
@@ -387,6 +510,18 @@ const showHeroMetadata =
 									{designerYears && <span class="designer-years"> ({designerYears})</span>}
 								</p>
 								{designerBio && <p class="designer-bio">{designerBio}</p>}
+							</div>
+						)}
+						{relatedByDesigner && relatedByDesigner.length > 0 && (
+							<div class="designer-related">
+								<h3 class="designer-heading">More by {designer}</h3>
+								<ul class="related-list">
+									{relatedByDesigner.map((p) => (
+										<li>
+											<a href={`/blog/${p.id}/`}>{p.data.title}</a>
+										</li>
+									))}
+								</ul>
 							</div>
 						)}
 					</aside>

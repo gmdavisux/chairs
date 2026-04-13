@@ -1,0 +1,15 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T15:08:05.161677",
+  "images": [
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1280114,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-context.png",
+      "provider": "google",
+      "prompt": "Transform this reference photograph: Preserve the exact Barcelona Chair structure and viewing angle. Apply soft diffused warm illumination at 2800K with gentle amber warmth and well-defined natural shadows. Reframe with era-appropriate 1929 International Style architectural context - floor-to-ceiling window with soft daylight, travertine or polished concrete flooring. Enhance material texture authenticity - visible leather grain, button tufting depth, chrome reflections with warm highlights. Achieve full tonal range from deep shadows to clean highlights. Architectural elements must remain minimal and subordinate to the chair. Remove any decorative props or clutter. Natural warm color grading; enhanced contrast preserving shadow and highlight detail; museum aesthetic.",
+      "reference_url": "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-003.jpg"
+    }
+  ]
+}

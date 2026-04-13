@@ -1,0 +1,15 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T18:59:54.194438",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1178559,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-hero.png",
+      "provider": "google",
+      "prompt": "Transform this reference photograph to museum-catalog quality: Retain the exact Barcelona Chair form, proportions, and three-quarter viewing angle. Apply soft diffused warm illumination at 2800K producing gentle amber warmth with well-defined natural shadows and rich tonal depth. Replace background with minimalist warm-toned architectural setting - smooth polished concrete floor and textured plaster wall in warm beige. Enhance leather texture detail showing grain and button tufting depth; enhance chrome frame reflections with subtle warm highlights. Achieve full tonal range from deep shadows to clean highlights while preserving material authenticity. Remove all extraneous objects. Natural color grading with enhanced contrast; museum aesthetic; clean negative space.",
+      "reference_url": "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-001.jpg"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T18:58:32.841425",
+  "images": [
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 1121197,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Retouch the reference photograph: Do NOT change the structure or form of the Barcelona Chair shown in the reference image. Only improve: lighting (add soft backlit window light effect), color balance and exposure, professional framing with clean composition. Change the background to a minimal 20th century modern interior setting with neutral tones. Maintain the chair's exact proportions, frame structure, and cushion details from the reference. Professional photographic quality.",
+      "reference_url": "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-002.jpg"
+    }
+  ]
+}

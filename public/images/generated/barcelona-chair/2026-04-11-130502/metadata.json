@@ -1,0 +1,19 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-11T13:05:13.868303",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1284550,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-hero.png",
+      "provider": "google",
+      "prompt": "Photorealistic museum-catalog photograph of Ludwig Mies van der Rohe Barcelona Chair and ottoman in a museum display, showing the crossed steel frame and tufted leather cushions. Soft, diffused warm illumination at 2700-3000K producing gentle highlights with well-defined natural shadows and rich tonal depth. Clean minimal background. Three-quarter view showing signature silhouette and geometry. Sharp focus on material texture, grain, and hardware detail. Full tonal range from deep shadows to clean highlights. Natural color grading. No people, no clutter, no text.",
+      "reference_url": [
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Mies-Barcelona-Chair-and-Ottoman.jpg",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_ludwig_mies_van_der_rohe_%26_co%2C_barcelona_chair.JPG",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Ludwig_mies_van_der_rohe%2C_sedia_barcelona_modello_M_R90%2C_1923.jpg"
+      ]
+    }
+  ]
+}

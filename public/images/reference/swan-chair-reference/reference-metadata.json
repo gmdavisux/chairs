@@ -1,0 +1,90 @@
+{
+  "slug": "swan-chair",
+  "title": "Swan Chair",
+  "referenceFolder": "public/images/reference/swan-chair-reference",
+  "collectedAt": "2026-04-12",
+  "downloadedCount": 2,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Swan_chair_(Arne_Jacobsen",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+      "localPath": "public/images/reference/swan-chair-reference/ref-002.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Ngv_design,_arne_jacobsen,_swan_chair,_1958.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_arne_jacobsen%2C_swan_chair%2C_1958.JPG",
+      "localPath": "public/images/reference/swan-chair-reference/ref-004.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Swan_chairs_-_Copenhagen_Airport.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Swan_chairs_-_Copenhagen_Airport.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://en.wikipedia.org/wiki/Swan_(chair",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "https://www.danishdesignstore.com/products/fritz-hansen-swan-chair-design-arne-jacobsen?srsltid=AfmBOopeUZgCe9_bUvE2Ggr0Y78v7jb6u9-Mx3fE0cHqNqcO57YN5S2_",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://arnejacobsen.com/works/the-swan/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}

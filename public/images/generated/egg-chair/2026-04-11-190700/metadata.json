@@ -1,0 +1,15 @@
+{
+  "slug": "egg-chair",
+  "timestamp": "2026-04-11T19:07:47.015167",
+  "images": [
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1572189,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/egg-chair-context.png",
+      "provider": "google",
+      "prompt": "Egg Chair by Arne Jacobsen in the lobby of the SAS Royal Hotel Copenhagen. The chair is positioned in an elegant mid-century modern interior with warm lighting, showing how the enveloping form creates an intimate space within the larger public setting. Architectural photography capturing the relationship between the sculptural furniture and the modernist interior design. Subtle warm lighting at 2700K emphasizes both the chair's organic curves and the refined hotel atmosphere.",
+      "reference_url": "/Users/garydavis/Sites/chairs/public/images/reference/egg-chair-reference/ref-002.jpg"
+    }
+  ]
+}

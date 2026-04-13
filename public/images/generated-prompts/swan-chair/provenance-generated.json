@@ -1,0 +1,115 @@
+{
+  "slug": "swan-chair",
+  "title": "Swan Chair",
+  "generatedAt": "2026-04-12T19:15:46.814139Z",
+  "provider": "fal",
+  "model": "fal-ai/flux/dev",
+  "imageSize": "1024x1024",
+  "maxImages": 4,
+  "budgetUsd": null,
+  "referenceBankUrls": [
+    "https://commons.wikimedia.org/wiki/Category:Swan_chair_(Arne_Jacobsen",
+    "https://commons.wikimedia.org/wiki/File:SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+    "https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen",
+    "https://commons.wikimedia.org/wiki/File:Ngv_design,_arne_jacobsen,_swan_chair,_1958.JPG",
+    "https://commons.wikimedia.org/wiki/File:Swan_chairs_-_Copenhagen_Airport.jpg",
+    "https://en.wikipedia.org/wiki/Swan_(chair",
+    "https://www.danishdesignstore.com/products/fritz-hansen-swan-chair-design-arne-jacobsen?srsltid=AfmBOopeUZgCe9_bUvE2Ggr0Y78v7jb6u9-Mx3fE0cHqNqcO57YN5S2_",
+    "https://arnejacobsen.com/works/the-swan/",
+    "https://collections.vam.ac.uk/item/O144553/the-swan-armchair-jacobsen-arne-emil/",
+    "https://rarify.co/products/swan-chair-model-3320-arne-jacobsen-fritz-hansen-21082009?srsltid=AfmBOopyh7HWDE-uMEHhsAu0zPGmEvOY70YOEn5izhjT8DX2-oM0AB-D",
+    "https://rarify.co/products/swan-chair-model-3320-arne-jacobsen-fritz-hansen-21082009?srsltid=AfmBOoqbBU1D_evnu4y3PDR4VVm245z4Uvt8fGI_5ES0aQzRdhgfMIbg",
+    "https://www.danishdesignstore.com/products/fritz-hansen-swan-chair-design-arne-jacobsen?srsltid=AfmBOorqhOTdXSSc7f04EOrUr71wyFE0B9pXl5EGz9ZhiqZ8lFXSNf7M",
+    "https://www.dwr.com/living-lounge-chairs/swan-chair/7501.html?lang=en_US",
+    "https://www.fritzhansen.com/en/categories/products/popular-series/swan",
+    "https://www.fritzhansen.com/en/inspiration/designers/arne-jacobsen",
+    "https://www.fritzhansen.com/en/categories/products/popular-series/egg",
+    "https://www.fritzhansen.com/en/about-us/quality-and-craftmanship",
+    "https://www.fritzhansen.com/en/categories/by-series/swan/3320",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_arne_jacobsen%2C_swan_chair%2C_1958.JPG",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Swan_chairs_-_Copenhagen_Airport.jpg"
+  ],
+  "aiReferenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+  "results": [
+    {
+      "slot": "hero",
+      "status": "success",
+      "file": "public/images/swan-chair-hero.jpg",
+      "archive_path": "public/images/generated/swan-chair/2026-04-12-151501/hero.jpg",
+      "hash": "sha256:a2cc75e0f0fee634a447371e8353db703834564ac786c5fe4567ceac963653b9",
+      "provider": "google",
+      "model": "imagen-4.0-generate-001",
+      "prompt": "Photorealistic museum-catalog image of Swan Chair by Arne Jacobsen. Slot intent: hero. Professional product photography of Swan Chair designed by Arne Jacobsen. Three-quarter view showing the chair's full form, sculptural qualities, and distinctive design features. Studio lighting with soft shadows on a neutral background. High contrast, sharp focus, museum-quality documentation style.\n\nUse soft diffused warm light in the 2700-3000K range with well-defined natural shadows. Full tonal range from deep shadows to clean highlights, preserving both shadow and highlight detail. Natural color grading with rich contrast and enhanced material depth. Realistic material textures showing grain, surface detail, and dimensional quality. Clean negative space. Preserve historical fidelity: authentic silhouette, proportions, and era plausibility. CRITICAL: Use ONLY colors, materials, and finishes visible in the reference images. Do not invent or fabricate structural details. No people or clutter.",
+      "negativePrompt": "harsh shadows, cool lighting, over-saturated colors, blown highlights, crushed blacks, muddy mid-tones, flat lighting, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, low resolution, blur, motion blur, synthetic HDR halos, overprocessed, incorrect colors, wrong materials, fabricated details, invented finishes, altered proportions, modified geometry",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+      "response": "sdk_http_response=None generated_images=[GeneratedImage(\n  image=Image(\n    image_bytes=b'\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x05\\x00\\x00\\x00\\x03\\x80\\x08\\x02\\x00\\x00\\x00\\xea\\xe6IB\\x00\\x00\\x00\\x83zTXtRaw profile type iptc\\x00\\x00\\x08\\x99M\\x8b;\\x0e\\xc20\\x10\\x05{\\x9f\"G\\xd8\\xdd\\xbc\\xfd\\xa4\\xa6\\xa2\\xa3\\xe0\\x02\\xb6\\xe3\\x95\\x90\"\\x05q\\xff\\x02...',\n    mime_type='image/png'\n  ),\n  safety_attributes=SafetyAttributes()\n)] positive_prompt_safety_attributes=None",
+      "revisedPrompt": null
+    },
+    {
+      "slot": "sketch",
+      "status": "success",
+      "file": "public/images/swan-chair-sketch.jpg",
+      "archive_path": "public/images/generated/swan-chair/2026-04-12-151501/sketch.jpg",
+      "hash": "sha256:3cff8c0bdc7904d61a99ad50e69c132c72219c5ea04325c132a32cc31d39d587",
+      "provider": "google",
+      "model": "imagen-4.0-generate-001",
+      "prompt": "Industrial design marker rendering of Swan Chair by Arne Jacobsen. Slot intent: sketch. Technical industrial design marker rendering of Swan Chair. Dynamic three-quarter view showing the chair's distinctive geometry and proportions. Clean line drawing style with subtle gray markers and selective color accents on white paper. Professional architecture sketch aesthetic with visible hand-drawn character.\n\nIndustrial design marker rendering style with confident sketchy linework and dimensional shading. Use cool gray markers (20%, 30%, 50% tones) with selective strategic color accents. Dynamic three-quarter or perspective view (NOT flat side profile). Show sculptural form through graduated marker tones. Clean white paper background with loose gestural marks. Style evokes professional mid-century design sketches with visible hand-drawn character. Multiple overlapping line strokes showing drawing process. Balance technical precision with spontaneity. No tight technical drawing, no annotations, no dimensions.",
+      "negativePrompt": "harsh shadows, cool lighting, over-saturated colors, blown highlights, crushed blacks, muddy mid-tones, flat lighting, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, low resolution, blur, motion blur, synthetic HDR halos, overprocessed, incorrect colors, wrong materials, fabricated details, invented finishes, altered proportions, modified geometry",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+      "response": "sdk_http_response=None generated_images=[GeneratedImage(\n  image=Image(\n    image_bytes=b'\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x05\\x00\\x00\\x00\\x03\\x80\\x08\\x02\\x00\\x00\\x00\\xea\\xe6IB\\x00\\x00\\x00\\x83zTXtRaw profile type iptc\\x00\\x00\\x08\\x99M\\x8b;\\x0e\\xc20\\x10\\x05{\\x9f\"G\\xd8\\xdd\\xbc\\xfd\\xa4\\xa6\\xa2\\xa3\\xe0\\x02\\xb6\\xe3\\x95\\x90\"\\x05q\\xff\\x02...',\n    mime_type='image/png'\n  ),\n  safety_attributes=SafetyAttributes()\n)] positive_prompt_safety_attributes=None",
+      "revisedPrompt": null
+    },
+    {
+      "slot": "context",
+      "status": "success",
+      "file": "public/images/swan-chair-context.jpg",
+      "archive_path": "public/images/generated/swan-chair/2026-04-12-151501/context.jpg",
+      "hash": "sha256:ea448e22717059501dbed9298f507e3d6b94245961a3e3044c3070f7c4097590",
+      "provider": "google",
+      "model": "imagen-4.0-generate-001",
+      "prompt": "Interior photograph showing Swan Chair by Arne Jacobsen. Slot intent: context. Swan Chair by Arne Jacobsen in an elegant mid-century modern interior. The chair positioned in a sophisticated living room or office setting with period-appropriate furniture and décor. Natural daylight, architectural photography style, showing the chair in its intended environment.\n\nPlace chair in period-appropriate interior setting matching the design era. Use natural warm lighting, minimal styling, clean composition. Interior should feel authentic to the period without excessive decoration. Focus remains on the chair while showing how it lives in a real space. No people, no clutter, historically accurate.",
+      "negativePrompt": "harsh lighting, flat lighting, blown highlights, crushed blacks, clutter, excessive decorative items, people, modern anachronisms, text, logos, watermark, low resolution, blur, wrong era furniture",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+      "response": "sdk_http_response=None generated_images=[GeneratedImage(\n  image=Image(\n    image_bytes=b'\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR\\x00\\x00\\x05\\x00\\x00\\x00\\x03\\x80\\x08\\x02\\x00\\x00\\x00\\xea\\xe6IB\\x00\\x00\\x00\\x83zTXtRaw profile type iptc\\x00\\x00\\x08\\x99M\\x8b;\\x0e\\xc20\\x10\\x05{\\x9f\"G\\xd8\\xdd\\xbc\\xfd\\xa4\\xa6\\xa2\\xa3\\xe0\\x02\\xb6\\xe3\\x95\\x90\"\\x05q\\xff\\x02...',\n    mime_type='image/png'\n  ),\n  safety_attributes=SafetyAttributes()\n)] positive_prompt_safety_attributes=None",
+      "revisedPrompt": null
+    },
+    {
+      "slot": "designer",
+      "status": "success",
+      "file": "public/images/swan-chair-designer.jpg",
+      "archive_path": "public/images/generated/swan-chair/2026-04-12-151501/designer.jpg",
+      "hash": "sha256:2d639df01db3cd1e1f4c9a2895307a50f8a4541c333a17e57506fb050c171dfc",
+      "provider": "fal",
+      "model": "fal-ai/flux/dev",
+      "prompt": "Archival portrait photograph of Arne Jacobsen. Slot intent: designer. Portrait photograph of Arne Jacobsen, the designer of Swan Chair. Professional archival photograph showing the designer at work or in their studio. Black and white or period color photography. Documentary style capturing the designer's creative presence.\n\nArchival portrait photograph from designer's active period. Black and white or period-appropriate color photography. Professional quality, clear focus on subject. Style should match historical photography conventions of the era. No modern elements.",
+      "negativePrompt": "modern clothing, anachronistic elements, color photos (unless original was color), digital artifacts, text overlays, logos, watermark, poor quality",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/SAS_Royal_Hotel_furniture_in_Copenhagen.JPG",
+      "response": {
+        "images": [
+          {
+            "url": "https://v3b.fal.media/files/b/0a95fe56/qAe73nPX40c6dPsugfamA.jpg",
+            "width": 1280,
+            "height": 1024,
+            "content_type": "image/jpeg"
+          }
+        ],
+        "timings": {
+          "inference": 2.7442890209931647
+        },
+        "seed": 150890185,
+        "has_nsfw_concepts": [
+          false
+        ],
+        "prompt": "Archival portrait photograph of Arne Jacobsen. Slot intent: designer. Portrait photograph of Arne Jacobsen, the designer of Swan Chair. Professional archival photograph showing the designer at work or in their studio. Black and white or period color photography. Documentary style capturing the designer's creative presence.\n\nArchival portrait photograph from designer's active period. Black and white or period-appropriate color photography. Professional quality, clear focus on subject. Style should match historical photography conventions of the era. No modern elements."
+      },
+      "revisedPrompt": null
+    }
+  ],
+  "summary": {
+    "generatedCount": 4,
+    "referenceFallbackCount": 0,
+    "failedCount": 0,
+    "skippedCount": 0
+  }
+}
