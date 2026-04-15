@@ -4,7 +4,8 @@ generate_images_gemini.py - Generate furniture images using Google Gemini
 
 Usage:
     python generate_images_gemini.py wassily-chair
-    python generate_images_gemini.py wassily-chair --update-mdx
+    python generate_images_gemini.py wassily-chair
+    python generate_images_gemini.py wassily-chair --no-update-mdx
     python generate_images_gemini.py wassily-chair --custom-prompts prompts.json
     python generate_images_gemini.py wassily-chair --reference-images refs.json
     python generate_images_gemini.py wassily-chair --use-reference-metadata
@@ -57,6 +58,7 @@ IMAGE_SLOTS = [
     ("context", "context.txt"),
     ("designer", "designer.txt"),
     ("sketch", "sketch.txt"),
+    ("detail-material", "detail-material.txt"),
 ]
 
 
@@ -379,10 +381,14 @@ def load_reference_metadata(slug: str) -> list[str]:
 
 def get_references_for_slot(slot: str, all_references: list[str]) -> list[str]:
     """
-    Return all reference images reordered so the preferred one is first.
+    Return reference images ordered so Gemini anchors on the right subject.
 
-    Gemini favors the first image in the list, so rotating which reference
-    leads ensures each slot draws from a different primary source.
+    Gemini weights the first image most heavily, so ordering matters:
+    - sketch: all chair references passed as-is — subject accuracy is paramount.
+    - other slots: rotate starting index so each slot draws from a different
+                   primary source.
+    - designer: no chair references (would bias toward the chair form).
+
     FAL callers should take only the first element (single-image limit).
 
     Args:
@@ -390,7 +396,7 @@ def get_references_for_slot(slot: str, all_references: list[str]) -> list[str]:
         all_references: List of all available reference image paths
 
     Returns:
-        Reordered list with the preferred reference first, or [] for designer/empty.
+        Ordered list with the preferred reference first, or [] for designer/empty.
     """
     if not all_references:
         return []
@@ -399,13 +405,21 @@ def get_references_for_slot(slot: str, all_references: list[str]) -> list[str]:
     if slot == "designer":
         return []
 
+    # Sketch: pass all chair references unchanged — subject accuracy is the
+    # only priority; no style reference injected.
+    if slot == "sketch":
+        log.info(
+            f"Slot 'sketch': {len(all_references)} chair ref(s), "
+            f"leading with {Path(all_references[0]).name}"
+        )
+        return list(all_references)
+
     # Map each slot to a different starting index so every slot begins
     # from a distinct reference — Gemini will weight that first image most.
     slot_preferences = {
         "hero": 0,        # First reference — typically primary product shot
         "silhouette": 1,  # Second reference — different angle/view
         "context": 2,     # Third reference — architectural or setting shot
-        "sketch": 3,      # Fourth reference — distinct source when 4+ refs available
     }
 
     preferred_index = slot_preferences.get(slot, 0) % len(all_references)
@@ -426,64 +440,142 @@ def select_reference_for_slot(slot: str, all_references: list[str]) -> Optional[
     return refs[0] if refs else None
 
 
-def update_mdx_file(slug: str, extension: str = "png") -> bool:
+def _slot_alt_and_caption(slot: str, title: str, designer: str) -> tuple[str, str]:
+    """Return (alt, caption) text for a generated image slot."""
+    slot_meta = {
+        "hero": (
+            f"{title} — studio composition highlighting form and materials",
+            f"AI-generated studio photograph of the {title} by {designer}.",
+        ),
+        "silhouette": (
+            f"{title} profile silhouette showing signature geometry",
+            f"AI-generated silhouette of the {title} by {designer}.",
+        ),
+        "context": (
+            f"{title} in a mid-century modern interior setting",
+            f"AI-generated context photograph of the {title} by {designer} in situ.",
+        ),
+        "designer": (
+            f"Portrait of {designer}, designer of the {title}",
+            f"AI-generated portrait of {designer}.",
+        ),
+        "sketch": (
+            f"Industrial design marker rendering of the {title}",
+            f"AI-generated design sketch of the {title} by {designer}.",
+        ),
+        "detail-material": (
+            f"Close-up of material texture on the {title}",
+            f"AI-generated material detail of the {title} by {designer}.",
+        ),
+        "detail-structure": (
+            f"Structural detail showing joints and frame of the {title}",
+            f"AI-generated structural detail of the {title} by {designer}.",
+        ),
+    }
+    return slot_meta.get(slot, (f"{title} — {slot}", f"AI-generated {slot} image for the {title}."))
+
+
+def update_mdx_file(
+    slug: str,
+    extension: str = "png",
+    generated_slots: Optional[list[str]] = None,
+    provider: str = "google",
+    model: str = "",
+) -> bool:
     """
-    Update the MDX file to use the specified image extension.
-    
+    Update the MDX file to use the specified image extension and, for any
+    successfully generated slots, replace placeholder alt/caption/status/
+    source/license/origin with real values.
+
     Args:
         slug: The furniture piece slug
         extension: Image file extension (default: png)
-    
+        generated_slots: Slots that were successfully generated (metadata updated)
+        provider: Image provider name for source label
+        model: Model name for source label
+
     Returns:
         True if file was updated successfully
     """
     mdx_path = CONTENT_DIR / f"{slug}.mdx"
-    
+
     if not mdx_path.exists():
         # Try .md extension
         mdx_path = CONTENT_DIR / f"{slug}.md"
         if not mdx_path.exists():
             log.error(f"MDX file not found: {slug}.mdx or {slug}.md")
             return False
-    
+
     content = mdx_path.read_text(encoding="utf-8")
-    
+
     # Split frontmatter and body
     if not content.startswith("---"):
         log.error("MDX file missing frontmatter")
         return False
-    
+
     parts = content.split("---", 2)
     if len(parts) < 3:
         log.error("MDX file has invalid frontmatter structure")
         return False
-    
+
     frontmatter_text = parts[1]
     body = parts[2]
-    
+
     # Parse YAML frontmatter
     try:
         data = yaml.safe_load(frontmatter_text)
     except yaml.YAMLError as e:
         log.error(f"Failed to parse YAML frontmatter: {e}")
         return False
-    
+
+    title = data.get("title", "")
+    designer = data.get("designer", "")
+    source_label = f"AI generated via {provider}/{model}" if model else f"AI generated via {provider}"
+    slots_set = set(generated_slots or [])
+
     # Update image extensions
     if data.get("heroImage"):
         data["heroImage"] = data["heroImage"].replace(".jpg", f".{extension}")
-    
+
+    # Update hero-level metadata if hero was generated
+    if "hero" in slots_set:
+        alt, caption = _slot_alt_and_caption("hero", title, designer)
+        data["heroImageAlt"] = alt
+        data["heroImageAltStatus"] = "actual"
+        data["heroImageCaption"] = caption
+        data["heroImageSource"] = source_label
+        data["heroImageLicense"] = "ai_generated"
+        data["heroImageOrigin"] = "ai_generated"
+
+    # Update designer image path if designer slot was generated
+    if "designer" in slots_set:
+        data["designerImage"] = f"/images/{slug}-designer.{extension}"
+
     if "images" in data and isinstance(data["images"], list):
         for img in data["images"]:
             if "src" in img:
                 img["src"] = img["src"].replace(".jpg", f".{extension}")
-    
+            # Update metadata for generated slots
+            if slots_set:
+                img_id = str(img.get("id", ""))
+                for slot in slots_set:
+                    if img_id.endswith(slot):
+                        alt, caption = _slot_alt_and_caption(slot, title, designer)
+                        img["alt"] = alt
+                        img["altStatus"] = "actual"
+                        img["caption"] = caption
+                        img["source"] = source_label
+                        img["license"] = "ai_generated"
+                        img["origin"] = "ai_generated"
+                        break
+
     # Serialize back to YAML
     serialized = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).strip()
-    
+
     # Write back
     mdx_path.write_text(f"---\n{serialized}\n---{body}", encoding="utf-8")
     log.info(f"Updated MDX file: {mdx_path}")
-    
+
     return True
 
 
@@ -511,14 +603,16 @@ def main():
         help="Automatically include reference image URLs from reference-metadata.json",
     )
     parser.add_argument(
-        "--update-mdx",
-        action="store_true",
-        help="Update MDX file to use .png extensions",
+        "--no-update-mdx",
+        dest="update_mdx",
+        action="store_false",
+        help="Skip updating the MDX file after generation",
     )
+    parser.set_defaults(update_mdx=True)
     parser.add_argument(
         "--slots",
         nargs="+",
-        choices=["hero", "silhouette", "context", "designer", "sketch"],
+        choices=["hero", "silhouette", "context", "designer", "sketch", "detail-material"],
         help="Generate only specific slots (default: all)",
     )
     parser.add_argument(
@@ -549,15 +643,34 @@ def main():
     if args.use_reference_metadata:
         log.info(f"Loading reference URLs from metadata for {args.slug}")
         reference_urls_from_metadata = load_reference_metadata(args.slug)
-    
+
     # Filter slots if specified
     slots_to_generate = [(s, f) for s, f in IMAGE_SLOTS if s in prompts]
     if args.slots:
         slots_to_generate = [(s, f) for s, f in slots_to_generate if s in args.slots]
-    
+
     if not slots_to_generate:
         log.error("No slots to generate. Check that prompt files exist.")
         return 1
+
+    # Sketch slot requires chair reference images for subject accuracy.
+    # Auto-load from metadata if not already loaded; abort with guidance if missing.
+    generating_sketch = any(s == "sketch" for s, _ in slots_to_generate)
+    if generating_sketch and not reference_urls_from_metadata and not reference_images.get("sketch"):
+        reference_urls_from_metadata = load_reference_metadata(args.slug)
+        if not reference_urls_from_metadata:
+            ref_dir = IMAGES_DIR / "reference" / f"{args.slug}-reference"
+            log.error(
+                "Sketch slot requires chair reference images but none were found.\n"
+                f"  Expected: {ref_dir}\n"
+                "  To fix, run:  python furniture_agent.py --plan  (then rebuild the page)\n"
+                "  Or provide a reference manually:\n"
+                f"    python generate_images_gemini.py {args.slug} --slots sketch "
+                "--reference-images refs.json\n"
+                "  where refs.json contains: {\"sketch\": \"https://example.com/chair.jpg\"}"
+            )
+            return 1
+        log.info(f"Auto-loaded {len(reference_urls_from_metadata)} chair reference(s) for sketch slot")
     
     log.info(f"Generating {len(slots_to_generate)} images for {args.slug}")
     
@@ -591,18 +704,22 @@ def main():
         try:
             log.info(f"Generating {slot}...")
 
-            # Generate image with selected provider
-            if provider == "fal":
+            # Generate image with selected provider.
+            # Designer slot always uses Gemini regardless of provider setting —
+            # FAL doesn't handle human portraits reliably. If Gemini fails for
+            # this slot, the exception propagates and the slot is skipped; there
+            # is no FAL fallback for designer images.
+            if slot == "designer" or provider != "fal":
+                image_bytes = generate_with_gemini(
+                    prompt=prompt,
+                    reference_image_url=slot_refs if slot_refs else None,
+                )
+            else:  # provider == "fal" for non-designer slots
                 # FAL supports only one reference image
                 fal_ref = slot_refs[0] if slot_refs else None
                 image_bytes = generate_with_fal(
                     prompt=prompt,
                     reference_image_url=fal_ref,
-                )
-            else:  # default to google/gemini — pass full rotated list
-                image_bytes = generate_with_gemini(
-                    prompt=prompt,
-                    reference_image_url=slot_refs if slot_refs else None,
                 )
 
             # Enforce grayscale for designer slot
@@ -676,10 +793,19 @@ def main():
         for result in failed:
             print(f"  - {result['slot']}: {result['error']}")
     
-    # Update MDX file if requested
+    # Update MDX file unless explicitly skipped
     if args.update_mdx and successful:
-        print(f"\nUpdating MDX file to use .{args.format} extensions...")
-        if update_mdx_file(args.slug, args.format):
+        successful_slots = [r["slot"] for r in successful]
+        # Determine model name for source label (use env var or generic fallback)
+        gemini_model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-imagen")
+        print(f"\nUpdating MDX file (extensions + metadata for {successful_slots})...")
+        if update_mdx_file(
+            args.slug,
+            args.format,
+            generated_slots=successful_slots,
+            provider=provider,
+            model=gemini_model,
+        ):
             print("✓ MDX file updated successfully")
             # Auto-insert any missing ImageWithMeta slots (registry-first format)
             import subprocess

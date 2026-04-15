@@ -1,0 +1,19 @@
+{
+  "slug": "tulip-chair",
+  "timestamp": "2026-04-13T16:09:00.428921",
+  "images": [
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 780453,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/tulip-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Tulip Chair by Eero Saarinen, strict profile (side) view against a clean neutral background. The composition emphasizes the chair's iconic flowing silhouette: the wide shallow fiberglass shell curving up to cradle the upholstered seat cushion, and the single tulip-stem pedestal base flaring out to a circular foot. Soft diffused studio lighting preserves the pure white finish without harsh glare. No distracting props or shadows. The single-support form fills the frame, making the revolutionary absence of legs immediately clear. Match the exact white shell color, round cushion form, and polished aluminum base from reference images.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/tulip-chair-reference/ref-003.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/tulip-chair-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/tulip-chair-reference/ref-003.jpg"
+    }
+  ]
+}

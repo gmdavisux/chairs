@@ -2,6 +2,9 @@
 import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
 import ImageWithMeta from '../../components/ImageWithMeta.astro';
+import designerLinksData from '../../data/designer-links.json';
+
+type DesignerExtra = { label: string; href: string | null; comingSoon?: boolean };
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog');
@@ -17,10 +20,14 @@ export async function getStaticPaths() {
 					(p) => p.id !== post.id && p.data.designer === post.data.designer
 			  )
 			: [];
+		const designerExtra: DesignerExtra[] =
+			post.data.designer
+				? ((designerLinksData as Record<string, { extra: DesignerExtra[] }>)[post.data.designer]?.extra ?? [])
+				: [];
 
 		return {
 			params: { slug: post.id },
-			props: { post, prevPost, nextPost, relatedByDesigner },
+			props: { post, prevPost, nextPost, relatedByDesigner, designerExtra },
 		};
 	});
 }
@@ -30,12 +37,13 @@ type Props = {
 	prevPost: CollectionEntry<'blog'> | null;
 	nextPost: CollectionEntry<'blog'> | null;
 	relatedByDesigner: CollectionEntry<'blog'>[];
+	designerExtra: DesignerExtra[];
 };
 
-const { post, prevPost, nextPost, relatedByDesigner } = Astro.props;
+const { post, prevPost, nextPost, relatedByDesigner, designerExtra } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data} prevPost={prevPost} nextPost={nextPost} relatedByDesigner={relatedByDesigner}>
+<BlogPost {...post.data} prevPost={prevPost} nextPost={nextPost} relatedByDesigner={relatedByDesigner} designerExtra={designerExtra}>
 	<Content components={{ ImageWithMeta }} entryImages={post.data.images ?? []} />
 </BlogPost>

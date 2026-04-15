@@ -16,7 +16,17 @@ All images are saved to: `/public/images/`
 
 ## Automated Fetching
 
-The `fetch_designer_images.py` script automatically searches Wikimedia Commons for designer portraits and downloads them with the correct naming convention.
+The `fetch_designer_images.py` script automatically searches for designer portraits with real likeness and downloads them with the correct naming convention.
+
+### Automatic Portrait Pipeline (used by `furniture_agent.py`)
+
+When `furniture_agent.py` reaches the `designer` image slot it now runs a multi-step real-photo lookup **before** any AI image generation:
+
+1. **Wikidata SPARQL** — queries the canonical P18 (image) property; most famous mid-century designers have a portrait recorded here.
+2. **Wikimedia Commons search** — text search for `{designer name} portrait photograph` returning up to 10 candidates.
+3. **Gemini Vision ranking** — downloads thumbnails and sends them to `gemini-1.5-flash` (multimodal) to visually identify which image is an actual portrait of the designer's face, not a sketch or building.
+4. If a real photo is found it is downloaded, archived, and saved directly — `status: real_photo` in `provenance-generated.json`.
+5. If no real photo is found, AI generation falls back to **Gemini Imagen → FAL** (OpenAI is skipped for this slot due to its stricter policies on portraits of real people).
 
 ### Prerequisites
 
@@ -27,7 +37,7 @@ python3 -m pip install -r requirements.txt
 
 ### Usage
 
-**Fetch all missing designer images:**
+**Fetch all missing designer images (interactive):**
 ```bash
 python fetch_designer_images.py --all
 ```

@@ -1,0 +1,125 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => a.data.title.localeCompare(b.data.title),
+);
+
+// Flatten all images across all posts, tagging each with its post slug + title
+const galleryItems = posts.flatMap((post) => {
+	const images = post.data.images ?? [];
+	return images.map((img) => ({
+		src: img.src,
+		caption: img.caption ?? img.alt,
+		postSlug: post.id,
+		postTitle: post.data.title,
+	}));
+});
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="Gallery" description="All images from the design journal" />
+		<style>
+			main {
+				width: 960px;
+				max-width: 100%;
+				margin: 0 auto;
+				padding: 2rem 1rem 4rem;
+			}
+			h1 {
+				font-family: "Playfair Display", Georgia, serif;
+				font-size: 2rem;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: rgb(var(--black));
+				margin-bottom: 2rem;
+				border-bottom: 1px solid rgba(var(--gray-light), 1);
+				padding-bottom: 1rem;
+			}
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+				gap: 0.75rem;
+			}
+			.gallery-item {
+				display: block;
+				position: relative;
+				overflow: hidden;
+				border-radius: 6px;
+				aspect-ratio: 1 / 1;
+				background: rgba(var(--gray-light), 0.5);
+				text-decoration: none;
+			}
+			.gallery-item img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+				transition: transform 0.35s ease, filter 0.35s ease;
+			}
+			.gallery-item:hover img {
+				transform: scale(1.06);
+				filter: brightness(0.45);
+			}
+			.gallery-item .tooltip {
+				position: absolute;
+				inset: 0;
+				display: flex;
+				flex-direction: column;
+				justify-content: flex-end;
+				padding: 0.75rem;
+				opacity: 0;
+				transition: opacity 0.25s ease;
+				pointer-events: none;
+			}
+			.gallery-item:hover .tooltip {
+				opacity: 1;
+			}
+			.tooltip-caption {
+				font-size: 0.75rem;
+				line-height: 1.35;
+				color: rgb(var(--black));
+				margin-bottom: 0.25rem;
+			}
+			.tooltip-post {
+				font-size: 0.65rem;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: var(--accent);
+				font-weight: 700;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Gallery</h1>
+			<div class="grid">
+				{galleryItems.map((item) => (
+					<a
+						class="gallery-item"
+						href={`/blog/${item.postSlug}`}
+						aria-label={`${item.caption} — ${item.postTitle}`}
+					>
+						<img
+							src={item.src}
+							alt={item.caption}
+							loading="lazy"
+							decoding="async"
+						/>
+						<div class="tooltip">
+							<p class="tooltip-caption">{item.caption}</p>
+							<span class="tooltip-post">{item.postTitle}</span>
+						</div>
+					</a>
+				))}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "slug": "panton-chair",
+  "timestamp": "2026-04-15T12:28:45.214929",
+  "images": [
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 826427,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-designer.png",
+      "provider": "fal",
+      "prompt": "Black and white archival portrait photograph of Verner Panton from the mid-20th century. Professional photographer studio style of the 1960s-1970s period. Clear, dignified composition typical of modernist designer portraits of the era. Period-appropriate clothing and natural or controlled studio lighting. Historical photography aesthetic with neutral background. Museum-quality archival print character with fine grain and rich tonal range from deep blacks to clean whites.",
+      "reference_urls": [],
+      "primary_reference": null
+    }
+  ]
+}

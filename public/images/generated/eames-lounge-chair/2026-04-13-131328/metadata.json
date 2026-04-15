@@ -1,0 +1,46 @@
+{
+  "slug": "eames-lounge-chair",
+  "timestamp": "2026-04-13T13:13:33.137871",
+  "images": [
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 738562,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/eames-lounge-chair-silhouette.png",
+      "provider": "fal",
+      "prompt": "Eames Lounge Chair 670 and Ottoman 671 (1956) three-quarter view → molded rosewood veneer plywood shells with rich black leather cushions on polished cast aluminum five-star swivel base → soft warm 2700K diffused lighting, well-defined natural shadows, warm amber tones → full tonal range from deep shadows to clean highlights → clean minimal background with warm-neutral floor surface → emphasize compound curved shell silhouette, angular three-shell stacking, and sculptural reclining posture → museum-catalog quality, no people, no clutter, no text.",
+      "reference_urls": [],
+      "primary_reference": null
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1351359,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/eames-lounge-chair-context.png",
+      "provider": "fal",
+      "prompt": "Eames Lounge Chair 670 and Ottoman 671 (1956) in a period-authentic mid-century modern living room → warm wood floors, large windows with natural afternoon light filtered softly, minimal 1950s-1960s California modernist interior → warm 2700-3000K ambient light enhancing rosewood and leather warmth → subtle styling with low furniture and one potted tropical plant → chair and ottoman as natural focal point → full tonal range, rich modeled shadows → no people, historically accurate postwar American interior, no clutter or excessive decoration.",
+      "reference_urls": [],
+      "primary_reference": null
+    },
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 764465,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/eames-lounge-chair-designer.png",
+      "provider": "fal",
+      "prompt": "Charles and Ray Eames archival photograph circa 1950s → black and white documentary portrait of both designers together → natural workshop or studio setting with design objects or models visible in background → gelatin silver print aesthetic with gentle grain → soft natural side lighting with dimensional shadows → close three-quarter composition showing both faces clearly → warm and engaged expressions, period-appropriate 1950s clothing → historical authenticity, mid-century photographic quality, no retouching, no text overlays, no logos, no watermarks.",
+      "reference_urls": [],
+      "primary_reference": null
+    },
+    {
+      "slot": "detail-material",
+      "filename": "detail-material.png",
+      "size": 844468,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/eames-lounge-chair-detail-material.png",
+      "provider": "fal",
+      "prompt": "Extreme close-up of Eames Lounge Chair 670 leather cushion meeting molded rosewood plywood shell → rich black leather upholstery with visible grain and supple sheen where it meets warm rosewood veneer surface → leather strap and button visible where cushion attaches to shell → soft warm 2700K light reveals material character and fine craftsmanship → shallow depth of field, shell curving away softly behind → natural shadows define surface dimensionality → exact materials: deep black leather, warm rosewood wood grain → tactile museum-quality close-up, no people, no text, no logos.",
+      "reference_urls": [],
+      "primary_reference": null
+    }
+  ]
+}

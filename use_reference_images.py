@@ -70,58 +70,98 @@ def get_available_references(metadata: dict) -> list[dict]:
     return available
 
 
+def _slot_alt_and_caption_reference(slot: str, title: str, designer: str) -> tuple[str, str]:
+    """Return (alt, caption) text for a reference image slot."""
+    slot_meta = {
+        "hero": (
+            f"{title} — archival reference photograph",
+            f"Reference photograph of the {title} by {designer}.",
+        ),
+        "silhouette": (
+            f"{title} profile silhouette — archival reference",
+            f"Reference silhouette of the {title} by {designer}.",
+        ),
+        "context": (
+            f"{title} in context — archival reference photograph",
+            f"Reference photograph of the {title} by {designer} in situ.",
+        ),
+        "designer": (
+            f"Archival photograph of {designer}, designer of the {title}",
+            f"Archival portrait of {designer}.",
+        ),
+        "sketch": (
+            f"Design drawing of the {title}",
+            f"Archival design drawing of the {title} by {designer}.",
+        ),
+    }
+    return slot_meta.get(slot, (f"{title} — {slot} reference", f"Reference {slot} image for the {title}."))
+
+
 def update_frontmatter_metadata(slug: str, slot_updates: dict[str, dict], dry_run: bool = False) -> bool:
     """Update the frontmatter with reference image metadata."""
-    article_path = CONTENT_DIR / f"{slug}.md"
-    
+    # Support both .md and .mdx
+    article_path = CONTENT_DIR / f"{slug}.mdx"
     if not article_path.exists():
-        print(f"⚠️  Article not found at: {article_path}")
+        article_path = CONTENT_DIR / f"{slug}.md"
+    if not article_path.exists():
+        print(f"⚠️  Article not found at: {CONTENT_DIR / slug}(.mdx/.md)")
         return False
-    
+
     raw = article_path.read_text(encoding="utf-8")
     match = re.match(r"^---\n(.*?)\n---\n(.*)$", raw, flags=re.DOTALL)
     if not match:
         print(f"⚠️  Could not parse frontmatter in {article_path}")
         return False
-    
+
     try:
         import yaml
     except ImportError:
         print(f"⚠️  PyYAML not installed; frontmatter update skipped")
         return False
-    
+
     frontmatter_raw = match.group(1)
     body = match.group(2)
     data = yaml.safe_load(frontmatter_raw) or {}
-    
+
+    title = data.get("title", "")
+    designer = data.get("designer", "")
+
     # Update hero metadata
     hero_update = slot_updates.get("hero")
     if hero_update:
-        data["heroImageSource"] = hero_update.get("source", "TBD")
+        alt, caption = _slot_alt_and_caption_reference("hero", title, designer)
+        data["heroImageAlt"] = alt
+        data["heroImageAltStatus"] = "actual"
+        data["heroImageCaption"] = caption
+        data["heroImageSource"] = hero_update.get("source", "archival reference")
         data["heroImageLicense"] = hero_update.get("license", "unknown")
         data["heroImageOrigin"] = hero_update.get("origin", "licensed")
-    
+
     # Update images array
     images = data.get("images")
     if isinstance(images, list):
         for entry in images:
             if not isinstance(entry, dict):
                 continue
-            
+
             entry_id = str(entry.get("id", ""))
             entry_src = str(entry.get("src", ""))
-            
+
             for slot, update in slot_updates.items():
                 if slot in entry_id or slot in entry_src:
-                    entry["source"] = update.get("source", "TBD")
+                    alt, caption = _slot_alt_and_caption_reference(slot, title, designer)
+                    entry["alt"] = alt
+                    entry["altStatus"] = "actual"
+                    entry["caption"] = caption
+                    entry["source"] = update.get("source", "archival reference")
                     entry["license"] = update.get("license", "unknown")
                     entry["origin"] = update.get("origin", "licensed")
                     break
-    
+
     if dry_run:
         print(f"  [DRY RUN] Would update frontmatter metadata in {article_path}")
         return False
-    
+
     serialized = yaml.safe_dump(data, sort_keys=False, allow_unicode=False).strip()
     article_path.write_text(f"---\n{serialized}\n---\n{body.lstrip()}", encoding="utf-8")
     print(f"  ✓ Updated frontmatter metadata in {article_path}")

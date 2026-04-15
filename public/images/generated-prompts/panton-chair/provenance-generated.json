@@ -1,0 +1,37 @@
+{
+  "slug": "panton-chair",
+  "title": "Panton Chair",
+  "generatedAt": "2026-04-14T22:26:29.770400Z",
+  "provider": "fal",
+  "model": "fal-ai/flux/dev",
+  "imageSize": "1024x1024",
+  "maxImages": 4,
+  "budgetUsd": null,
+  "results": [
+    {
+      "slot": "hero",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "detail-material",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "detail-structure",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "detail-silhouette",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    }
+  ],
+  "summary": {
+    "generatedCount": 0,
+    "failedCount": 0,
+    "skippedCount": 4
+  }
+}

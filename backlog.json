@@ -46,7 +46,7 @@
       "designer": "Arne Jacobsen",
       "era": "Mid-Century Modern",
       "category": "Dining Chairs",
-      "status": "pending"
+      "status": "done"
     },
     {
       "slug": "panton-chair",
@@ -54,7 +54,7 @@
       "designer": "Verner Panton",
       "era": "Late Modern",
       "category": "Iconic Chairs",
-      "status": "pending"
+      "status": "done"
     },
     {
       "slug": "wishbone-chair",

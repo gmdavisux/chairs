@@ -10,6 +10,7 @@ type Props = CollectionEntry<'blog'>['data'] & {
 	prevPost?: CollectionEntry<'blog'> | null;
 	nextPost?: CollectionEntry<'blog'> | null;
 	relatedByDesigner?: CollectionEntry<'blog'>[];
+	designerExtra?: { label: string; href: string | null; comingSoon?: boolean }[];
 };
 
 const {
@@ -36,6 +37,7 @@ const {
 	prevPost,
 	nextPost,
 	relatedByDesigner,
+	designerExtra = [],
 } = Astro.props;
 
 const heroAlt =
@@ -512,13 +514,21 @@ const jsonLd = {
 								{designerBio && <p class="designer-bio">{designerBio}</p>}
 							</div>
 						)}
-						{relatedByDesigner && relatedByDesigner.length > 0 && (
+						{(relatedByDesigner && relatedByDesigner.length > 0 || designerExtra.length > 0) && (
 							<div class="designer-related">
 								<h3 class="designer-heading">More by {designer}</h3>
 								<ul class="related-list">
-									{relatedByDesigner.map((p) => (
+									{relatedByDesigner && relatedByDesigner.map((p) => (
 										<li>
 											<a href={`/blog/${p.id}/`}>{p.data.title}</a>
+										</li>
+									))}
+									{designerExtra.map((item) => (
+										<li>
+											{item.href
+												? <a href={item.href} target="_blank" rel="noopener">{item.label}</a>
+												: <span>{item.label}{item.comingSoon && <em> (coming soon)</em>}</span>
+											}
 										</li>
 									))}
 								</ul>

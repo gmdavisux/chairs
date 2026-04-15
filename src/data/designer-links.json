@@ -1,0 +1,26 @@
+{
+  "Arne Jacobsen": {
+    "extra": [
+      { "label": "Series 7 Chair", "href": null, "comingSoon": true },
+      { "label": "Fritz Hansen — Arne Jacobsen", "href": "https://www.fritzhansen.com/en-gb/arne-jacobsen" }
+    ]
+  },
+  "Ludwig Mies van der Rohe": {
+    "extra": [
+      { "label": "Knoll — Mies van der Rohe", "href": "https://www.knoll.com/designer/Ludwig-Mies-van-der-Rohe" }
+    ]
+  },
+  "Charles and Ray Eames": {
+    "extra": [
+      { "label": "Eames Office", "href": "https://www.eamesoffice.com" }
+    ]
+  },
+  "Eero Saarinen": {
+    "extra": [
+      { "label": "Knoll — Eero Saarinen", "href": "https://www.knoll.com/designer/Eero-Saarinen" }
+    ]
+  },
+  "Marcel Breuer": {
+    "extra": []
+  }
+}

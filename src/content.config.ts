@@ -7,18 +7,12 @@ const imageOriginEnum = z.enum([
 	'licensed',
 	'ai_generated',
 	'placeholder',
+	'studio_composition',
 ]);
 
-const imageLicenseEnum = z.enum([
-	'public_domain',
-	'cc0',
-	'cc_by',
-	'cc_by_sa',
-	'licensed',
-	'rights_reserved',
-	'ai_generated',
-	'unknown',
-]);
+// Free-text field: accepts descriptive license strings (e.g. "Original work for educational and archival purposes")
+// as well as legacy enum shortcodes (public_domain, cc0, cc_by, cc_by_sa, licensed, rights_reserved, ai_generated, unknown)
+const imageLicenseEnum = z.string();
 
 const imageAltStatusEnum = z.enum(['proposed', 'actual']);
 

@@ -1,0 +1,90 @@
+{
+  "slug": "panton-chair",
+  "title": "Panton Chair",
+  "referenceFolder": "public/images/reference/panton-chair-reference",
+  "collectedAt": "2026-04-14",
+  "downloadedCount": 3,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Ngv_design,_verner_panton,_panton_chair,_1960_01.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Ngv_design%2C_verner_panton%2C_panton_chair%2C_1960_01.JPG",
+      "localPath": "public/images/reference/panton-chair-reference/ref-001.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Verner_Panton_-_S_chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Verner_Panton_-_S_chair.jpg",
+      "localPath": "public/images/reference/panton-chair-reference/ref-002.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Panton_Chair_by_Verner_Panton.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Panton_Chair_by_Verner_Panton.JPG",
+      "localPath": "public/images/reference/panton-chair-reference/ref-003.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Verner_Panton_-_Cone_Chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Verner_Panton_-_Cone_Chair.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Panton_chair",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://collections.vam.ac.uk/item/O120670/panton-chair-chair-panton-verner/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "https://www.verner-panton.com/en/collection/panton-chair/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://www.vitra.com/en-us/product/details/panton-chair?srsltid=AfmBOopVYpFPW-ayO3-ZofnyizEFpvBHrQoE2wNKjLKmmMUIZeLgUWZs",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}

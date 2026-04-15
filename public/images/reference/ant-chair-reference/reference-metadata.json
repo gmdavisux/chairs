@@ -1,0 +1,90 @@
+{
+  "slug": "ant-chair",
+  "title": "Ant Chair",
+  "referenceFolder": "public/images/reference/ant-chair-reference",
+  "collectedAt": "2026-04-13",
+  "downloadedCount": 2,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Ant_chair_(white)_by_Arne_Jacobsen.JPG",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/The_Ant_chair_%28white%29_by_Arne_Jacobsen.JPG",
+      "localPath": "public/images/reference/ant-chair-reference/ref-001.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Ant_chair_(Arne_Jacobsen",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Ant_chair_(Arne_Jacobsen)?uselang=de",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Arne_Jacobsen_Ant_Chair_Copenhagen_Design_Museum.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Arne_Jacobsen_Ant_Chair_Copenhagen_Design_Museum.jpg",
+      "localPath": "public/images/reference/ant-chair-reference/ref-004.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://arnejacobsen.com/works/the-ant/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "http://danishdesignreview.com/a-danish-chair-1/2018/3/30/chair-3103-by-arne-jacobsen-1955-h3wys",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://collections.vam.ac.uk/item/O1357847/model-3107-chair-jacobsen-arne-emil/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}

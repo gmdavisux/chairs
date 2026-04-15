@@ -1,0 +1,65 @@
+Image source discovery for: Ant Chair [ant-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Ant Chair Arne Jacobsen site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/File:The_Ant_chair_(white)_by_Arne_Jacobsen.JPG
+2. Untitled
+   https://commons.wikimedia.org/wiki/Category:Ant_chair_(Arne_Jacobsen)
+3. Untitled
+   https://commons.wikimedia.org/wiki/Category:Ant_chair_(Arne_Jacobsen)?uselang=de
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Arne_Jacobsen_Ant_Chair_Copenhagen_Design_Museum.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/Category:Chairs_by_Arne_Jacobsen
+
+[MUSEUMS QUERY]
+Ant Chair Arne Jacobsen site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://arnejacobsen.com/works/the-ant/
+2. Untitled
+   http://danishdesignreview.com/a-danish-chair-1/2018/3/30/chair-3103-by-arne-jacobsen-1955-h3wys
+3. Untitled
+   https://collections.vam.ac.uk/item/O1357847/model-3107-chair-jacobsen-arne-emil/
+4. Untitled
+   https://arnejacobsen.com/works/egg-table/
+5. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/ant
+
+[ARCHIVES QUERY]
+Ant Chair Arne Jacobsen site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   http://danishdesignreview.com/a-danish-chair-1/2018/3/30/chair-3103-by-arne-jacobsen-1955-h3wys
+2. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/ant
+3. Untitled
+   https://www.danishdesignstore.com/collections/arne-jacobsen-ant-chair-by-fritz-hansen?srsltid=AfmBOopd0VlIQxrzbza7Osv2vbZisZrC_zaWEm9Pb064ZxmylgrQOIfb
+4. Untitled
+   https://catdir.loc.gov/catdir/enhancements/fy0645/00037051-s.html
+5. Untitled
+   http://catdir.loc.gov/catdir/enhancements/fy0653/2006389586-d.html
+
+[MANUFACTURERS QUERY]
+Ant Chair Arne Jacobsen site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.fritzhansen.com/en/about-us/arnejacobsen
+2. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/ant
+3. Untitled
+   https://www.fritzhansen.com/en/categories/products/popular-series/egg
+4. Untitled
+   https://www.fritzhansen.com/en/inspiration/designers/arne-jacobsen
+5. Untitled
+   https://www.fritzhansen.com/

@@ -1,0 +1,65 @@
+Image source discovery for: Panton Chair [panton-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Panton Chair Verner Panton site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/File:Ngv_design,_verner_panton,_panton_chair,_1960_01.JPG
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Verner_Panton_-_S_chair.jpg
+3. Untitled
+   https://commons.wikimedia.org/wiki/File:Panton_Chair_by_Verner_Panton.JPG
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Verner_Panton_-_Cone_Chair.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/Category:Panton_chair
+
+[MUSEUMS QUERY]
+Panton Chair Verner Panton site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://collections.vam.ac.uk/item/O120670/panton-chair-chair-panton-verner/
+2. Untitled
+   https://www.verner-panton.com/en/collection/panton-chair/
+3. Untitled
+   https://www.vitra.com/en-us/product/details/panton-chair?srsltid=AfmBOopVYpFPW-ayO3-ZofnyizEFpvBHrQoE2wNKjLKmmMUIZeLgUWZs
+4. Untitled
+   https://www.vitra.com/en-us/product/panton-chair?srsltid=AfmBOorkWe_AdgKuqEOrbzkhi37gvP1SptTLuYtlL4MOk0yl7DJdA860
+5. Untitled
+   https://www.vertigohome.us/collections/verner-panton?srsltid=AfmBOoqD8vaTRsL0KemkArQisaBS4Uc89RzS0d9Xv9K4ror7KNW9xEdq
+
+[ARCHIVES QUERY]
+Panton Chair Verner Panton site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://www.vitra.com/en-us/product/panton-chair?srsltid=AfmBOopveqeSiRJlmuF_QB87JQaI4BfPYgZfIzlz8TFWV6kgczdRvFzr
+2. Untitled
+   https://www.verner-panton.com/en/collection/panton-chair/
+3. Untitled
+   https://www.vitra.com/en-us/product/panton-chair-classic?srsltid=AfmBOoqiB96yyYaffx8PJwaqYsID3AzGgRuFNSbxlvDA66Ifu6cV-RGy
+4. Untitled
+   https://www.vertigohome.us/collections/verner-panton?srsltid=AfmBOoqsh-LfjeA0uNJrirRTiIiACctn07_70_kJHJS_T7pBrqkuuZ26
+5. Untitled
+   https://www.metmuseum.org/art/collection/search/484643
+
+[MANUFACTURERS QUERY]
+Panton Chair Verner Panton site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.vitra.com/en-us/product/details/panton-chair?srsltid=AfmBOooaU3kCoQIE8wdMtsGDKd1r72zOUJfxtajZ3UDlANiG7D2FtGMQ
+2. Untitled
+   https://www.vitra.com/en-us/product/panton-chair?srsltid=AfmBOoqLevJbw4dxuOIVOQJ2ga-mFnZEc2j7ZGCN09S2wDzyuTc-g7uc
+3. Untitled
+   https://www.vitra.com/en-us/product/panton-chair?srsltid=AfmBOor4puE2Ddo3lwfbTVZF8vC1apXFlN7TQnHXvnG6aJX5N2FqcbES
+4. Untitled
+   https://www.vitra.com/en-us/product/panton-chair-classic?srsltid=AfmBOorSZ7ZQsiVfGTZhiTuDrkGccjULDhk1mFIlHC5hIQrMAyMUsgx2
+5. Untitled
+   https://www.vitra.com/en-us/product/panton-chair-classic?srsltid=AfmBOoowwzPuovg4UjAJ4Oik6_eg3pSw9vpwYoaCCnGr1maCw_lo0mbU

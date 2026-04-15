@@ -8,13 +8,18 @@ import HeaderLink from './HeaderLink.astro';
 		<h2><a href="/">{SITE_TITLE}</a></h2>
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
-			<HeaderLink href="/blog">Journal</HeaderLink>
+			<HeaderLink href="/gallery">Gallery</HeaderLink>
 			<HeaderLink href="/about">About</HeaderLink>
 		</div>
 	</nav>
 </header>
 <style>
 	header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 100;
 		margin: 0;
 		padding: 0 1em;
 		background: #0d0b09;

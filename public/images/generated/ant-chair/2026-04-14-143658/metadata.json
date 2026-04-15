@@ -1,0 +1,16 @@
+{
+  "slug": "ant-chair",
+  "timestamp": "2026-04-14T14:38:52.884203",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1031773,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/ant-chair-hero.png",
+      "provider": "google",
+      "prompt": "Professional product photography of Ant Chair designed by Arne Jacobsen. Three-quarter view showing the chair's full form, sculptural qualities, and distinctive design features. Studio lighting with soft shadows on a neutral background. High contrast, sharp focus, museum-quality documentation style.",
+      "reference_urls": [],
+      "primary_reference": null
+    }
+  ]
+}

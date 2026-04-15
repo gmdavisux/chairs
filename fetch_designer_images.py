@@ -289,6 +289,163 @@ def process_all_chairs(enhance: bool = False, force: bool = False):
         fetch_designer_for_chair(chair_slug, designer_name, enhance, force)
 
 
+def _query_wikidata_designer_image(designer_name: str) -> Optional[dict]:
+    """Query Wikidata SPARQL for the canonical P18 (image) property of a designer.
+
+    Returns a dict with 'url', 'title', 'source', 'license' or None.
+    """
+    # Build a SPARQL query that looks up a person by name and fetches their image.
+    sparql_query = """
+SELECT ?file ?fileLabel WHERE {
+  ?person wdt:P18 ?file .
+  ?person rdfs:label "%s"@en .
+  BIND(CONCAT("File:", STRAFTER(STR(?file), "Special:FilePath/")) AS ?fileLabel)
+}
+LIMIT 1
+""" % designer_name.replace('"', '\\"')
+
+    endpoint = "https://query.wikidata.org/sparql"
+    headers = {
+        "Accept": "application/sparql-results+json",
+        "User-Agent": "DesignerPortraitFetcher/1.0 (chairs-site-bot)",
+    }
+    try:
+        response = requests.get(
+            endpoint,
+            params={"query": sparql_query, "format": "json"},
+            headers=headers,
+            timeout=15,
+        )
+        response.raise_for_status()
+        data = response.json()
+        bindings = data.get("results", {}).get("bindings", [])
+        if not bindings:
+            return None
+
+        file_url = bindings[0].get("file", {}).get("value", "")
+        if not file_url.startswith("http"):
+            return None
+
+        # file_url is already a Special:FilePath direct URL from Wikimedia
+        log.info("Wikidata portrait found for %s: %s", designer_name, file_url)
+        return {
+            "url": file_url,
+            "title": bindings[0].get("fileLabel", {}).get("value", ""),
+            "source": f"https://www.wikidata.org/wiki/Special:Search/{designer_name.replace(' ', '_')}",
+            "license": "public domain or CC-BY-SA (Wikimedia Commons)",
+            "width": 0,
+            "height": 0,
+        }
+    except Exception as exc:
+        log.warning("Wikidata SPARQL query failed for %s: %s", designer_name, exc)
+        return None
+
+
+def _rank_wikimedia_results_with_ai(designer_name: str, results: list) -> Optional[dict]:
+    """Use Gemini Vision to visually select the best portrait candidate from Wikimedia results.
+
+    Downloads thumbnails and sends them to Gemini multimodal for visual identification.
+    Falls back to heuristic selection if Gemini is unavailable.
+    """
+    if not results:
+        return None
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if api_key:
+        try:
+            import google.generativeai as genai
+            from io import BytesIO as _BytesIO
+
+            genai.configure(api_key=api_key)
+            vision_model = genai.GenerativeModel("gemini-1.5-flash")
+
+            # Download thumbnails for visual inspection (up to 6 candidates)
+            candidates = results[:6]
+            content_parts: list = [
+                f"I need to identify a real portrait photograph of the furniture designer {designer_name}. "
+                f"Below are up to {len(candidates)} images from Wikimedia Commons numbered 1 to {len(candidates)}. "
+                "Reply with ONLY the number (1-based) of the image that best shows this designer's face as a "
+                "real portrait photograph (not a sketch, building, chair, or illustration). "
+                "If none clearly show the designer's face, reply with 0. Reply with just the number."
+            ]
+            valid_candidates = []
+            for r in candidates:
+                thumb_url = r.get("thumburl") or r.get("url", "")
+                if not thumb_url:
+                    continue
+                try:
+                    thumb_resp = requests.get(thumb_url, timeout=10)
+                    thumb_resp.raise_for_status()
+                    img = Image.open(_BytesIO(thumb_resp.content)).convert("RGB")
+                    content_parts.append(img)
+                    valid_candidates.append(r)
+                except Exception:
+                    pass  # skip unloadable thumbnails
+
+            if valid_candidates:
+                response = vision_model.generate_content(content_parts)
+                choice_str = response.text.strip().split()[0].rstrip(".")
+                choice = int(choice_str)
+                if 1 <= choice <= len(valid_candidates):
+                    log.info("Gemini Vision selected candidate %d for %s", choice, designer_name)
+                    return valid_candidates[choice - 1]
+                if choice == 0:
+                    log.info("Gemini Vision found no suitable portrait for %s", designer_name)
+                    return None
+        except Exception as exc:
+            log.warning("Gemini Vision ranking unavailable (%s), using heuristic fallback", exc)
+
+    # Heuristic fallback: prefer items with "portrait" in title, highest resolution
+    PORTRAIT_KEYWORDS = ("portrait", "photo", "photograph", "headshot", "mugshot")
+    EXCLUDE_KEYWORDS = ("chair", "furniture", "building", "design", "sketch", "drawing", "plan")
+
+    def score(r: dict) -> float:
+        title_lower = r.get("title", "").lower()
+        if any(kw in title_lower for kw in EXCLUDE_KEYWORDS):
+            return -1.0
+        portrait_bonus = 2.0 if any(kw in title_lower for kw in PORTRAIT_KEYWORDS) else 0.0
+        # Prefer larger images
+        area = r.get("width", 0) * r.get("height", 0)
+        return portrait_bonus + area / 1_000_000
+
+    scored = sorted(results[:10], key=score, reverse=True)
+    best = scored[0]
+    if score(best) < 0:
+        return None
+    log.info("Heuristic selected: %s for %s", best.get("title"), designer_name)
+    return best
+
+
+def fetch_designer_auto(designer_name: str) -> Optional[dict]:
+    """Non-interactive: find the best real portrait for a designer.
+
+    Pipeline:
+      1. Wikidata SPARQL (P18 canonical image) — structured data, most reliable
+      2. Wikimedia Commons text search + Gemini/heuristic ranking
+
+    Returns a dict with keys: url, title, source, license
+    Returns None if no suitable image found.
+    """
+    log.info("Auto-fetching designer portrait for: %s", designer_name)
+
+    # Step 1: Wikidata canonical portrait
+    wikidata_result = _query_wikidata_designer_image(designer_name)
+    if wikidata_result and wikidata_result.get("url"):
+        return wikidata_result
+
+    # Step 2: Wikimedia Commons search + AI ranking
+    commons_results = search_wikimedia_for_designer(designer_name, limit=10)
+    if commons_results:
+        best = _rank_wikimedia_results_with_ai(designer_name, commons_results)
+        if best:
+            best.setdefault("source", best.get("pageurl", ""))
+            best.setdefault("license", "public domain or CC-BY-SA (Wikimedia Commons)")
+            return best
+
+    log.warning("No suitable designer portrait found for: %s", designer_name)
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Fetch designer portrait images from Wikimedia Commons"

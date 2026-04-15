@@ -45,7 +45,7 @@ FURNITURE_IMAGE_PROVIDER=google \
     --slots hero context silhouette designer
 ```
 
-Add `--update-mdx` to also rewrite frontmatter in the same run.
+Add `--no-update-mdx` to opt out of rewrite frontmatter in the same run.
 
 ---
 
@@ -189,6 +189,41 @@ Produces a formatted text batch file with ready-to-paste prompts and reference U
 
 ---
 
+### `migrate_to_registry.py`
+
+Converts all inline `<ImageWithMeta src="..." alt="..." caption="...">` calls to registry-first form `<ImageWithMeta id="..." images={props.entryImages} />`. Any metadata present inline but missing or stale in the frontmatter `images[]` registry (e.g. real captions replacing "TBD") is merged into the registry before the inline call is removed.
+
+Run this whenever you have hand-edited inline component props and want to consolidate them back into the single source of truth.
+
+| Argument | Description |
+|---|---|
+| *(none)* | Process all MDX files |
+| `--slug SLUG` | Process a single file |
+| `--dry-run` | Preview changes without writing |
+
+---
+
+### `audit_image_registry.py`
+
+Reports image metadata quality issues across all articles. Use after any bulk edit or generation run to catch problems before they reach production.
+
+| Argument | Description |
+|---|---|
+| *(none)* | Check all MDX files |
+| `--slug SLUG` | Check a single file |
+| `--level error\|warn\|info` | Minimum severity to show (default: `warn`) |
+
+Checks performed:
+- Unmigrated inline `src=` calls in the body (should be `id=` after migration)
+- `id=` references in the body with no matching frontmatter registry entry
+- `caption: TBD` entries
+- `altStatus: proposed` entries that need real alt text
+- `source: TBD` entries
+- Image `src` paths that don't exist on disk
+- `heroImageCaption` and `heroImageAltStatus` quality
+
+---
+
 ### `update_mdx_images.py`
 
 After manually saving generated images as PNGs/JPGs, rewrites MDX frontmatter image paths to point to the new files.
@@ -312,6 +347,67 @@ Key public functions:
 - `create_archive_directory()` — make a timestamped archive dir
 - `get_latest_archive_directory()` — find the most recent archive for a slug
 - `list_archive_directories()` — list all archives for a slug
+
+---
+
+## Manual Metadata Editing
+
+All image metadata lives in two places for each article:
+
+1. **Frontmatter `images[]` registry** — the single source of truth, used by `<ImageWithMeta id="...">` lookups
+2. **Hero image fields** — `heroImageAlt`, `heroImageCaption`, `heroImageSource`, etc. at the top level
+
+Edit these directly in the `.mdx` file. The dev server reloads on save and will show a schema error in the terminal if a field is invalid.
+
+### Free-text fields — edit freely
+
+| Field | Notes |
+|---|---|
+| `alt` / `heroImageAlt` | Any descriptive string. Change `altStatus` → `actual` when done. |
+| `caption` / `heroImageCaption` | Any string. Replace `TBD` with a real caption. |
+| `source` / `heroImageSource` | Attribution text or URL. Replace `TBD` with a real value. For purpose-built studio images use: `Original studio composition created for this site, based on public-domain reference photographs and historical documentation.` |
+| `title`, `description`, `designer`, `designerBio`, `designerYears` | Plain strings, no constraints. |
+| `manufacturer` | Plain string, e.g. `Fritz Hansen`. |
+| `keywords` | YAML list — one keyword per line under a `-` bullet. |
+| `yearDesigned` | Integer with **no quotes** — `1958`, not `"1958"`. |
+
+### Enum-constrained fields — must use exact values
+
+| Field | Valid values |
+|---|---|
+| `heroImageOrigin` / `images[].origin` | `public_domain` `licensed` `ai_generated` `placeholder` `studio_composition` |
+| `heroImageAltStatus` / `images[].altStatus` | `proposed` `actual` |
+
+The `heroImageLicense` / `images[].license` field accepts any descriptive string. Use the standard phrase for purpose-built images:
+
+```
+license: Original work for educational and archival purposes
+```
+
+Legacy shortcodes (`public_domain`, `cc0`, `cc_by`, `cc_by_sa`, `licensed`, `rights_reserved`, `ai_generated`, `unknown`) remain valid for records sourced from external archives.
+
+### Diagnosing schema errors
+
+The dev server error message (`data does not match collection schema`) doesn't always identify the specific field. Two ways to find it quickly:
+
+```sh
+# Show quality warnings for a single article
+python audit_image_registry.py --slug barcelona-chair
+
+# Full Zod validation with field names
+npm run build 2>&1 | grep -A5 'does not match'
+```
+
+### Workflow for updating metadata after image review
+
+```sh
+# 1. Edit frontmatter in the .mdx file directly (update alt, caption, source, altStatus)
+# 2. Run the audit to confirm no issues remain
+python audit_image_registry.py --slug barcelona-chair
+# 3. If you also edited inline <ImageWithMeta> props by hand, consolidate back to registry:
+python migrate_to_registry.py --slug barcelona-chair --dry-run
+python migrate_to_registry.py --slug barcelona-chair
+```
 
 ---
 

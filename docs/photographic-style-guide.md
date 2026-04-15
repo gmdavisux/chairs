@@ -98,25 +98,23 @@ The sketch slot uses professional industrial design marker rendering technique i
 **CRITICAL: NOT A SILHOUETTE** - Avoid flat side-profile views. Use dynamic three-quarter or perspective angles that show sculptural form and dimensional depth.
 
 **Visual Characteristics:**
-- Cool gray Prismacolor or Copic markers (20%, 30%, 50% gray tones) as primary shading
-- Always include judicious selective color accents - single or limited hues to highlight key features or materials
+- Bold, generous color application is the primary visual driver — colors drawn from the subject's own palette and era applied to key forms, not saved as a small accent
+- Gray Prismacolor or Copic markers (20%, 30%, 50%) used only for secondary shadow tones; gray must NOT dominate
 - Confident, sketchy black ink construction lines that extend beyond the form with skeletal quality
 - Multiple overlapping line strokes showing drawing process - not tight technical drawing
 - Lines can overshoot corners and edges, emphasizing gesture and construction over precision
-- Smooth graduated marker tones showing dimensional form
 - White or subtly tinted paper background (pale blue, warm beige, or neutral tone)
 - Dynamic three-quarter or perspective view emphasizing sculptural geometry (NOT flat profile)
 
-**Background Treatment:**
-- Abstract geometric shapes, color blocks, or marker splashes behind subject
-- Color washes in pale blue, warm beige, orange, or teal as design presentation accents
+**Background Treatment (REQUIRED — not optional):**
+- Abstract geometric shapes, color blocks, or marker splashes behind subject are mandatory
+- Color washes drawn from the subject's palette as design presentation accents
 - Construction lines and gestural marks that extend beyond the object form
-- Background elements add visual interest without competing with subject
-- Keeps professional presentation while adding energy and humanity
+- Background energy gives the rendering life and professional presentation quality
+- Background adds visual interest without competing with the subject
 
 **Core Requirements:**
 - No signature, text, annotations, or dimension lines
 - Sketchy, loose linework showing drawing confidence and process
-- Emphasize pure form and sculptural form through shading
-- Selective strategic color use to enhance form, not decorate
+- Color and background are as important as the linework — do not produce a gray-toned outline drawing
 - Balance between technical precision and hand-drawn spontaneity

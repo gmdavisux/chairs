@@ -1,0 +1,58 @@
+{
+  "slug": "barcelona-chair",
+  "timestamp": "2026-04-14T19:01:03.321734",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1225967,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-hero.png",
+      "provider": "google",
+      "prompt": "Transform this reference photograph to museum-catalog quality: Retain the exact Barcelona Chair form, proportions, and three-quarter viewing angle. Apply soft diffused warm illumination at 2800K producing gentle amber warmth with well-defined natural shadows and rich tonal depth. Replace background with minimalist warm-toned architectural setting - smooth polished concrete floor and textured plaster wall in warm beige. Enhance leather texture detail showing grain and button tufting depth; enhance chrome frame reflections with subtle warm highlights. Achieve full tonal range from deep shadows to clean highlights while preserving material authenticity. Remove all extraneous objects. Natural color grading with enhanced contrast; museum aesthetic; clean negative space.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-003.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-001.jpg"
+    },
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 1178152,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Retouch the reference photograph: Do NOT change the structure or form of the Barcelona Chair shown in the reference image. Only improve: lighting (add soft backlit window light effect), color balance and exposure, professional framing with clean composition. Change the background to a minimal 20th century modern interior setting with neutral tones. Maintain the chair's exact proportions, frame structure, and cushion details from the reference. Professional photographic quality.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-003.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-001.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-002.jpg"
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1271531,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-context.png",
+      "provider": "google",
+      "prompt": "Transform this reference photograph: Preserve the exact Barcelona Chair structure and viewing angle. Apply soft diffused warm illumination at 2800K with gentle amber warmth and well-defined natural shadows. Reframe with era-appropriate 1929 International Style architectural context - floor-to-ceiling window with soft daylight, travertine or polished concrete flooring. Enhance material texture authenticity - visible leather grain, button tufting depth, chrome reflections with warm highlights. Achieve full tonal range from deep shadows to clean highlights. Architectural elements must remain minimal and subordinate to the chair. Remove any decorative props or clutter. Natural warm color grading; enhanced contrast preserving shadow and highlight detail; museum aesthetic.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-003.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/barcelona-chair-reference/ref-003.jpg"
+    },
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 773970,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/barcelona-chair-designer.png",
+      "provider": "google",
+      "prompt": "Black and white archival photograph of Ludwig Mies van der Rohe, German-American modernist architect and furniture designer, circa 1930s-1950s. Professional portrait in period-appropriate photographic style - gelatin silver print aesthetic with natural grain. Clean studio or architectural background. Soft natural lighting with dimensional shadows emphasizing facial character and refinement. Three-quarter or frontal composition. Sharp focus on subject; authentic mid-century photographic quality; preserve historical authenticity without modern retouching or manipulation.",
+      "reference_urls": [],
+      "primary_reference": null
+    }
+  ]
+}

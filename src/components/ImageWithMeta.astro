@@ -49,8 +49,10 @@ const resolvedOrigin = origin || fromRegistry?.origin || 'placeholder';
 ---
 
 {resolvedSrc && (
-  <figure class="image-with-meta" title={resolvedSource}>
-    <img src={resolvedSrc} alt={resolvedAlt} loading="lazy" decoding="async" />
+  <figure class="image-with-meta">
+    <div class="img-wrapper" title={resolvedSource}>
+      <img src={resolvedSrc} alt={resolvedAlt} loading="lazy" decoding="async" />
+    </div>
     {resolvedCaption && (
       <figcaption>
         {resolvedCaption}
@@ -62,13 +64,41 @@ const resolvedOrigin = origin || fromRegistry?.origin || 'placeholder';
 <style>
   .image-with-meta {
     margin: 2rem 0;
+  }
+
+  .img-wrapper {
     position: relative;
   }
 
-  .image-with-meta img {
+  .img-wrapper img {
     width: 100%;
+    display: block;
     border-radius: 10px;
     box-shadow: var(--box-shadow);
+  }
+
+  .img-wrapper::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    border-radius: 0 0 10px 10px;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .img-wrapper:hover::after {
+    opacity: 1;
+    transition: opacity 0.35s ease 0.5s;
   }
 
   .image-with-meta figcaption {
@@ -77,21 +107,5 @@ const resolvedOrigin = origin || fromRegistry?.origin || 'placeholder';
     line-height: 1.6;
     color: rgb(var(--gray-dark));
     font-style: italic;
-  }
-
-  .image-with-meta:hover::after {
-    content: attr(title);
-    position: absolute;
-    bottom: 3.5rem;
-    left: 0;
-    right: 0;
-    padding: 0.5rem 0.75rem;
-    background: rgba(0, 0, 0, 0.85);
-    color: white;
-    font-size: 0.75rem;
-    border-radius: 6px;
-    pointer-events: none;
-    opacity: 0.95;
-    z-index: 10;
   }
 </style>

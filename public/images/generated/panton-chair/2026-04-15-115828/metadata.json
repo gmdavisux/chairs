@@ -1,0 +1,86 @@
+{
+  "slug": "panton-chair",
+  "timestamp": "2026-04-15T11:58:58.705504",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 985981,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-hero.png",
+      "provider": "google",
+      "prompt": "Photorealistic museum-catalog photograph of the iconic Panton Chair by Verner Panton, three-quarter view showing the signature S-shaped cantilever silhouette, flowing single-piece form, and authentic molded polymer surface. Soft, diffused warm illumination at 2700-3000K producing gentle highlights with well-defined natural shadows and rich tonal depth. Clean minimal background with subtle era-appropriate architectural elements. Sharp focus on material texture showing the seamless high-gloss plastic surface and fluid curvature transitions. Full tonal range from deep shadows to clean highlights. Enhanced contrast preserving shadow and highlight detail. Natural color grading. Clean negative space. No people, no clutter, no text.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-003.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg"
+    },
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 685520,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Pure profile silhouette of the Panton Chair from the side, capturing the iconic S-shaped cantilever form and unbroken flowing geometry that define its revolutionary design. Low-angle perspective against a clean white or neutral background. Soft warm 2700K lighting creates gentle rim light on the molded plastic edges while preserving the strong graphic silhouette. The seamless single-piece polymer construction is clearly legible in profile, showcasing Verner Panton's groundbreaking cantilever structure with no legs. Match the exact plastic color and surface finish visible in reference images. No decorative elements, no people, sharp focus on the chair's revolutionary continuous form.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-003.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-002.jpg"
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1211345,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-context.png",
+      "provider": "google",
+      "prompt": "Panton Chair in an elegant Pop-era modernist interior setting. The S-shaped molded plastic form positioned to show its dramatic sculptural presence within the architectural space. Warm lighting at 2700K emphasizing both the chair's fluid form and the refined atmosphere. Architectural photography capturing the relationship between this sculptural furniture and a clean 1960s-1970s modernist interior. Minimal era-appropriate context with bold geometric or Pop-inspired palette that anchors period authenticity without visual crowding. Clean negative space around the subject. No people, no clutter.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-003.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-003.jpg"
+    },
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 812729,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-designer.png",
+      "provider": "google",
+      "prompt": "Black and white archival portrait photograph of Verner Panton from the mid-20th century. Professional photographer studio style of the 1960s-1970s period. Clear, dignified composition typical of modernist designer portraits of the era. Period-appropriate clothing and natural or controlled studio lighting. Historical photography aesthetic with neutral background. Museum-quality archival print character with fine grain and rich tonal range from deep blacks to clean whites.",
+      "reference_urls": [],
+      "primary_reference": null
+    },
+    {
+      "slot": "sketch",
+      "filename": "sketch.png",
+      "size": 1299324,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-sketch.png",
+      "provider": "google",
+      "prompt": "Professional industrial design marker rendering of the Panton Chair. **CRITICAL: NOT A SILHOUETTE** - Use dynamic three-quarter or perspective angle showing sculptural form and dimensional depth, NOT flat side profile. Cool gray Prismacolor or Copic markers (20%, 30%, 50% gray tones) defining the form with smooth graduated shading. Always include judicious selective color accents - single or limited strategic hue (a warm red, orange, or bold Pop color) highlighting the iconic curved form. Confident, sketchy black ink construction lines that extend beyond the form with skeletal quality - multiple overlapping line strokes showing the drawing process, not tight technical drawing. Lines can overshoot corners and edges, emphasizing gesture and construction over precision. White or subtly tinted paper background (pale blue, warm beige, or neutral tone). Background features abstract geometric shapes, color blocks, or marker splashes adding visual interest without competing with subject. Emphasize the continuous flowing S-curve through shading. Balance between technical precision and hand-drawn spontaneity. No signature, text, annotations, or dimension lines.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-003.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg"
+    },
+    {
+      "slot": "detail-material",
+      "filename": "detail-material.png",
+      "size": 911949,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/panton-chair-detail-material.png",
+      "provider": "google",
+      "prompt": "Extreme close-up of the Panton Chair's molded plastic surface, showing the seamless high-gloss polymer curvature, reflective sheen, and the material quality of the single-piece injection-molded form. Soft warm 2700K lighting reveals the plastic's subtle surface reflections and smooth transitions between curved planes. Shallow depth of field with the flowing edge contour receding gently into soft focus. Natural highlights define the plastic's dimensional quality and reflective surface character. Match the exact plastic color and gloss finish visible in reference images. No distracting background elements, focus purely on the material surface and curvature detail.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-003.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/panton-chair-reference/ref-001.jpg"
+    }
+  ]
+}

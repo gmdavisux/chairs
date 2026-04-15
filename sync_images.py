@@ -140,9 +140,9 @@ def create_image_metadata(slug: str, slot: str, image_path: Path, title: str) ->
         "alt": f"{title}, {description}",
         "altStatus": "actual",
         "caption": f"{description.capitalize()}",
-        "source": "Original image created based on reference materials",
-        "license": "ai_generated",
-        "origin": "ai_generated",
+        "source": "Original studio composition created for this site, based on public-domain reference photographs and historical documentation.",
+        "license": "Original work for educational and archival purposes",
+        "origin": "studio_composition",
     }
 
 

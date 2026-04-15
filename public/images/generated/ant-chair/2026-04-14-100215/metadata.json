@@ -1,0 +1,19 @@
+{
+  "slug": "ant-chair",
+  "timestamp": "2026-04-14T10:02:20.826528",
+  "images": [
+    {
+      "slot": "sketch",
+      "filename": "sketch.png",
+      "size": 1137141,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/ant-chair-sketch.png",
+      "provider": "fal",
+      "prompt": "Professional industrial design marker rendering of the Ant Chair by Arne Jacobsen (1952). Dynamic three-quarter perspective view emphasizing the iconic three-legged molded plywood shell and its waisted silhouette. Bold color accents drawn from the subject's own palette and era — the organic warmth of natural teak or the graphic punch of the classic red/black colorways — applied generously to the shell form. Abstract color-wash background with geometric marker splashes that complement the mid-century Scandinavian palette — background is required, not optional. Confident black ink construction lines extend well beyond the form; multiple overlapping strokes reveal hand-drawn process and gestural energy. Gray markers used only for secondary shadow tones beneath the shell and along the tubular steel legs. White or lightly tinted paper visible through the composition. Hand-drawn character with visible line layering. No annotations, no dimensions, no signatures.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/ant-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/ant-chair-reference/ref-004.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/ant-chair-reference/ref-001.jpg"
+    }
+  ]
+}

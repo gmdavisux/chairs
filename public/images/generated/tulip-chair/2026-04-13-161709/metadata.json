@@ -1,0 +1,18 @@
+{
+  "slug": "tulip-chair",
+  "timestamp": "2026-04-13T16:17:23.894920",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 780284,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/tulip-chair-hero.png",
+      "provider": "google",
+      "prompt": "Two Tulip chairs by Eero Saarinen shown together in a composed studio grouping. On the left: the armchair variant (Model 151) with its full wraparound one-piece fiberglass shell curving up into integral armrests, upholstered cushion pad in warm brick red wool. On the right: the armless side chair (Model 150) with its shallower open shell and round seat cushion pad in deep charcoal grey wool. Both chairs have the same signature gloss white molded fiberglass shell and polished cast aluminum pedestal base — the single tulip-stem leg flaring out to a circular foot. Soft warm museum lighting with gentle diffusion. Clean minimal neutral background. Three-quarter view angle showing both chairs at slight offset, making the armrest/armless difference clearly legible. The composition emphasizes Saarinen's vision of \"clear up the slum of legs\" — each chair a seamless sculptural object. Match the white shell finish, round cushion placement, and satin aluminum base from reference images.",
+      "reference_urls": [
+        "public/images/reference/tulip-chair-reference/ref-wikimedia-hero.jpg"
+      ],
+      "primary_reference": "public/images/reference/tulip-chair-reference/ref-wikimedia-hero.jpg"
+    }
+  ]
+}
