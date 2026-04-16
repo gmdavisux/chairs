@@ -234,7 +234,12 @@ That is one of the most important discussion points in the current architecture.
 
 If `generate_and_log_images()` produces no images, `run_build()` launches:
 
-- `generate_images_standalone.py <slug>`
+- `generate_images_standalone.py <slug> --images-only`
+
+Current implementation guardrails:
+
+- uses a phase-6 guard env flag (`FURNITURE_PHASE6_FALLBACK_ACTIVE`) to prevent nested fallback re-entry
+- keeps fallback scope to image generation only (no automatic prompt regeneration in phase 6)
 
 This fallback script has two stages:
 
