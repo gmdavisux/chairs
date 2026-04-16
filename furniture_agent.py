@@ -58,6 +58,9 @@ IMAGES_DIR = ROOT / "public" / "images"
 REFERENCE_IMAGES_DIR = IMAGES_DIR / "reference"
 CHECKPOINTS_DIR = ROOT / ".checkpoints"
 DEFAULT_PLACEHOLDER_IMAGE = IMAGES_DIR / "blog-placeholder-1.jpg"
+PHASE6_FALLBACK_GUARD_ENV = "FURNITURE_PHASE6_FALLBACK_ACTIVE"
+PHASE6_FALLBACK_SCRIPT = ROOT / "generate_images_standalone.py"
+PHASE6_FALLBACK_MAX_ERROR_LINES = 4
 PLACEHOLDER_IMAGE_CANDIDATES = [
     IMAGES_DIR / "blog-placeholder-1.jpg",
     IMAGES_DIR / "blog-placeholder-2.jpg",
@@ -1639,17 +1642,17 @@ def _run_phase6_standalone_fallback(slug: str) -> None:
     Guarded mode prevents accidental re-entry and keeps this fallback focused on
     image generation only (no prompt regeneration drift).
     """
-    guard_env = "FURNITURE_PHASE6_FALLBACK_ACTIVE"
-    if _env_bool(guard_env):
+    guard_active = os.getenv(PHASE6_FALLBACK_GUARD_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+    if guard_active:
         log.warning(
             "Phase 6 fallback re-entry detected for '%s'; skipping nested fallback run.",
             slug,
         )
         return
 
-    cmd = [sys.executable, str(ROOT / "generate_images_standalone.py"), slug, "--images-only"]
+    cmd = [sys.executable, str(PHASE6_FALLBACK_SCRIPT), slug, "--images-only"]
     env = os.environ.copy()
-    env[guard_env] = "1"
+    env[PHASE6_FALLBACK_GUARD_ENV] = "1"
 
     result = subprocess.run(
         cmd,
@@ -1662,7 +1665,8 @@ def _run_phase6_standalone_fallback(slug: str) -> None:
     if result.returncode != 0:
         err_text = (result.stderr or result.stdout or "").strip()
         if err_text:
-            err_text = " | ".join(err_text.splitlines()[-4:])
+            err_lines = err_text.splitlines()[-PHASE6_FALLBACK_MAX_ERROR_LINES:]
+            err_text = "\n    " + "\n    ".join(err_lines)
         else:
             err_text = "No error output captured."
         log.warning(
