@@ -134,20 +134,22 @@ Each prompt should be concrete and specific to this furniture piece."""
     return prompts
 
 
-def save_prompts_to_files(slug: str, prompts: dict[str, str]) -> list[Path]:
-    """Save prompts to individual text files."""
+def save_prompts_to_files(slug: str, prompts: dict[str, str], requested_labels=None) -> list[Path]:
+    """Save prompts to individual text files, only for requested slots."""
     out_dir = PROMPTS_DIR / slug
     out_dir.mkdir(parents=True, exist_ok=True)
-    
+
+    # Only map the core slots unless explicitly requested
     label_map = {
         "HERO": "hero.txt",
-        "DETAIL_1_MATERIAL": "detail-material.txt",
-        "DETAIL_2_STRUCTURE": "detail-structure.txt",
-        "DETAIL_3_SILHOUETTE": "silhouette.txt",
         "CONTEXT": "context.txt",
+        "SILHOUETTE": "silhouette.txt",
         "DESIGNER": "designer.txt",
     }
-    
+    # If requested_labels is provided, filter to those only
+    if requested_labels:
+        label_map = {k: v for k, v in label_map.items() if k in requested_labels}
+
     saved_files = []
     for label, filename in label_map.items():
         if label in prompts:
@@ -157,7 +159,6 @@ def save_prompts_to_files(slug: str, prompts: dict[str, str]) -> list[Path]:
             log.info("  Saved: %s", out_path)
         else:
             log.warning("  Missing prompt for %s", label)
-    
     return saved_files
 
 
@@ -225,9 +226,19 @@ def main():
         if not args.images_only:
             log.info("=== Step 1: Generate Image Prompts ===")
             prompts = generate_prompts_with_ai(slug, article_path)
-            saved_files = save_prompts_to_files(slug, prompts)
+            # Only save prompts for requested slots if --slots is used
+            requested_labels = None
+            if hasattr(args, "slots") and args.slots:
+                # Map slot names to prompt labels
+                slot_to_label = {
+                    "hero": "HERO",
+                    "context": "CONTEXT",
+                    "silhouette": "SILHOUETTE",
+                    "designer": "DESIGNER",
+                }
+                requested_labels = [slot_to_label[s] for s in args.slots if s in slot_to_label]
+            saved_files = save_prompts_to_files(slug, prompts, requested_labels=requested_labels)
             log.info("Generated %d prompt files", len(saved_files))
-            
             if args.prompts_only:
                 log.info("Prompts-only mode: stopping here.")
                 return

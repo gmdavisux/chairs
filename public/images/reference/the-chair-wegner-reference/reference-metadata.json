@@ -1,0 +1,90 @@
+{
+  "slug": "the-chair-wegner",
+  "title": "The Chair (JH501)",
+  "referenceFolder": "public/images/reference/the-chair-wegner-reference",
+  "collectedAt": "2026-04-16",
+  "downloadedCount": 2,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Hans_j._wegner_per_johannes_hansen,_sedia_modello_JH_501,_copenhagen_1949.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg",
+      "localPath": "public/images/reference/the-chair-wegner-reference/ref-001.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Hans_Wegner_Round_Chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_Wegner_Round_Chair.jpg",
+      "localPath": "public/images/reference/the-chair-wegner-reference/ref-002.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Chairs_by_Hans_Wegner",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:Furniture_in_the_Milwaukee_Art_Museum",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/Category:1940s_furniture",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://studio-nordic.com/products/pair-of-chair-model-jh501-by-hans-j-wegner",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "https://www.instagram.com/reel/DNi2nvHIQcT/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://www.studiocarinagrefmar.se/2012/02/01/the-best-chair-in-the-world-according-to-hans-j-wegner/",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}

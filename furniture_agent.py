@@ -68,7 +68,7 @@ PLACEHOLDER_SLOTS = [
     ("hero", "Hero view of the full chair profile"),
     ("detail-material", "Close-up of the chair material and finish"),
     ("detail-structure", "Detail of structural joinery or hardware"),
-    ("detail-silhouette", "Profile or silhouette detail of the chair form"),
+    ("silhouette", "Profile or silhouette detail of the chair form"),
 ]
 IMAGE_SLOT_PROMPT_FILES = [
     ("hero", "hero.txt"),
@@ -1275,15 +1275,39 @@ def _generate_with_fal(
 
 def _provider_and_model() -> tuple[str, str]:
     """Resolve configured image provider and model values."""
-    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "fal").strip().lower()
-    if provider not in {"fal", "openai"}:
-        provider = "fal"
+    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "google").strip().lower()
+    if provider not in {"google", "fal", "openai"}:
+        provider = "google"
 
     if provider == "openai":
         model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
+    elif provider == "google":
+        model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image-preview").strip() or "gemini-3.1-flash-image-preview"
     else:
         model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
     return provider, model
+
+
+def _generate_with_google(
+    prompt: str,
+    reference_url: Optional[str],
+) -> dict:
+    """Generate one image via Google Gemini image APIs."""
+    try:
+        from generate_images_gemini import generate_with_gemini
+    except ImportError as exc:
+        raise RuntimeError(
+            "generate_images_gemini.py is unavailable; cannot use FURNITURE_IMAGE_PROVIDER=google"
+        ) from exc
+
+    references = [reference_url] if reference_url else None
+    image_bytes = generate_with_gemini(prompt=prompt, reference_image_url=references)
+    return {
+        "image_url": None,
+        "image_bytes": image_bytes,
+        "revised_prompt": None,
+        "raw": {"provider": "google", "reference_url": reference_url},
+    }
 
 
 def _slot_alt_and_caption(slot: str, title: str, designer: str) -> tuple[str, str]:
@@ -1390,7 +1414,9 @@ def generate_and_log_images(page: dict) -> dict:
     provenance_path = prompt_dir / "provenance-generated.json"
 
     provider, model = _provider_and_model()
+    fal_model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
     fallback_model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
+    allow_openai_fallback = _env_bool("FURNITURE_ALLOW_OPENAI_FALLBACK", default=False)
     size = _normalize_image_size(os.getenv("FURNITURE_IMAGE_SIZE", "1024x1024"))
     timeout_seconds = _safe_int_env("FURNITURE_IMAGE_TIMEOUT_SECONDS", 60)
     max_images = max(1, min(_safe_int_env("FURNITURE_IMAGE_MAX_PER_PAGE", 4), 4))
@@ -1427,16 +1453,62 @@ def generate_and_log_images(page: dict) -> dict:
                     model=model,
                     timeout_seconds=timeout_seconds,
                 )
+            elif provider == "google":
+                try:
+                    response_payload = _generate_with_google(
+                        prompt=final_prompt,
+                        reference_url=reference_url,
+                    )
+                except Exception as google_exc:
+                    log.warning(
+                        "Google generation failed for slot '%s'; trying FAL fallback: %s",
+                        slot,
+                        google_exc,
+                    )
+                    try:
+                        response_payload = _generate_with_fal(
+                            prompt=final_prompt,
+                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            size=size,
+                            model=fal_model,
+                            reference_url=reference_url,
+                        )
+                        used_provider = "fal"
+                        used_model = fal_model
+                    except Exception as fal_exc:
+                        if not allow_openai_fallback:
+                            raise RuntimeError(
+                                f"google failed ({google_exc}); fal fallback failed ({fal_exc}); "
+                                "openai fallback disabled"
+                            ) from fal_exc
+                        log.warning(
+                            "FAL fallback failed for slot '%s'; trying OpenAI fallback: %s",
+                            slot,
+                            fal_exc,
+                        )
+                        response_payload = _generate_with_openai(
+                            prompt=final_prompt,
+                            negative_prompt=STYLE_NEGATIVE_PROMPT,
+                            size=size,
+                            model=fallback_model,
+                            timeout_seconds=timeout_seconds,
+                        )
+                        used_provider = "openai"
+                        used_model = fallback_model
             else:
                 try:
                     response_payload = _generate_with_fal(
                         prompt=final_prompt,
                         negative_prompt=STYLE_NEGATIVE_PROMPT,
                         size=size,
-                        model=model,
+                        model=fal_model,
                         reference_url=reference_url,
                     )
                 except Exception as fal_exc:
+                    if not allow_openai_fallback:
+                        raise RuntimeError(
+                            f"fal failed ({fal_exc}); openai fallback disabled"
+                        ) from fal_exc
                     log.warning(
                         "FAL generation failed for slot '%s'; trying OpenAI fallback: %s",
                         slot,
@@ -1766,20 +1838,46 @@ def run_build() -> None:
                 commit_exc,
             )
 
-        # Phase 6: auto-launch standalone image script when Phase 4 produced no images.
+        # Phase 6: if Phase 4 produced no images, try Gemini batch first,
+        # then deploy downloaded references as a fallback.
         if not generated_slots:
             log.info(
-                "Phase 4 generated no images — launching generate_images_standalone.py %s",
+                "Phase 4 generated no images — launching Gemini batch for %s",
                 slug,
             )
+            gemini_slots = [slot for slot, _ in IMAGE_SLOT_PROMPT_FILES if slot in {"hero", "silhouette", "context", "designer", "sketch", "detail-material"}]
+            gemini_exit = 1
             try:
-                subprocess.run(
-                    [sys.executable, str(ROOT / "generate_images_standalone.py"), slug],
+                gemini_proc = subprocess.run(
+                    [
+                        sys.executable,
+                        str(ROOT / "generate_images_gemini.py"),
+                        slug,
+                        "--use-reference-metadata",
+                        "--no-update-mdx",
+                        "--slots",
+                        *gemini_slots,
+                    ],
                     cwd=ROOT,
                     check=False,
                 )
+                gemini_exit = gemini_proc.returncode
             except Exception as img_exc:
-                log.warning("Standalone image script failed (non-blocking): %s", img_exc)
+                log.warning("Gemini image script failed (non-blocking): %s", img_exc)
+
+            if gemini_exit != 0:
+                log.info(
+                    "Gemini fallback failed for %s — deploying downloaded references instead",
+                    slug,
+                )
+                try:
+                    subprocess.run(
+                        [sys.executable, str(ROOT / "use_reference_images.py"), slug],
+                        cwd=ROOT,
+                        check=False,
+                    )
+                except Exception as ref_img_exc:
+                    log.warning("Reference-image fallback failed (non-blocking): %s", ref_img_exc)
 
         print(
             f"\n✅ PAGE COMPLETE: {page['slug']} — "

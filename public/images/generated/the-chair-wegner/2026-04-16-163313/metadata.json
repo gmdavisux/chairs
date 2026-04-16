@@ -1,0 +1,32 @@
+{
+  "slug": "the-chair-wegner",
+  "timestamp": "2026-04-16T16:33:36.590808",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1160723,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/the-chair-wegner-hero.png",
+      "provider": "google",
+      "prompt": "\"A full view of The Chair (JH501) by Hans J. Wegner, placed in a softly lit, minimalist setting with a warm, diffused glow (2700-3000K). The chair is positioned at a three-quarter angle, showcasing its curved wooden frame, seamless joinery, and iconic organic form, with a neutral Danish Modern backdrop subtly complementing its timeless design.\"",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/the-chair-wegner-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/the-chair-wegner-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/the-chair-wegner-reference/ref-001.jpg"
+    },
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 1231990,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/the-chair-wegner-silhouette.png",
+      "provider": "google",
+      "prompt": "\"A side-profile silhouette of The Chair (JH501), set against a clean, minimal backdrop in warm, diffused lighting. The shot highlights the chair’s signature organic geometry, with its rounded frame and elegant balance of curves and straight lines.\"",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/the-chair-wegner-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/the-chair-wegner-reference/ref-001.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/the-chair-wegner-reference/ref-002.jpg"
+    }
+  ]
+}

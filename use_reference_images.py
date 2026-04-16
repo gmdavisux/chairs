@@ -28,7 +28,20 @@ IMAGES_DIR = ROOT / "public" / "images"
 REFERENCE_IMAGES_DIR = IMAGES_DIR / "reference"
 CONTENT_DIR = ROOT / "src" / "content" / "blog"
 
-SLOT_ORDER = ["hero", "sketch", "context", "designer"]
+MODERN_SLOT_ORDER = ["hero", "detail-material", "detail-structure", "silhouette"]
+LEGACY_SLOT_ORDER = ["hero", "sketch", "context", "designer"]
+
+
+def resolve_slot_order(slug: str) -> list[str]:
+    """Pick slot order based on existing image filenames for the slug."""
+    modern_markers = [
+        IMAGES_DIR / f"{slug}-detail-material.jpg",
+        IMAGES_DIR / f"{slug}-detail-structure.jpg",
+        IMAGES_DIR / f"{slug}-silhouette.jpg",
+    ]
+    if any(path.exists() for path in modern_markers):
+        return MODERN_SLOT_ORDER
+    return LEGACY_SLOT_ORDER
 
 
 def load_reference_metadata(slug: str) -> dict:
@@ -92,6 +105,18 @@ def _slot_alt_and_caption_reference(slot: str, title: str, designer: str) -> tup
         "sketch": (
             f"Design drawing of the {title}",
             f"Archival design drawing of the {title} by {designer}.",
+        ),
+        "detail-material": (
+            f"Material detail of the {title} — archival reference photograph",
+            f"Archival material detail of the {title} by {designer}.",
+        ),
+        "detail-structure": (
+            f"Structural detail of the {title} — archival reference photograph",
+            f"Archival structural detail of the {title} by {designer}.",
+        ),
+        "silhouette": (
+            f"Silhouette of the {title} — archival reference photograph",
+            f"Archival silhouette view of the {title} by {designer}.",
         ),
     }
     return slot_meta.get(slot, (f"{title} — {slot} reference", f"Reference {slot} image for the {title}."))
@@ -187,6 +212,7 @@ def main():
     args = parser.parse_args()
     
     slug = args.slug
+    slot_order = resolve_slot_order(slug)
     metadata = load_reference_metadata(slug)
     available = get_available_references(metadata)
     
@@ -204,7 +230,7 @@ def main():
     slot_assignments: dict[str, dict] = {}
     slot_updates: dict[str, dict] = {}
     
-    for idx, slot in enumerate(SLOT_ORDER):
+    for idx, slot in enumerate(slot_order):
         ref_item = available[idx % len(available)]
         slot_assignments[slot] = ref_item
         slot_updates[slot] = {
@@ -215,7 +241,7 @@ def main():
     
     # Display plan
     print(f"\n📋 PLANNED ASSIGNMENTS:")
-    for slot in SLOT_ORDER:
+    for slot in slot_order:
         ref_item = slot_assignments[slot]
         dest_file = IMAGES_DIR / f"{slug}-{slot}.jpg"
         source_name = ref_item["path"].name
@@ -239,7 +265,7 @@ def main():
     # Copy files
     print(f"\n📦 COPYING FILES:")
     copied_count = 0
-    for slot in SLOT_ORDER:
+    for slot in slot_order:
         ref_item = slot_assignments[slot]
         dest_file = IMAGES_DIR / f"{slug}-{slot}.jpg"
         

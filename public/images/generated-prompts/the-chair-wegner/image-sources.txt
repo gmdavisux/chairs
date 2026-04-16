@@ -1,0 +1,65 @@
+Image source discovery for: The Chair (JH501) [the-chair-wegner]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+The Chair (JH501) Hans J. Wegner site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/File:Hans_j._wegner_per_johannes_hansen,_sedia_modello_JH_501,_copenhagen_1949.jpg
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Hans_Wegner_Round_Chair.jpg
+3. Untitled
+   https://commons.wikimedia.org/wiki/Category:Chairs_by_Hans_Wegner
+4. Untitled
+   https://commons.wikimedia.org/wiki/Category:Furniture_in_the_Milwaukee_Art_Museum
+5. Untitled
+   https://commons.wikimedia.org/wiki/Category:1940s_furniture
+
+[MUSEUMS QUERY]
+The Chair (JH501) Hans J. Wegner site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://studio-nordic.com/products/pair-of-chair-model-jh501-by-hans-j-wegner
+2. Untitled
+   https://www.instagram.com/reel/DNi2nvHIQcT/
+3. Untitled
+   https://www.studiocarinagrefmar.se/2012/02/01/the-best-chair-in-the-world-according-to-hans-j-wegner/
+4. Untitled
+   http://collectiononline.design-museum.de/#/en/object/41632
+5. Untitled
+   https://designmuseum.dk/en/exhibition/the-danish-chair-an-international-affair/
+
+[ARCHIVES QUERY]
+The Chair (JH501) Hans J. Wegner site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   http://collectiononline.design-museum.de/#/en/object/41632
+2. Untitled
+   https://wyeth.nyc/products/4896-001
+3. Untitled
+   https://studio-nordic.com/products/pair-of-chair-model-jh501-by-hans-j-wegner
+4. Untitled
+   https://www.studiocarinagrefmar.se/2012/02/01/the-best-chair-in-the-world-according-to-hans-j-wegner/
+5. Untitled
+   https://web.archive.org/web/20070223125937/http://www.iht.com/articles/ap/2007/02/01/europe/EU-GEN-Denmark-Obit-Wegner.php
+
+[MANUFACTURERS QUERY]
+The Chair (JH501) Hans J. Wegner site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.carlhansen.com/en/designers/hans-j-wegner
+2. Untitled
+   https://www.carlhansen.com/en/en/collection/chairs/lounge-chairs/ch290
+3. Untitled
+   https://www.carlhansen.com/en/en/designers/hans-j-wegner/wegner-110years
+4. Untitled
+   https://www.fritzhansen.com/de/inspiration/designers/hans-j-wegner
+5. Untitled
+   https://www.fritzhansen.com/en/inspiration/designers/hans-j-wegner

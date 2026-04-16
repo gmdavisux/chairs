@@ -1,0 +1,81 @@
+{
+  "slug": "the-chair-wegner",
+  "title": "The Chair (JH501)",
+  "generatedAt": "2026-04-16T23:03:43.808502Z",
+  "provider": "google",
+  "model": "gemini-3.1-flash-image-preview",
+  "imageSize": "1024x1024",
+  "maxImages": 4,
+  "budgetUsd": null,
+  "results": [
+    {
+      "slot": "hero",
+      "status": "success",
+      "file": "public/images/the-chair-wegner-hero.jpg",
+      "hash": "sha256:a87c34520e043a74c063715e91112d8e78cf977a72089febab2460c0f9a1b95e",
+      "provider": "google",
+      "model": "gemini-3.1-flash-image-preview",
+      "prompt": "Photorealistic high-quality studio photograph of The Chair (JH501) by Hans J. Wegner. Slot intent: hero. A studio composition of Hans J. Wegner's The Chair (JH501) in a three-quarter perspective, showcasing its full form with warm, diffused lighting (2700-3000K) that highlights the curved wooden frame, seamless joinery, and Danish Modern design against a neutral, era-appropriate background like a soft beige or light gray gradient.\n\nUse soft diffused warm light in the 2700-3000K range. Keep natural color grading, moderate contrast, realistic material textures, and clean negative space. Preserve historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. No people or clutter.",
+      "negativePrompt": "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, modern anachronistic elements, cartoonish, painterly, low resolution, blur, motion blur",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg",
+      "response": {
+        "provider": "google",
+        "reference_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg"
+      },
+      "revisedPrompt": null
+    },
+    {
+      "slot": "detail-material",
+      "status": "success",
+      "file": "public/images/the-chair-wegner-detail-material.jpg",
+      "hash": "sha256:ef11fc6797a32e4f5a48e0a39a85a515f45726854312c9f60951b3798ad228c7",
+      "provider": "google",
+      "model": "gemini-3.1-flash-image-preview",
+      "prompt": "Photorealistic high-quality studio photograph of The Chair (JH501) by Hans J. Wegner. Slot intent: detail-material. \"A close-up shot of The Chair (JH501), emphasizing the texture of the wood grain and the smooth tactile surface of the curved armrest. The lighting is soft and warm, highlighting the craftsmanship and natural beauty of the material in fine detail.\"\n\nUse soft diffused warm light in the 2700-3000K range. Keep natural color grading, moderate contrast, realistic material textures, and clean negative space. Preserve historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. No people or clutter.",
+      "negativePrompt": "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, modern anachronistic elements, cartoonish, painterly, low resolution, blur, motion blur",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg",
+      "response": {
+        "provider": "google",
+        "reference_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg"
+      },
+      "revisedPrompt": null
+    },
+    {
+      "slot": "detail-structure",
+      "status": "success",
+      "file": "public/images/the-chair-wegner-detail-structure.jpg",
+      "hash": "sha256:f2e9ee15d26c6739d36fa3f2a74470bfab3460458dcff503e9891fd20f45b21a",
+      "provider": "google",
+      "model": "gemini-3.1-flash-image-preview",
+      "prompt": "Photorealistic high-quality studio photograph of The Chair (JH501) by Hans J. Wegner. Slot intent: detail-structure. \"A detailed view of The Chair (JH501)’s joinery, focusing on the precise connections between the seat, backrest, and legs. The soft, diffused lighting accentuates the craftsmanship of the transitions, revealing the seamless integration of its structure.\"\n\nUse soft diffused warm light in the 2700-3000K range. Keep natural color grading, moderate contrast, realistic material textures, and clean negative space. Preserve historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. No people or clutter.",
+      "negativePrompt": "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, modern anachronistic elements, cartoonish, painterly, low resolution, blur, motion blur",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg",
+      "response": {
+        "provider": "google",
+        "reference_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg"
+      },
+      "revisedPrompt": null
+    },
+    {
+      "slot": "silhouette",
+      "status": "success",
+      "file": "public/images/the-chair-wegner-silhouette.jpg",
+      "hash": "sha256:f16b56e0fbf13dff4daa6198b679bac13914b122a8b51ee4eb7439df96e90ff5",
+      "provider": "google",
+      "model": "gemini-3.1-flash-image-preview",
+      "prompt": "Photorealistic high-quality studio photograph of The Chair (JH501) by Hans J. Wegner. Slot intent: silhouette. \"A side-profile silhouette of The Chair (JH501), set against a clean, minimal backdrop in warm, diffused lighting. The shot highlights the chair’s signature organic geometry, with its rounded frame and elegant balance of curves and straight lines.\"\n\nUse soft diffused warm light in the 2700-3000K range. Keep natural color grading, moderate contrast, realistic material textures, and clean negative space. Preserve historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. No people or clutter.",
+      "negativePrompt": "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, cluttered background, people, rugs, lamps, artwork, books, decorative props, text, logos, watermark, modern anachronistic elements, cartoonish, painterly, low resolution, blur, motion blur",
+      "referenceUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg",
+      "response": {
+        "provider": "google",
+        "reference_url": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_j._wegner_per_johannes_hansen%2C_sedia_modello_JH_501%2C_copenhagen_1949.jpg"
+      },
+      "revisedPrompt": null
+    }
+  ],
+  "summary": {
+    "generatedCount": 4,
+    "failedCount": 0,
+    "skippedCount": 0
+  }
+}
