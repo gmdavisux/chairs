@@ -1632,6 +1632,50 @@ def _save_partial_checkpoints(slug: str, exc: Exception) -> None:
         )
 
 
+def _run_phase6_standalone_fallback(slug: str) -> None:
+    """
+    Run the standalone image fallback once in guarded mode.
+
+    Guarded mode prevents accidental re-entry and keeps this fallback focused on
+    image generation only (no prompt regeneration drift).
+    """
+    guard_env = "FURNITURE_PHASE6_FALLBACK_ACTIVE"
+    if _env_bool(guard_env):
+        log.warning(
+            "Phase 6 fallback re-entry detected for '%s'; skipping nested fallback run.",
+            slug,
+        )
+        return
+
+    cmd = [sys.executable, str(ROOT / "generate_images_standalone.py"), slug, "--images-only"]
+    env = os.environ.copy()
+    env[guard_env] = "1"
+
+    result = subprocess.run(
+        cmd,
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    if result.returncode != 0:
+        err_text = (result.stderr or result.stdout or "").strip()
+        if err_text:
+            err_text = " | ".join(err_text.splitlines()[-4:])
+        else:
+            err_text = "No error output captured."
+        log.warning(
+            "Standalone image fallback failed for '%s' (exit %d): %s",
+            slug,
+            result.returncode,
+            err_text,
+        )
+        return
+
+    log.info("Standalone image fallback completed for '%s'.", slug)
+
+
 # ── Run modes ──────────────────────────────────────────────────────────────
 def run_plan_only() -> None:
     """Sync backlog status with the filesystem and display current state."""
@@ -1766,20 +1810,13 @@ def run_build() -> None:
                 commit_exc,
             )
 
-        # Phase 6: auto-launch standalone image script when Phase 4 produced no images.
+        # Phase 6: auto-launch standalone image fallback when Phase 4 produced no images.
         if not generated_slots:
             log.info(
-                "Phase 4 generated no images — launching generate_images_standalone.py %s",
+                "Phase 4 generated no images — launching standalone fallback for %s",
                 slug,
             )
-            try:
-                subprocess.run(
-                    [sys.executable, str(ROOT / "generate_images_standalone.py"), slug],
-                    cwd=ROOT,
-                    check=False,
-                )
-            except Exception as img_exc:
-                log.warning("Standalone image script failed (non-blocking): %s", img_exc)
+            _run_phase6_standalone_fallback(slug)
 
         print(
             f"\n✅ PAGE COMPLETE: {page['slug']} — "
