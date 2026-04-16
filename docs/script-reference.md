@@ -165,7 +165,7 @@ Generate images via Google Gemini (or FAL via `FURNITURE_IMAGE_PROVIDER=fal`). R
 | Argument | Description |
 |---|---|
 | `slug` | Furniture piece slug, e.g. `barcelona-chair` |
-| `--slots SLOT ...` | Restrict to specific slots: `hero silhouette context designer sketch` |
+| `--slots SLOT ...` | Restrict to specific slots: `hero silhouette context designer sketch detail-material` |
 | `--use-reference-metadata` | Auto-load reference image URLs from `reference-metadata.json` |
 | `--reference-images PATH` | JSON file `{slot: url}` with per-slot reference URLs |
 | `--custom-prompts PATH` | JSON file `{slot: prompt}` overriding prompt files |
@@ -217,7 +217,7 @@ Checks performed:
 - Unmigrated inline `src=` calls in the body (should be `id=` after migration)
 - `id=` references in the body with no matching frontmatter registry entry
 - `caption: TBD` entries
-- `altStatus: proposed` entries that need real alt text
+- `altStatus: pending` entries that need real alt text
 - `source: TBD` entries
 - Image `src` paths that don't exist on disk
 - `heroImageCaption` and `heroImageAltStatus` quality
@@ -303,6 +303,7 @@ Fetches designer portrait images from Wikimedia Commons and saves to `public/ima
 | `--all` | Process all chairs found in `src/content/blog/` |
 | `--chair SLUG` | Specific chair slug |
 | `--designer NAME` | Designer name (must be paired with `--chair`) |
+| `--reference URL_OR_PATH` | URL or local path to any portrait photo. Used as a Gemini generation reference only — never published. Output is marked as `original`. Requires `--chair` and `--designer`. Useful when no open-license photo exists. |
 | `--enhance` | AI-upscale low-quality images via FAL |
 | `--force` | Overwrite existing images |
 
@@ -311,6 +312,8 @@ Fetches designer portrait images from Wikimedia Commons and saves to `public/ima
 ### `generate_images_standalone.py`
 
 Two-step LangChain + OpenAI pipeline: (1) AI-generates image prompts from MDX content, (2) generates images via FAL or OpenAI. Alternative to the Gemini path when you prefer OpenAI/FAL.
+
+Generates prompt files for all six slots: `hero`, `detail-material`, `detail-structure`, `silhouette`, `context`, and `designer`.
 
 | Argument | Description |
 |---|---|
@@ -375,8 +378,8 @@ Edit these directly in the `.mdx` file. The dev server reloads on save and will 
 
 | Field | Valid values |
 |---|---|
-| `heroImageOrigin` / `images[].origin` | `public_domain` `licensed` `ai_generated` `placeholder` `studio_composition` |
-| `heroImageAltStatus` / `images[].altStatus` | `proposed` `actual` |
+| `heroImageOrigin` / `images[].origin` | `public_domain` `licensed` `original` `placeholder` `studio_composition` |
+| `heroImageAltStatus` / `images[].altStatus` | `pending` `actual` |
 
 The `heroImageLicense` / `images[].license` field accepts any descriptive string. Use the standard phrase for purpose-built images:
 
@@ -384,7 +387,7 @@ The `heroImageLicense` / `images[].license` field accepts any descriptive string
 license: Original work for educational and archival purposes
 ```
 
-Legacy shortcodes (`public_domain`, `cc0`, `cc_by`, `cc_by_sa`, `licensed`, `rights_reserved`, `ai_generated`, `unknown`) remain valid for records sourced from external archives.
+Legacy shortcodes (`public_domain`, `cc0`, `cc_by`, `cc_by_sa`, `licensed`, `rights_reserved`, `original`, `unknown`) remain valid for records sourced from external archives.
 
 ### Diagnosing schema errors
 

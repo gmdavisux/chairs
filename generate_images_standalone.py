@@ -46,12 +46,10 @@ from furniture_agent import (
     _file_sha256,
     _generate_with_fal,
     _generate_with_openai,
-    _has_real_openai_key,
     _normalize_image_size,
     _provider_and_model,
     _safe_int_env,
     _safe_relpath,
-    _select_ai_reference_url,
     load_backlog,
 )
 
@@ -143,9 +141,11 @@ def save_prompts_to_files(slug: str, prompts: dict[str, str]) -> list[Path]:
     
     label_map = {
         "HERO": "hero.txt",
-        "DETAIL_1_MATERIAL": "detail-1-material.txt",
-        "DETAIL_2_STRUCTURE": "detail-2-structure.txt",
-        "DETAIL_3_SILHOUETTE": "detail-3-silhouette.txt",
+        "DETAIL_1_MATERIAL": "detail-material.txt",
+        "DETAIL_2_STRUCTURE": "detail-structure.txt",
+        "DETAIL_3_SILHOUETTE": "silhouette.txt",
+        "CONTEXT": "context.txt",
+        "DESIGNER": "designer.txt",
     }
     
     saved_files = []
@@ -171,7 +171,7 @@ def generate_images(slug: str, article_path: Path) -> dict:
         raise ValueError(f"Page {slug} not found in backlog.json")
     
     log.info("Generating images for %s...", slug)
-    result = generate_and_log_images(page, article_path)
+    result = generate_and_log_images(page)
     
     summary = result.get("summary", {})
     log.info(

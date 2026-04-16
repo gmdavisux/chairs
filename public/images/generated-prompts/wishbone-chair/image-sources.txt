@@ -1,0 +1,65 @@
+Image source discovery for: Wishbone Chair (CH24) [wishbone-chair]
+
+Notes:
+- Reference usage can include any license class; preserve provenance and license notes.
+- Blog publication still requires explicit frontmatter license/source metadata per selected image.
+
+[WIKIMEDIA QUERY]
+Wishbone Chair (CH24) Hans J. Wegner site:commons.wikimedia.org
+
+[WIKIMEDIA RESULTS]
+1. Untitled
+   https://commons.wikimedia.org/wiki/File:Hans_J_Wegner_Wishbone_Chair.jpg
+2. Untitled
+   https://commons.wikimedia.org/wiki/File:Y_stoel.jpg
+3. Untitled
+   https://commons.wikimedia.org/wiki/File:Y_stoel_(retouched).jpg
+4. Untitled
+   https://commons.wikimedia.org/wiki/File:Wishbone_Chair_with_seat_covers.jpg
+5. Untitled
+   https://commons.wikimedia.org/wiki/File:Leather_Wishbone_Chair.jpg
+
+[MUSEUMS QUERY]
+Wishbone Chair (CH24) Hans J. Wegner site:moma.org OR site:vam.ac.uk OR site:collection.cooperhewitt.org OR site:designmuseum.dk
+
+[MUSEUMS RESULTS]
+1. Untitled
+   https://www.danishdesignstore.com/products/wishbone-chair-wegner-wishbone?srsltid=AfmBOor6NeSJikcemk_-ykHMtxxIIJDUnb3mpU2XAtLzFEW1_C4QjPQE
+2. Untitled
+   https://store.leibal.com/products/ch24-wishbone-chair?srsltid=AfmBOoqD6MTa3SbP-NPNeel3NlEtFzrhSWHEC-6RxR1Qe3sZZ1pgNSpe
+3. Untitled
+   https://store.moma.org/products/ch24-wishbone-chair-white
+4. Untitled
+   https://designmuseum.dk/en/exhibition/the-danish-chair-an-international-affair/
+5. Untitled
+   https://press.moma.org/wp-content/uploads/2018/12/VGD_Extended-Labels-for-Press.pdf
+
+[ARCHIVES QUERY]
+Wishbone Chair (CH24) Hans J. Wegner site:archive.org OR site:loc.gov
+
+[ARCHIVES RESULTS]
+1. Untitled
+   https://www.danishdesignstore.com/products/wishbone-chair-wegner-wishbone?srsltid=AfmBOopam4Afajkk_FuS94sdtQKkccAIu7L0hWt2fFhwA3J4E1LVjTUf
+2. Untitled
+   https://www.carlhansen.com/en/en/collection/chairs/dining-chairs/ch24
+3. Untitled
+   https://www.hyggelife.com/products/wishbone-chair-ch24-classic?srsltid=AfmBOopVu3gyd5B4_a27i1SE9vc4BIn-28Dj0eUy469eEwHL4L0d-V1b
+4. Untitled
+   https://hivemodern.com/pages/product202/carl-hansen-hans-wegner-ch24-wishbone-chair?srsltid=AfmBOophrpM8diByx5B-vZD3jxYSKWTKm00S1PEkhddJGbiKEcEt7Lyw
+5. Untitled
+   https://www.danishdesignstore.com/products/hans-j-wegner-ch24-wishbone-chair-ilse-crawford-soft-colors-campaign-carl-hansen-son?srsltid=AfmBOormebJ8DcbgF-d7NuYWuauFDk96EiHncQ9Nf10MfCwPnmTYFwTh
+
+[MANUFACTURERS QUERY]
+Wishbone Chair (CH24) Hans J. Wegner site:hermanmiller.com OR site:vitra.com OR site:knoll.com OR site:cassina.com OR site:artek.fi OR site:fritzhansen.com OR site:carlhansen.com
+
+[MANUFACTURERS RESULTS]
+1. Untitled
+   https://www.carlhansen.com/en/en/designers/hans-j-wegner/behind-an-icon-ch24
+2. Untitled
+   https://www.carlhansen.com/en/en/collection/chairs/dining-chairs/ch24
+3. Untitled
+   https://www.carlhansen.com/en/en/designers/hans-j-wegner
+4. Untitled
+   https://www.carlhansen.com/en/en/inspiration/news
+5. Untitled
+   https://www.carlhansen.com/en/en/inspiration/stories/the-story-of-danish-modern

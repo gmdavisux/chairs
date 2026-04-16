@@ -5,7 +5,7 @@ audit_image_registry.py - Audit MDX files for image metadata quality
 Reports:
   - Inline src= calls that escaped migration (regression check)
   - Registry entries with caption: TBD
-  - Registry entries with altStatus: proposed
+    - Registry entries with altStatus: pending
   - Image src paths that don't exist on disk
   - Registry entries referenced by id= but missing from frontmatter
 
@@ -89,8 +89,8 @@ def audit_file(mdx_path: Path) -> list[dict]:
         if img.get("caption") in ("TBD", "", None):
             issues.append({"level": "warn", "msg": f"[{img_id}] caption is TBD"})
 
-        if img.get("altStatus", "proposed") == "proposed":
-            issues.append({"level": "warn", "msg": f"[{img_id}] altStatus is 'proposed'"})
+        if img.get("altStatus", "pending") == "pending":
+            issues.append({"level": "warn", "msg": f"[{img_id}] altStatus is 'pending'"})
 
         if img.get("source") in ("TBD", "", None):
             issues.append({"level": "info", "msg": f"[{img_id}] source is TBD"})
@@ -109,8 +109,8 @@ def audit_file(mdx_path: Path) -> list[dict]:
     if data.get("heroImageCaption") in ("TBD", "", None):
         issues.append({"level": "warn", "msg": "heroImageCaption is TBD"})
 
-    if data.get("heroImageAltStatus", "proposed") == "proposed":
-        issues.append({"level": "warn", "msg": "heroImageAltStatus is 'proposed'"})
+    if data.get("heroImageAltStatus", "pending") == "pending":
+        issues.append({"level": "warn", "msg": "heroImageAltStatus is 'pending'"})
 
     return issues
 

@@ -475,6 +475,25 @@ def _slot_alt_and_caption(slot: str, title: str, designer: str) -> tuple[str, st
     return slot_meta.get(slot, (f"{title} — {slot}", f"AI-generated {slot} image for the {title}."))
 
 
+def _slot_aliases(slot: str) -> tuple[str, ...]:
+    """Return legacy slot aliases that should be normalized to the canonical slot name."""
+    aliases = {
+        "detail-material": ("material",),
+        "detail-structure": ("structure",),
+        "detail-silhouette": ("silhouette",),
+    }
+    return aliases.get(slot, ())
+
+
+def _matches_slot_identifier(value: str, slug: str, slot: str) -> bool:
+    """Check whether an id/src-derived identifier matches a slot or one of its legacy aliases."""
+    candidates = (slot, *_slot_aliases(slot))
+    for candidate in candidates:
+        if value == f"{slug}-{candidate}":
+            return True
+    return False
+
+
 def update_mdx_file(
     slug: str,
     extension: str = "png",
@@ -497,6 +516,19 @@ def update_mdx_file(
     Returns:
         True if file was updated successfully
     """
+    valid_exts = {"png", "jpg", "jpeg", "webp"}
+
+    # Backward-compat for legacy positional calls that passed
+    # (slug, generated_slots, extension, ...)
+    if isinstance(extension, (list, tuple, set)) and isinstance(generated_slots, str):
+        if generated_slots.lower() in valid_exts:
+            extension, generated_slots = generated_slots, list(extension)
+    elif isinstance(extension, str) and isinstance(generated_slots, str):
+        if extension.lower() not in valid_exts and generated_slots.lower() in valid_exts:
+            extension, generated_slots = generated_slots, [extension]
+
+    extension = str(extension).lower()
+
     mdx_path = CONTENT_DIR / f"{slug}.mdx"
 
     if not mdx_path.exists():
@@ -531,7 +563,11 @@ def update_mdx_file(
     title = data.get("title", "")
     designer = data.get("designer", "")
     source_label = f"AI generated via {provider}/{model}" if model else f"AI generated via {provider}"
-    slots_set = set(generated_slots or [])
+    if isinstance(generated_slots, str):
+        slots_list = [generated_slots]
+    else:
+        slots_list = list(generated_slots or [])
+    slots_set = set(slots_list)
 
     # Update image extensions
     if data.get("heroImage"):
@@ -544,30 +580,51 @@ def update_mdx_file(
         data["heroImageAltStatus"] = "actual"
         data["heroImageCaption"] = caption
         data["heroImageSource"] = source_label
-        data["heroImageLicense"] = "ai_generated"
-        data["heroImageOrigin"] = "ai_generated"
+        data["heroImageLicense"] = "Original work for educational and archival purposes"
+        data["heroImageOrigin"] = "original"
 
     # Update designer image path if designer slot was generated
     if "designer" in slots_set:
         data["designerImage"] = f"/images/{slug}-designer.{extension}"
 
-    if "images" in data and isinstance(data["images"], list):
-        for img in data["images"]:
-            if "src" in img:
-                img["src"] = img["src"].replace(".jpg", f".{extension}")
-            # Update metadata for generated slots
-            if slots_set:
+    images_list = data.get("images")
+    if not isinstance(images_list, list):
+        images_list = []
+        data["images"] = images_list
+
+    if slots_set:
+        for slot in slots_list:
+            if slot in {"hero", "designer"}:
+                continue
+
+            canonical_id = f"{slug}-{slot}"
+            canonical_src = f"/images/{slug}-{slot}.{extension}"
+            matching_item = None
+
+            for img in images_list:
                 img_id = str(img.get("id", ""))
-                for slot in slots_set:
-                    if img_id.endswith(slot):
-                        alt, caption = _slot_alt_and_caption(slot, title, designer)
-                        img["alt"] = alt
-                        img["altStatus"] = "actual"
-                        img["caption"] = caption
-                        img["source"] = source_label
-                        img["license"] = "ai_generated"
-                        img["origin"] = "ai_generated"
-                        break
+                img_src = str(img.get("src", ""))
+                img_stem = Path(img_src).stem if img_src else ""
+                if _matches_slot_identifier(img_id, slug, slot) or _matches_slot_identifier(img_stem, slug, slot):
+                    matching_item = img
+                    break
+
+            if matching_item is None:
+                matching_item = {
+                    "id": canonical_id,
+                    "src": canonical_src,
+                }
+                images_list.append(matching_item)
+
+            alt, caption = _slot_alt_and_caption(slot, title, designer)
+            matching_item["id"] = canonical_id
+            matching_item["src"] = canonical_src
+            matching_item["alt"] = alt
+            matching_item["altStatus"] = "actual"
+            matching_item["caption"] = caption
+            matching_item["source"] = source_label
+            matching_item["license"] = "Original work for educational and archival purposes"
+            matching_item["origin"] = "original"
 
     # Serialize back to YAML
     serialized = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).strip()

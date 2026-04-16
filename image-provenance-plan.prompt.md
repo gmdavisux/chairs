@@ -6,7 +6,7 @@ Add explicit image provenance metadata (license/domain/source/origin), render vi
 1. Phase 1: Schema and data model (blocks all later steps)
 - Extend blog frontmatter schema in /Users/garydavis/Sites/chairs/src/content.config.ts with hero metadata and an inline image registry.
 - Recommended fields: heroImageCaption, heroImageSource, heroImageLicense, heroImageOrigin; plus images[] entries with id, src, alt, caption, source, license, origin.
-- Require meaningful alt text for every image slot, including placeholders. Add an altStatus field with values proposed or actual so the system can track whether the description is anticipatory or image-verified.
+- Require meaningful alt text for every image slot, including placeholders. Add an altStatus field with values pending or actual so the system can track whether the description is anticipatory or image-verified.
 - Restrict license/origin values via enums to keep data consistent.
 
 2. Phase 2: Hero rendering and placeholder policy (depends on 1)
@@ -22,7 +22,7 @@ Add explicit image provenance metadata (license/domain/source/origin), render vi
 4. Phase 4: Generator alignment (parallel with 2 after 1; blocks automation completeness)
 - Update /Users/garydavis/Sites/chairs/furniture_agent.py output instructions so generated posts include hero metadata defaults and an initial images[] registry scaffold.
 - Keep publish-first behavior and placeholders so a page is never blocked by image sourcing.
-- Ensure placeholders include a descriptive alt candidate, for example detail of visible screws at the pad ends on early Eames lounge chairs, and mark it as proposed until replaced with a verified image.
+- Ensure placeholders include a descriptive alt candidate, for example detail of visible screws at the pad ends on early Eames lounge chairs, and mark it as pending until replaced with a verified image.
 - Continue non-blocking public-domain discovery output; map discovered URLs into source/license/origin fields during later enrichment.
 
 5. Phase 5: Content migration and templates (depends on 2 and 3)
@@ -48,16 +48,16 @@ Add explicit image provenance metadata (license/domain/source/origin), render vi
 3. Validate hero image credit block displays source/license/origin and labels public-domain assets distinctly.
 4. Validate inline MDX figure rendering shows caption and provenance badges consistently on desktop and mobile.
 5. Run python furniture_agent.py once and confirm generated post includes metadata scaffold and does not fail page creation when image sourcing fails.
-6. Confirm every image record has non-generic alt text and that altStatus transitions from proposed to actual when the final image is selected.
+6. Confirm every image record has non-generic alt text and that altStatus transitions from pending to actual when the final image is selected.
 
 **Decisions**
 - License field style: single license string (enum-constrained).
 - Placeholder policy: show explicit placeholder labels in UI when metadata is missing.
 - Inline metadata scope: included now via MDX component path.
-- Alt text policy: placeholders must carry meaningful proposed alt text; finalized images must have actual alt text reviewed against the image content.
+- Alt text policy: placeholders must carry meaningful pending alt text; finalized images must have actual alt text reviewed against the image content.
 - Scope boundary: this plan adds metadata and rendering; it does not auto-download or legally verify image licenses from third-party sites.
 
 **Further Considerations**
-1. Origin taxonomy recommendation: public_domain, cc, rights_reserved, ai_generated, placeholder.
+1. Origin taxonomy recommendation: public_domain, cc, rights_reserved, original, placeholder.
 2. Migration strategy recommendation: convert only posts that need inline attribution to MDX first, keep others in Markdown.
 3. Editorial workflow recommendation: require source URL + license at draft review, allow placeholders only in early generation runs.

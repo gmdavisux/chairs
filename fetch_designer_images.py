@@ -6,6 +6,11 @@ Usage:
     python fetch_designer_images.py --all
     python fetch_designer_images.py --chair barcelona-chair --designer "Ludwig Mies van der Rohe"
     python fetch_designer_images.py --enhance  # Enhance low-quality images with AI
+    python fetch_designer_images.py --chair panton-chair --designer "Verner Panton" \\
+        --reference https://example.com/panton.jpg
+    # --reference also accepts a local file path
+    # The reference is only used to guide Gemini generation; it is never published.
+    # Output is saved as original, not as the reference photo.
 """
 
 import argparse
@@ -20,6 +25,8 @@ from PIL import Image
 from io import BytesIO
 
 from dotenv import load_dotenv
+
+from generate_images_gemini import generate_with_gemini
 
 load_dotenv()
 
@@ -416,6 +423,93 @@ def _rank_wikimedia_results_with_ai(designer_name: str, results: list) -> Option
     return best
 
 
+def generate_portrait_from_reference(
+    chair_slug: str,
+    designer_name: str,
+    reference: str,
+) -> bool:
+    """Generate a designer portrait using Gemini with a user-supplied reference image.
+
+    The reference (URL or local file path) is used only to guide generation and is
+    never published.  The output is an AI-generated portrait saved as original.
+
+    Args:
+        chair_slug: e.g. "panton-chair"
+        designer_name: e.g. "Verner Panton"
+        reference: URL or absolute/relative local path to any portrait photo
+
+    Returns:
+        True if the image was generated and saved successfully.
+    """
+    from io import BytesIO as _BytesIO
+
+    prompt = (
+        f"Create a black and white archival-style portrait photograph of {designer_name}, "
+        "the furniture designer. Use the provided reference image as a likeness guide. "
+        "Professional studio photographer style. Clear, dignified composition "
+        "typical of modernist designer portraits. Neutral background. "
+        "Museum-quality archival print character with fine grain and rich tonal range."
+    )
+
+    # Normalise reference: if it looks like a local path and exists, use it directly;
+    # otherwise treat as URL and download to a temp bytes object.
+    ref_input: str
+    if not reference.startswith("http"):
+        local = Path(reference)
+        if not local.exists():
+            log.error("Reference file not found: %s", reference)
+            return False
+        ref_input = str(local.resolve())
+        log.info("Using local reference image: %s", ref_input)
+    else:
+        log.info("Downloading reference image from URL: %s", reference)
+        try:
+            r = requests.get(reference, timeout=30)
+            r.raise_for_status()
+            # Save to a temp file so generate_with_gemini can load it
+            import tempfile, mimetypes
+            suffix = ".jpg"
+            ct = r.headers.get("content-type", "")
+            if "png" in ct:
+                suffix = ".png"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(r.content)
+                ref_input = tmp.name
+            log.info("Saved reference to temp file: %s", ref_input)
+        except Exception as exc:
+            log.error("Failed to download reference: %s", exc)
+            return False
+
+    try:
+        image_bytes = generate_with_gemini(prompt=prompt, reference_image_url=ref_input)
+    except Exception as exc:
+        log.error("Gemini portrait generation failed: %s", exc)
+        return False
+    finally:
+        # Clean up temp file if we created one
+        if not Path(reference).exists() and Path(ref_input).exists():
+            try:
+                Path(ref_input).unlink()
+            except OSError:
+                pass
+
+    # Convert to grayscale (archival look)
+    try:
+        from PIL import ImageOps
+        img = Image.open(_BytesIO(image_bytes))
+        img = ImageOps.grayscale(img).convert("RGB")
+        buf = _BytesIO()
+        img.save(buf, format="JPEG", quality=90)
+        image_bytes = buf.getvalue()
+    except Exception as exc:
+        log.warning("Grayscale conversion failed, saving colour image: %s", exc)
+
+    output_path = IMAGES_DIR / f"{chair_slug}-designer.jpg"
+    output_path.write_bytes(image_bytes)
+    log.info("Saved AI-generated portrait to: %s (%d KB)", output_path, len(image_bytes) // 1024)
+    return True
+
+
 def fetch_designer_auto(designer_name: str) -> Optional[dict]:
     """Non-interactive: find the best real portrait for a designer.
 
@@ -473,13 +567,27 @@ def main():
         action="store_true",
         help="Force overwrite existing images (useful for replacing placeholders)"
     )
-    
+    parser.add_argument(
+        "--reference",
+        metavar="URL_OR_PATH",
+        help=(
+            "URL or local path to any portrait photo of the designer. "
+            "Used only as a Gemini generation reference — never published. "
+            "Output is marked as original. Requires --chair and --designer."
+        ),
+    )
+
     args = parser.parse_args()
-    
+
     # Ensure images directory exists
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-    
-    if args.all:
+
+    if args.reference:
+        if not (args.chair and args.designer):
+            parser.error("--reference requires both --chair and --designer")
+        success = generate_portrait_from_reference(args.chair, args.designer, args.reference)
+        sys.exit(0 if success else 1)
+    elif args.all:
         process_all_chairs(args.enhance, args.force)
     elif args.chair and args.designer:
         fetch_designer_for_chair(args.chair, args.designer, args.enhance, args.force)

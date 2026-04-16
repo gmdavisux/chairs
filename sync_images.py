@@ -39,7 +39,16 @@ CONTENT_DIR = ROOT / "src" / "content" / "blog"
 IMAGES_DIR = ROOT / "public" / "images"
 
 # Standard image slots (order matters for insertion)
-STANDARD_SLOTS = ["hero", "sketch", "context", "silhouette", "material", "structure", "designer"]
+STANDARD_SLOTS = [
+    "hero",
+    "sketch",
+    "context",
+    "silhouette",
+    "detail-silhouette",
+    "detail-material",
+    "detail-structure",
+    "designer",
+]
 
 # Slot descriptions for generating metadata
 SLOT_DESCRIPTIONS = {
@@ -47,10 +56,19 @@ SLOT_DESCRIPTIONS = {
     "sketch": "industrial design marker rendering highlighting sculptural form",
     "context": "in-situ setting showing the chair in its intended environment",
     "silhouette": "profile view capturing distinctive proportions and geometry",
-    "material": "close-up detail showing surface texture and material quality",
-    "structure": "structural detail of frame construction and joinery",
+    "detail-silhouette": "detailed profile view capturing distinctive proportions and geometry",
+    "detail-material": "close-up detail showing surface texture and material quality",
+    "detail-structure": "structural detail of frame construction and joinery",
     "designer": "portrait of the designer",
 }
+
+
+def extract_slot_from_prefixed_name(name: str, slug: str) -> str:
+    """Extract full slot token from a slug-prefixed id/path stem."""
+    prefix = f"{slug}-"
+    if name.startswith(prefix):
+        return name[len(prefix):]
+    return name.rsplit("-", 1)[-1] if "-" in name else name
 
 
 def find_mdx_file(slug: str) -> Optional[Path]:
@@ -105,7 +123,7 @@ def parse_mdx_file(mdx_path: Path) -> tuple[dict, str]:
     return frontmatter, body
 
 
-def get_existing_slots(frontmatter: dict) -> set[str]:
+def get_existing_slots(frontmatter: dict, slug: str) -> set[str]:
     """Get slots already defined in frontmatter images array."""
     slots = set()
     
@@ -115,7 +133,7 @@ def get_existing_slots(frontmatter: dict) -> set[str]:
         filename = hero_path.split("/")[-1]
         name = filename.rsplit(".", 1)[0]
         if "-" in name:
-            slot = name.split("-")[-1]
+            slot = extract_slot_from_prefixed_name(name, slug)
             slots.add(slot)
     
     # Check images array
@@ -123,7 +141,7 @@ def get_existing_slots(frontmatter: dict) -> set[str]:
     for img in images:
         img_id = img.get("id", "")
         if "-" in img_id:
-            slot = img_id.split("-")[-1]
+            slot = extract_slot_from_prefixed_name(img_id, slug)
             slots.add(slot)
     
     return slots
@@ -146,12 +164,12 @@ def create_image_metadata(slug: str, slot: str, image_path: Path, title: str) ->
     }
 
 
-def find_referenced_slots_in_body(body: str) -> set[str]:
+def find_referenced_slots_in_body(body: str, slug: str) -> set[str]:
     """Find image slots already referenced in the body."""
     slots = set()
     
-    # Find ImageWithMeta src or img src
-    image_pattern = r'(?:src|heroImage)="?/images/[^"]+?-([^".]+)\.(?:jpg|png|jpeg)'
+    # Find src="/images/slug-slot.ext" references and extract full slot token.
+    image_pattern = rf'/images/{re.escape(slug)}-([a-z0-9-]+)\.(?:jpg|png|jpeg|webp)'
     for match in re.finditer(image_pattern, body):
         slot = match.group(1)
         slots.add(slot)
@@ -206,7 +224,7 @@ def sync_chair_images(
     title = frontmatter.get("title", slug.replace("-", " ").title())
     
     # Get existing slots
-    existing_slots = get_existing_slots(frontmatter)
+    existing_slots = get_existing_slots(frontmatter, slug)
     log.info(f"Existing slots in frontmatter: {', '.join(existing_slots) if existing_slots else 'none'}")
     
     # Find missing slots
@@ -249,7 +267,7 @@ def sync_chair_images(
     # Optionally insert into body
     body_insertions = []
     if insert_body:
-        referenced_slots = find_referenced_slots_in_body(body)
+        referenced_slots = find_referenced_slots_in_body(body, slug)
         for slot in missing_slots:
             if slot not in referenced_slots and slot not in ["hero", "designer"]:
                 # Find the metadata we just created

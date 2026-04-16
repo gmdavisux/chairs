@@ -31,14 +31,16 @@ def find_mdx_file(slug: str) -> Path:
     raise FileNotFoundError(f"No MDX/MD file found for: {slug}")
 
 
-def extract_slot_from_id(image_id: str) -> str:
+def extract_slot_from_id(image_id: str, slug: str = "") -> str:
     """
     Extract the slot name from an image id.
     Examples: tulip-chair-sketch -> sketch, tulip-chair-hero -> hero
     """
-    parts = image_id.split("-")
-    if len(parts) >= 2:
-        return parts[-1]  # Last part is the slot name
+    if slug and image_id.startswith(f"{slug}-"):
+        return image_id[len(slug) + 1:]
+    parts = image_id.rsplit("-", 1)
+    if len(parts) == 2:
+        return parts[1]
     return image_id
 
 
@@ -75,18 +77,18 @@ def parse_mdx_file(mdx_path: Path) -> tuple[dict, str, str]:
     return frontmatter, body, import_statement
 
 
-def find_referenced_slots(body: str) -> set[str]:
+def find_referenced_slots(body: str, slug: str) -> set[str]:
     """
     Find all image slots already referenced in the body via ImageWithMeta components.
     Detects both registry-first (id="...") and legacy inline (src="/images/...") forms.
     """
     slots = set()
 
-    # Registry-first: id="slug-slot" form — extract trailing slot name
+    # Registry-first: id="slug-slot" form
     for match in re.finditer(r'\bid="([^"]+)"', body):
         img_id = match.group(1)
-        if "-" in img_id:
-            slot = img_id.split("-")[-1]
+        if img_id.startswith(f"{slug}-"):
+            slot = img_id[len(slug) + 1:]
             slots.add(slot)
 
     # Legacy inline: src="/images/slug-slot.ext" form
@@ -95,8 +97,8 @@ def find_referenced_slots(body: str) -> set[str]:
         if "/images/" in src:
             filename = src.split("/")[-1]
             name = filename.rsplit(".", 1)[0]
-            if "-" in name:
-                slot = name.split("-")[-1]
+            if name.startswith(f"{slug}-"):
+                slot = name[len(slug) + 1:]
                 slots.add(slot)
 
     return slots
@@ -134,7 +136,8 @@ def insert_missing_slots(
         return True, ["No images defined in frontmatter"]
     
     # Find which slots are already referenced
-    referenced_slots = find_referenced_slots(body)
+    slug = mdx_path.stem
+    referenced_slots = find_referenced_slots(body, slug)
     
     # Find which slots need to be added (exclude hero and sketch if sketch is the hero)
     # Hero is shown automatically at the top, and if sketch is the hero image, don't duplicate it
@@ -143,12 +146,12 @@ def insert_missing_slots(
     if "/images/" in hero_image_path:
         filename = hero_image_path.split("/")[-1]
         name = filename.rsplit(".", 1)[0]
-        if "-" in name:
-            hero_slot = name.split("-")[-1]
+        if name.startswith(f"{slug}-"):
+            hero_slot = name[len(slug) + 1:]
     
     missing_slots = []
     for img in images:
-        slot = extract_slot_from_id(img.get("id", ""))
+        slot = extract_slot_from_id(img.get("id", ""), slug)
         # Skip if already referenced, or if it's the hero image (to avoid duplication)
         if slot not in referenced_slots and slot != "hero" and slot != hero_slot:
             missing_slots.append((slot, img))

@@ -1,0 +1,68 @@
+{
+  "slug": "wishbone-chair",
+  "timestamp": "2026-04-15T16:04:50.690316",
+  "images": [
+    {
+      "slot": "hero",
+      "filename": "hero.png",
+      "size": 1056515,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/wishbone-chair-hero.png",
+      "provider": "google",
+      "prompt": "Hans J. Wegner Wishbone Chair (CH24) from 1949, three-quarter view showing the iconic Y-shaped backrest and handwoven paper cord seat atop a solid wood frame. Soft warm lighting at 2700K highlights the natural oak or beech grain and the organic steam-bent curves. Clean minimal neutral background with subtle Scandinavian architectural context. Sharp focus on the chair's flowing Y-backrest, the tight grid weave of the paper cord seat, and the precise joinery where backrest meets legs. Natural shadows define the sculptural wood form and the texture of the handwoven cord. Match the exact colors and materials from the reference images — natural warm wood and natural cord only. No people, no clutter, no text.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg"
+    },
+    {
+      "slot": "silhouette",
+      "filename": "silhouette.png",
+      "size": 814048,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/wishbone-chair-silhouette.png",
+      "provider": "google",
+      "prompt": "Pure profile silhouette of the Wishbone Chair (CH24) from the side, capturing the distinctive Y-shaped backrest, the gently curved top rail echoing the human spine, and the tapering legs that define its iconic form. Low-angle perspective against a clean neutral background with subtle warm Danish Modern architectural context — bare whitewashed wall. Soft warm 2700K lighting creates a gentle rim light on the wooden frame edges while preserving the strong graphic silhouette. The handwoven cord seat visible in profile, showing its depth and slight ergonomic curve. Use only natural wood and cord colors matching reference images exactly. No decorative elements, no people, sharp focus on the chair's lightweight organic geometry.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-002.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-002.jpg"
+    },
+    {
+      "slot": "context",
+      "filename": "context.png",
+      "size": 1175760,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/wishbone-chair-context.png",
+      "provider": "google",
+      "prompt": "The Wishbone Chair (CH24) by Hans J. Wegner positioned at a simple Danish Modern dining table in a Scandinavian interior. Warm lighting at 2700K emphasizing both the chair's organic Y-back form and the refined atmosphere. Architectural photography capturing the relationship between the sculptural chair and a minimal Nordic interior — clean white plastered walls, light oak flooring, natural daylight from a side window. The chair's handwoven cord seat and the natural wood tones complement the interior's material palette. Clean negative space around the subject, era-appropriate minimal context that anchors the mid-century period authenticity. No clutter, no people.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg"
+    },
+    {
+      "slot": "designer",
+      "filename": "designer.png",
+      "size": 891637,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/wishbone-chair-designer.png",
+      "provider": "google",
+      "prompt": "Black and white archival portrait photograph of Hans J. Wegner (1914–2007), the Danish furniture designer known as the master of the chair. Mid-20th century professional photographer style, 1950s Denmark. Clear, dignified composition typical of modernist designer portraits of the period. Wegner appears thoughtful and composed, perhaps in his workshop or studio surrounded by wooden forms and design tools. Period-appropriate clothing and natural directional lighting casting subtle shadows. Historical photography aesthetic with neutral or workshop background. Museum-quality archival print with fine grain and full tonal range.",
+      "reference_urls": [],
+      "primary_reference": null
+    },
+    {
+      "slot": "detail-material",
+      "filename": "detail-material.png",
+      "size": 2051967,
+      "deployed_to": "/Users/garydavis/Sites/chairs/public/images/wishbone-chair-detail-material.png",
+      "provider": "google",
+      "prompt": "Extreme close-up of the handwoven paper cord seat of the Wishbone Chair (CH24) by Hans J. Wegner. Over 100 meters of natural paper cord woven in a precise diagonal grid pattern, filling the entire frame. Soft warm 2700K lighting reveals the cord's fibrous texture, subtle color variations in the natural material, and the slight compression where horizontal and vertical strands cross. Shallow depth of field with the smooth wood rail edge just visible in soft focus at the periphery. Natural shadows define the dimensional weave pattern and its organic tactile character. Use only the exact natural cord color and warm wood finish visible in reference images. No distracting background elements.",
+      "reference_urls": [
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg",
+        "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-002.jpg"
+      ],
+      "primary_reference": "/Users/garydavis/Sites/chairs/public/images/reference/wishbone-chair-reference/ref-001.jpg"
+    }
+  ]
+}

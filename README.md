@@ -94,7 +94,7 @@ Review the page in the browser, check the citations, then run again for the next
 
 - The project is moving to a provider-agnostic image pipeline.
 - Default target provider is FLUX via fal.ai, with OpenAI image APIs as fallback.
-- Image failures are non-blocking: pages still complete with placeholder/proposed metadata.
+- Image failures are non-blocking: pages still complete with placeholder/pending metadata.
 - Final deployment still requires human review, even when image generation is automated.
 
 If you set `FURNITURE_IMAGE_PROVIDER=fal`, install the optional client package in your venv:

@@ -5,22 +5,22 @@ import { z } from 'astro/zod';
 const imageOriginEnum = z.enum([
 	'public_domain',
 	'licensed',
-	'ai_generated',
+	'original',
 	'placeholder',
 	'studio_composition',
 ]);
 
 // Free-text field: accepts descriptive license strings (e.g. "Original work for educational and archival purposes")
-// as well as legacy enum shortcodes (public_domain, cc0, cc_by, cc_by_sa, licensed, rights_reserved, ai_generated, unknown)
+// as well as legacy enum shortcodes (public_domain, cc0, cc_by, cc_by_sa, licensed, rights_reserved, original, unknown)
 const imageLicenseEnum = z.string();
 
-const imageAltStatusEnum = z.enum(['proposed', 'actual']);
+const imageAltStatusEnum = z.enum(['pending', 'actual']);
 
 const imageRecordSchema = z.object({
 	id: z.string(),
 	src: z.string(),
 	alt: z.string(),
-	altStatus: imageAltStatusEnum.default('proposed'),
+	altStatus: imageAltStatusEnum.default('pending'),
 	caption: z.string().optional(),
 	source: z.string().optional(),
 	license: imageLicenseEnum.optional(),

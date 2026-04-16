@@ -72,9 +72,9 @@ PLACEHOLDER_SLOTS = [
 ]
 IMAGE_SLOT_PROMPT_FILES = [
     ("hero", "hero.txt"),
-    ("detail-material", "detail-1-material.txt"),
-    ("detail-structure", "detail-2-structure.txt"),
-    ("detail-silhouette", "detail-3-silhouette.txt"),
+    ("detail-material", "detail-material.txt"),
+    ("detail-structure", "detail-structure.txt"),
+    ("silhouette", "silhouette.txt"),
 ]
 STYLE_NEGATIVE_PROMPT = (
     "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, "
@@ -619,9 +619,11 @@ def _get_task_raw(tasks_output, index: int) -> str:
 # Labels in order — must match the ImagePrompter task format exactly.
 _PROMPT_LABELS = [
     ("HERO",            "hero.txt"),
-    ("DETAIL_1",        "detail-1-material.txt"),
-    ("DETAIL_2",        "detail-2-structure.txt"),
-    ("DETAIL_3",        "detail-3-silhouette.txt"),
+    ("DETAIL_1",        "detail-material.txt"),
+    ("DETAIL_2",        "detail-structure.txt"),
+    ("DETAIL_3",        "silhouette.txt"),
+    ("CONTEXT",         "context.txt"),
+    ("DESIGNER",        "designer.txt"),
     ("PUBLIC_DOMAIN_1", "search-wikimedia.txt"),
     ("PUBLIC_DOMAIN_2", "search-museum.txt"),
     ("PUBLIC_DOMAIN_3", "search-archive.txt"),
@@ -971,8 +973,8 @@ def _build_frontmatter(page: dict, description: str, today_str: str) -> str:
         f'description: "{desc}"',
         f"pubDate: {today_str}",
         f"heroImage: /images/{slug}-hero.jpg",
-        f'heroImageAlt: "Proposed hero image for {title} highlighting form and materials"',
-        "heroImageAltStatus: proposed",
+        f'heroImageAlt: "{title} highlighting form and materials"',
+        "heroImageAltStatus: pending",
         'heroImageCaption: "TBD"',
         'heroImageSource: "TBD"',
         "heroImageLicense: unknown",
@@ -980,32 +982,32 @@ def _build_frontmatter(page: dict, description: str, today_str: str) -> str:
         "images:",
         f"  - id: {slug}-hero",
         f"    src: /images/{slug}-hero.jpg",
-        f'    alt: "Proposed hero image for {title} highlighting form and materials"',
-        "    altStatus: proposed",
+        f'    alt: "{title} highlighting form and materials"',
+        "    altStatus: pending",
         '    caption: "TBD"',
         '    source: "TBD"',
         "    license: unknown",
         "    origin: placeholder",
         f"  - id: {slug}-detail-material",
         f"    src: /images/{slug}-detail-material.jpg",
-        f'    alt: "Proposed close-up of material texture on {title}"',
-        "    altStatus: proposed",
+        f'    alt: "Close-up of material texture on {title}"',
+        "    altStatus: pending",
         '    caption: "TBD"',
         '    source: "TBD"',
         "    license: unknown",
         "    origin: placeholder",
         f"  - id: {slug}-detail-structure",
         f"    src: /images/{slug}-detail-structure.jpg",
-        '    alt: "Proposed detail of visible joints, screws, or frame transitions"',
-        "    altStatus: proposed",
+        '    alt: "Detail of visible joints, screws, or frame transitions"',
+        "    altStatus: pending",
         '    caption: "TBD"',
         '    source: "TBD"',
         "    license: unknown",
         "    origin: placeholder",
         f"  - id: {slug}-detail-silhouette",
         f"    src: /images/{slug}-detail-silhouette.jpg",
-        f'    alt: "Proposed profile silhouette of {title} showing signature geometry"',
-        "    altStatus: proposed",
+        f'    alt: "Profile silhouette of {title} showing signature geometry"',
+        "    altStatus: pending",
         '    caption: "TBD"',
         '    source: "TBD"',
         "    license: unknown",
@@ -1153,7 +1155,7 @@ def _build_style_prompt(base_prompt: str, page: dict, slot: str) -> str:
     """Wrap a slot prompt with shared style and fidelity constraints."""
     title = page.get("title", "furniture piece")
     designer = page.get("designer", "")
-    header = f"Photorealistic museum-catalog image of {title}"
+    header = f"Photorealistic high-quality studio photograph of {title}"
     if designer:
         header += f" by {designer}"
     return (
@@ -1354,8 +1356,8 @@ def _apply_generated_image_metadata(
         data["heroImageAltStatus"] = "actual"
         data["heroImageCaption"] = caption
         data["heroImageSource"] = source_label
-        data["heroImageLicense"] = "ai_generated"
-        data["heroImageOrigin"] = "ai_generated"
+        data["heroImageLicense"] = "Original work for educational and archival purposes"
+        data["heroImageOrigin"] = "original"
 
     images = data.get("images")
     if isinstance(images, list):
@@ -1370,8 +1372,8 @@ def _apply_generated_image_metadata(
                     entry["altStatus"] = "actual"
                     entry["caption"] = caption
                     entry["source"] = source_label
-                    entry["license"] = "ai_generated"
-                    entry["origin"] = "ai_generated"
+                    entry["license"] = "Original work for educational and archival purposes"
+                    entry["origin"] = "original"
                     break
 
     serialized = yaml.safe_dump(data, sort_keys=False, allow_unicode=False).strip()
@@ -1737,6 +1739,7 @@ def run_build() -> None:
             )
 
         # Phase 4: non-blocking AI image generation + provenance.
+        generated_slots: set[str] = set()
         try:
             image_result = generate_and_log_images(page)
             generated_meta_path = image_result.get("provenance_path")
@@ -1762,6 +1765,21 @@ def run_build() -> None:
                 "Local auto-commit failed (non-blocking): %s",
                 commit_exc,
             )
+
+        # Phase 6: auto-launch standalone image script when Phase 4 produced no images.
+        if not generated_slots:
+            log.info(
+                "Phase 4 generated no images — launching generate_images_standalone.py %s",
+                slug,
+            )
+            try:
+                subprocess.run(
+                    [sys.executable, str(ROOT / "generate_images_standalone.py"), slug],
+                    cwd=ROOT,
+                    check=False,
+                )
+            except Exception as img_exc:
+                log.warning("Standalone image script failed (non-blocking): %s", img_exc)
 
         print(
             f"\n✅ PAGE COMPLETE: {page['slug']} — "

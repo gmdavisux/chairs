@@ -3,7 +3,7 @@ interface ImageRecord {
   id: string;
   src: string;
   alt: string;
-  altStatus?: 'proposed' | 'actual';
+  altStatus?: 'pending' | 'actual';
   caption?: string;
   source?: string;
   license?: string;
@@ -16,7 +16,7 @@ interface Props {
   entryImages?: ImageRecord[];
   src?: string;
   alt?: string;
-  altStatus?: 'proposed' | 'actual';
+  altStatus?: 'pending' | 'actual';
   caption?: string;
   source?: string;
   license?: string;
@@ -40,8 +40,8 @@ const imageRegistry = images ?? entryImages ?? [];
 
 const fromRegistry = id ? imageRegistry.find((item) => item.id === id) : undefined;
 const resolvedSrc = src || fromRegistry?.src;
-const resolvedAlt = alt || fromRegistry?.alt || 'Proposed image placeholder';
-const resolvedAltStatus = altStatus || fromRegistry?.altStatus || 'proposed';
+const resolvedAlt = alt || fromRegistry?.alt || 'Image placeholder';
+const resolvedAltStatus = altStatus || fromRegistry?.altStatus || 'pending';
 const resolvedCaption = caption || fromRegistry?.caption;
 const resolvedSource = source || fromRegistry?.source || 'TBD';
 const resolvedLicense = license || fromRegistry?.license || 'unknown';

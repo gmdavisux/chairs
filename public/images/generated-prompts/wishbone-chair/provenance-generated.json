@@ -1,0 +1,37 @@
+{
+  "slug": "wishbone-chair",
+  "title": "Wishbone Chair (CH24)",
+  "generatedAt": "2026-04-15T18:49:51.200881Z",
+  "provider": "fal",
+  "model": "fal-ai/flux/dev",
+  "imageSize": "1024x1024",
+  "maxImages": 4,
+  "budgetUsd": null,
+  "results": [
+    {
+      "slot": "hero",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "detail-material",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "detail-structure",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    },
+    {
+      "slot": "detail-silhouette",
+      "status": "skipped",
+      "reason": "missing prompt file"
+    }
+  ],
+  "summary": {
+    "generatedCount": 0,
+    "failedCount": 0,
+    "skippedCount": 4
+  }
+}

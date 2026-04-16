@@ -1,0 +1,90 @@
+{
+  "slug": "wishbone-chair",
+  "title": "Wishbone Chair (CH24)",
+  "referenceFolder": "public/images/reference/wishbone-chair-reference",
+  "collectedAt": "2026-04-15",
+  "downloadedCount": 2,
+  "totalCount": 8,
+  "items": [
+    {
+      "id": "ref-001",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Hans_J_Wegner_Wishbone_Chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans_J_Wegner_Wishbone_Chair.jpg",
+      "localPath": "public/images/reference/wishbone-chair-reference/ref-001.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-002",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Y_stoel.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Y_stoel.jpg",
+      "localPath": "public/images/reference/wishbone-chair-reference/ref-002.jpg",
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "downloaded",
+      "notes": "Downloaded from Wikimedia Special:FilePath endpoint."
+    },
+    {
+      "id": "ref-003",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Y_stoel_(retouched).jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Y_stoel_%28retouched%29.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-004",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Wishbone_Chair_with_seat_covers.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Wishbone_Chair_with_seat_covers.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-005",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Leather_Wishbone_Chair.jpg",
+      "downloadUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Leather_Wishbone_Chair.jpg",
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Download failed: HTTP Error 429: Too many requests (f061ab2)"
+    },
+    {
+      "id": "ref-006",
+      "sourcePage": "https://www.danishdesignstore.com/products/wishbone-chair-wegner-wishbone?srsltid=AfmBOor6NeSJikcemk_-ykHMtxxIIJDUnb3mpU2XAtLzFEW1_C4QjPQE",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-007",
+      "sourcePage": "https://store.leibal.com/products/ch24-wishbone-chair?srsltid=AfmBOoqD6MTa3SbP-NPNeel3NlEtFzrhSWHEC-6RxR1Qe3sZZ1pgNSpe",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    },
+    {
+      "id": "ref-008",
+      "sourcePage": "https://store.moma.org/products/ch24-wishbone-chair-white",
+      "downloadUrl": null,
+      "localPath": null,
+      "license": "unknown",
+      "origin": "mixed_license_reference",
+      "status": "metadata-only",
+      "notes": "Direct image download unavailable for this source URL."
+    }
+  ]
+}

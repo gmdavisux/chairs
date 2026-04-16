@@ -113,7 +113,7 @@ Image sourcing, generation, and normalization are automated and run within the o
 
 - Provider abstraction is required: default to FLUX via fal.ai, with OpenAI image APIs as fallback.
 - Every generated image must preserve historical fidelity in silhouette, proportions, materials, and visible construction logic.
-- Missing image assets or metadata must never block page creation; placeholders and proposed metadata are acceptable until review.
+- Missing image assets or metadata must never block page creation; placeholders and pending metadata are acceptable until review.
 - Every generated output must include traceable provenance metadata (prompt, provider/model, parameters, timestamp, and output file mapping).
 
 ### Photographic Style Requirements

@@ -167,7 +167,7 @@ def extract_prompt_from_mdx(slug: str, slot: str) -> Optional[str]:
         if slot == "hero":
             alt = data.get("heroImageAlt", "")
             if alt and designer:
-                return f"Photorealistic museum-catalog photograph of {designer} {alt}. Soft, diffused warm illumination at 2700-3000K producing gentle highlights with well-defined natural shadows and rich tonal depth. Clean minimal background. Three-quarter view showing signature silhouette and geometry. Sharp focus on material texture, grain, and hardware detail. Full tonal range from deep shadows to clean highlights. Natural color grading. No people, no clutter, no text."
+                return f"Photorealistic high-quality studio photograph of {designer} {alt}. Soft, diffused warm illumination at 2700-3000K producing gentle highlights with well-defined natural shadows and rich tonal depth. Clean minimal neutral background. Three-quarter view showing signature silhouette and geometry. Sharp focus on material texture, grain, and hardware detail. Full tonal range from deep shadows to clean highlights. Natural color grading. No people, no clutter, no text."
         
         elif slot == "sketch":
             # For sketch, never use photography language
@@ -185,7 +185,7 @@ def extract_prompt_from_mdx(slug: str, slot: str) -> Optional[str]:
         elif slot == "designer":
             # Designer portraits need archival photography style
             if designer:
-                return f"Black and white archival portrait photograph of {designer} from the mid-20th century. Professional architectural photographer style of the period. Clear, dignified composition typical of modernist designer portraits. Period clothing, natural lighting. Historical photography aesthetic."
+                return f"Black and white archival portrait photograph of {designer}, furniture designer. Professional studio photographer style. Clear, dignified composition typical of modernist designer portraits. Natural lighting. Historical photography aesthetic."
         
     except Exception:
         pass
@@ -198,16 +198,16 @@ def generate_template_prompt(slug: str, slot: str) -> str:
     chair_name = slug.replace("-", " ").title()
     
     templates = {
-        "hero": f"Photorealistic museum-catalog photograph of the iconic {chair_name}, three-quarter view showing the signature silhouette, geometry, and authentic materials. Soft, diffused warm illumination at 2700-3000K producing gentle highlights with well-defined natural shadows and rich tonal depth. Clean minimal background with subtle era-appropriate architectural elements. Sharp focus on material texture showing visible grain, stitching, and hardware detail. Full tonal range from deep shadows to clean highlights. Enhanced contrast preserving shadow and highlight detail. Natural color grading. Clean negative space. No people, no clutter, no text.",
+        "hero": f"Photorealistic high-quality studio photograph of the iconic {chair_name}, three-quarter view showing the signature silhouette, geometry, and authentic materials. Soft, diffused warm illumination at 2700-3000K producing gentle highlights with well-defined natural shadows and rich tonal depth. Clean minimal neutral background. Sharp focus on material texture showing visible grain, stitching, and hardware detail. Full tonal range from deep shadows to clean highlights. Enhanced contrast preserving shadow and highlight detail. Natural color grading. Clean negative space. No people, no clutter, no text.",
         
         "sketch": f"Professional industrial design marker rendering of the {chair_name}. **CRITICAL: NOT A SILHOUETTE** - Use dynamic three-quarter or perspective angle showing sculptural form and dimensional depth, NOT flat side profile. Cool gray Prismacolor or Copic markers (20%, 30%, 50% gray tones) defining the form with smooth graduated shading. Always include judicious selective color accents - single or limited strategic hues highlighting key features or materials. Confident, sketchy black ink construction lines that extend beyond the form with skeletal quality - multiple overlapping line strokes showing the drawing process, not tight technical drawing. Lines can overshoot corners and edges, emphasizing gesture and construction over precision. White or subtly tinted paper background (pale blue, warm beige, or neutral tone). Background features abstract geometric shapes, color blocks, or marker splashes adding visual interest without competing with subject. Emphasize pure form through shading. Balance between technical precision and hand-drawn spontaneity. No signature, text, annotations, or dimension lines.",
         
         "context": f"The {chair_name} in an elegant mid-century modern interior setting. Positioned to show how the enveloping form creates presence within the architectural space. Warm lighting at 2700K emphasizing both the chair's form and the refined atmosphere. Architectural photography capturing the relationship between sculptural furniture and modernist interior design. Minimal era-appropriate context that anchors period authenticity without visual crowding. Clean negative space around the subject.",
         
-        "designer": f"Black and white archival portrait photograph of the {chair_name} designer from the mid-20th century. Professional architectural photographer style of the period. Clear, dignified composition typical of modernist designer portraits of the 1950s-1960s. Period-appropriate clothing and natural lighting. Historical photography aesthetic with neutral background. Museum-quality archival print."
+        "designer": f"Black and white archival portrait photograph of the {chair_name} designer. Professional studio photographer style. Clear, dignified composition typical of modernist designer portraits. Natural lighting. Historical photography aesthetic with neutral background. Museum-quality archival print."
     }
     
-    return templates.get(slot, f"{chair_name} - {slot} view. Professional photograph with museum-quality lighting.")
+    return templates.get(slot, f"{chair_name} - {slot} view. Professional photograph with high-quality studio lighting.")
 
 
 def read_prompt(slug: str, slot: str) -> Optional[str]:

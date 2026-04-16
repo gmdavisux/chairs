@@ -111,18 +111,18 @@ def migrate_file(mdx_path: Path, dry_run: bool) -> tuple[bool, list[str]]:
             "origin":    extract_prop(tag_body, "origin"),
         }
 
-        # alt: prefer non-"Proposed..." value
+        # alt: prefer non-placeholder value
         if (
             inline["alt"]
-            and not inline["alt"].startswith("Proposed")
-            and (entry.get("alt") or "").startswith("Proposed")
+            and not inline["alt"].startswith("Image placeholder")
+            and (entry.get("alt") or "").startswith("Image placeholder")
         ):
             entry["alt"] = inline["alt"]
             entry["altStatus"] = "actual"
             changes.append(f"  [{img_id}] alt upgraded to actual text")
             registry_changed = True
 
-        # altStatus: upgrade proposed→actual when inline says actual
+        # altStatus: upgrade pending→actual when inline says actual
         if inline["altStatus"] == "actual" and entry.get("altStatus") != "actual":
             entry["altStatus"] = "actual"
             changes.append(f"  [{img_id}] altStatus set to 'actual'")
