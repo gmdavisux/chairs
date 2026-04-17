@@ -1,3 +1,44 @@
+# Script Reference: generate_csv_row.py
+
+## Purpose
+Generate a single CSV row for a blog post, suitable for appending to your metadata CSV. Extracts frontmatter fields from a given MDX file in `src/content/blog/` and formats them according to your requirements.
+
+## Usage
+
+```sh
+python generate_csv_row.py <slug>
+```
+
+- `<slug>`: The filename (without `.mdx`) of the blog post. Example: `tulip-chair`
+
+## Output
+Prints a single CSV row to stdout with the following columns:
+
+- Title: `title (designer - yearDesigned)`
+- Media URL: `heroImage` (absolute URL)
+- Pinterest board: Always `Classic Furniture Archives`
+- Thumbnail: (empty)
+- Description: from frontmatter
+- Link: `https://chairs.usersimple.com/blog/<slug>`
+- Publish date: `pubDate`
+- Keywords: semicolon-separated list from frontmatter
+
+## Example
+
+```sh
+python generate_csv_row.py tulip-chair
+```
+
+Output:
+
+```
+Tulip Chair (Eero Saarinen - 1956),https://chairs.usersimple.com/images/tulip-chair-sketch.png,Classic Furniture Archives,,The Tulip Chair: A Revolution in Form and Function It’s easy to take the chair for granted.,https://chairs.usersimple.com/blog/tulip-chair,2026-04-09,Tulip Chair;Eero Saarinen;pedestal chair;space age furniture;mid-century modern
+```
+
+## Notes
+- Requires Python 3 and PyYAML (`pip install pyyaml`).
+- The script reads the frontmatter from the MDX file. If a field is missing, the corresponding CSV cell will be empty.
+- Append the output to your main CSV file as needed.
 # Script Reference — Classic Furniture Archives
 
 Quick-reference for every operational Python script in this project. Covers purpose, arguments, and which workflow step each script serves.
