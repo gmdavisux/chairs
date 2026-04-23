@@ -30,7 +30,7 @@ Each execution must:
    - detail-structure
    - detail-silhouette
 4. Write provenance metadata for all generated or transformed outputs.
-5. Complete even when image steps fail, leaving explicit placeholder/pending states.
+5. Complete even when image steps fail, leaving explicit placeholder/proposed states.
 6. Print a review URL and stop.
 
 ## Provider Policy
@@ -118,7 +118,7 @@ For each image output, persist:
 ## Placeholder and Publication Rules
 
 - Missing image source/license must not block page completion.
-- Placeholder and pending status labels must remain explicit in metadata and UI.
+- Placeholder and proposed status labels must remain explicit in metadata and UI.
 - Final review must convert provisional metadata to actual where available.
 
 ## Reference Bank vs Display Fallback

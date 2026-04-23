@@ -1,5 +1,22 @@
 # Script Reference: generate_csv_row.py
 
+## Running Python Scripts in the .venv
+
+Before running any Python script in this project, activate the virtual environment:
+
+```sh
+source .venv/bin/activate
+```
+
+Your shell prompt should show `(.venv)` at the beginning. This ensures all dependencies are available and scripts run in the correct context.
+
+To deactivate when finished:
+
+```sh
+deactivate
+```
+
+
 ## Purpose
 Generate a single CSV row for a blog post, suitable for appending to your metadata CSV. Extracts frontmatter fields from a given MDX file in `src/content/blog/` and formats them according to your requirements.
 

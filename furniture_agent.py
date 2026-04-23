@@ -27,9 +27,9 @@ from typing import Optional
 from urllib.parse import quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
+from crewai import Agent, Crew, Task
 from dotenv import load_dotenv
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 # GitHub Models uses an OpenAI-compatible endpoint routed through the
@@ -37,7 +37,9 @@ from langchain_openai import ChatOpenAI
 # The token is the same GITHUB_TOKEN used for PyGithub.
 _GITHUB_MODELS_BASE_URL = "https://models.inference.ai.azure.com"
 
-load_dotenv()
+# Prefer project-local .env values over inherited shell exports so stale
+# session tokens don't silently override workspace configuration.
+load_dotenv(override=True)
 
 # ── Logging ────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -56,7 +58,6 @@ CONTENT_DIR = ROOT / "src" / "content" / "blog"
 PROMPTS_DIR = ROOT / "public" / "images" / "generated-prompts"
 IMAGES_DIR = ROOT / "public" / "images"
 REFERENCE_IMAGES_DIR = IMAGES_DIR / "reference"
-CHECKPOINTS_DIR = ROOT / ".checkpoints"
 DEFAULT_PLACEHOLDER_IMAGE = IMAGES_DIR / "blog-placeholder-1.jpg"
 PLACEHOLDER_IMAGE_CANDIDATES = [
     IMAGES_DIR / "blog-placeholder-1.jpg",
@@ -68,14 +69,27 @@ PLACEHOLDER_SLOTS = [
     ("hero", "Hero view of the full chair profile"),
     ("detail-material", "Close-up of the chair material and finish"),
     ("detail-structure", "Detail of structural joinery or hardware"),
-    ("silhouette", "Profile or silhouette detail of the chair form"),
+    ("detail-silhouette", "Profile or silhouette detail of the chair form"),
 ]
 IMAGE_SLOT_PROMPT_FILES = [
     ("hero", "hero.txt"),
-    ("detail-material", "detail-material.txt"),
-    ("detail-structure", "detail-structure.txt"),
-    ("silhouette", "silhouette.txt"),
+    ("detail-material", "detail-1-material.txt"),
+    ("detail-structure", "detail-2-structure.txt"),
+    ("detail-silhouette", "detail-3-silhouette.txt"),
 ]
+SLOT_ALIASES = {
+    "hero": ["hero"],
+    "detail-material": ["detail-material", "material-detail", "detail-1-material"],
+    "detail-structure": ["detail-structure", "structure-detail", "detail-2-structure"],
+    "detail-silhouette": [
+        "detail-silhouette",
+        "silhouette-context",
+        "detail-3-silhouette",
+        "detail-context",
+        "ottoman-pairing",
+        "profile",
+    ],
+}
 STYLE_NEGATIVE_PROMPT = (
     "harsh shadows, cool lighting, daylight, fluorescent, over-saturated colors, "
     "cluttered background, people, rugs, lamps, artwork, books, decorative props, "
@@ -88,68 +102,6 @@ STYLE_PROMPT_SUFFIX = (
     "historical fidelity: authentic silhouette, proportions, joinery, and era plausibility. "
     "No people or clutter."
 )
-
-
-# ── Checkpointing ─────────────────────────────────────────────────────────
-# Task outputs are saved to .checkpoints/<slug>/<name>.txt as each task
-# completes. If a run fails part-way through, the next run can resume from
-# whatever was already written rather than starting over from scratch.
-
-_CHECKPOINT_NAMES = ["plan", "research", "article_body", "description"]
-
-
-def _checkpoint_path(slug: str, name: str) -> Path:
-    return CHECKPOINTS_DIR / slug / f"{name}.txt"
-
-
-def make_task_checkpoint_callback(slug: str, name: str):
-    """Return a CrewAI Task callback that writes the task output to disk."""
-    def _callback(output) -> None:
-        try:
-            raw = str(getattr(output, "raw", output)).strip()
-            if not raw:
-                return
-            cp = _checkpoint_path(slug, name)
-            cp.parent.mkdir(parents=True, exist_ok=True)
-            cp.write_text(raw, encoding="utf-8")
-            log.info("Checkpoint saved: .checkpoints/%s/%s.txt", slug, name)
-        except Exception as exc:  # never let a checkpoint write crash the agent
-            log.warning("Checkpoint write failed (%s/%s): %s", slug, name, exc)
-    return _callback
-
-
-def load_checkpoint(slug: str, name: str) -> Optional[str]:
-    """Return a cleaned, validated checkpoint text, or None if missing or corrupt."""
-    cp = _checkpoint_path(slug, name)
-    if not cp.exists():
-        return None
-    raw = cp.read_text(encoding="utf-8").strip()
-    if not raw:
-        return None
-    cleaned = _clean_llm_output(raw, name)
-    if not _is_valid_checkpoint(name, cleaned):
-        log.warning(
-            "Checkpoint .checkpoints/%s/%s.txt failed validation — will re-run.",
-            slug, name,
-        )
-        return None
-    return cleaned
-
-
-def clear_checkpoints(slug: str) -> None:
-    """Remove checkpoint files after a successful build."""
-    cp_dir = CHECKPOINTS_DIR / slug
-    if not cp_dir.exists():
-        return
-    for name in _CHECKPOINT_NAMES:
-        cp = cp_dir / f"{name}.txt"
-        if cp.exists():
-            cp.unlink()
-    try:
-        cp_dir.rmdir()  # only removes if empty
-    except OSError:
-        pass
-    log.info("Checkpoints cleared for '%s'.", slug)
 
 
 # ── Default backlog (~40 classic pieces) ──────────────────────────────────
@@ -234,9 +186,7 @@ def init_backlog() -> dict:
 
 def get_existing_slugs() -> set:
     """Return the set of slugs that already exist as published markdown files."""
-    md = {p.stem for p in CONTENT_DIR.glob("*.md")}
-    mdx = {p.stem for p in CONTENT_DIR.glob("*.mdx")}
-    return md | mdx
+    return {p.stem for p in CONTENT_DIR.glob("*.md")}
 
 
 def pick_next_page(backlog: dict) -> Optional[dict]:
@@ -294,316 +244,235 @@ def make_llm(temperature: float = 0.7) -> ChatOpenAI:
     )
 
 
-# ── Direct LLM pipeline (replaces CrewAI crew) ────────────────────────────
-# Using LangChain ChatOpenAI directly avoids the ReAct executor format
-# requirements that cause "Missing 'Action:' after 'Thought:'" hangs with
-# gpt-4o via GitHub Models when tool-free agents mix with the RPM limiter.
-
-def _llm_call(llm: ChatOpenAI, system: str, user: str) -> str:
-    """Single LLM call; returns the text content of the response."""
-    response = llm.invoke([SystemMessage(content=system), HumanMessage(content=user)])
-    return response.content.strip()
-
-
-def run_pipeline(page: dict, concept: str) -> tuple[str, str]:
-    """
-    Run the four-stage pipeline (plan → research → write → describe) using
-    direct LangChain calls instead of CrewAI agents.
-
-    Returns (article_body, description).
-    Checkpoints each stage to .checkpoints/<slug>/ as it completes.
-    """
+# ── CrewAI crew builder ────────────────────────────────────────────────────
+def build_crew(page: dict, concept: str) -> Crew:
     slug = page["slug"]
     title = page["title"]
     designer = page.get("designer", "Unknown")
     era = page.get("era", "Classic")
     category = page.get("category", "Iconic Chairs")
+    today = date.today().isoformat()
 
+    # Instantiate LLMs — analytical agents use lower temperature, creative ones higher.
     llm_analytical = make_llm(temperature=0.3)
     llm_creative = make_llm(temperature=0.7)
 
-    _concept_excerpt = concept[:2000].rsplit("\n", 1)[0]
+    # TavilySearchResults reads TAVILY_API_KEY from the environment automatically.
+    # max_results=6 keeps token usage low while giving the Researcher enough sources.
+    search_tool = TavilySearchResults(max_results=6)
 
-    # ── Stage 1: Editorial brief ───────────────────────────────────────────
-    cached_plan = load_checkpoint(slug, "plan")
-    if cached_plan:
-        log.info("Stage 1 (plan): loaded from checkpoint.")
-        plan = cached_plan
-    else:
-        log.info("Stage 1 (plan): calling LLM…")
-        plan = _llm_call(
-            llm_analytical,
-            system=(
-                "You are a seasoned editorial director for a high-end design museum archive. "
-                "You understand narrative arcs, design history, and what makes furniture "
-                "deep-dives distinct and authoritative."
-            ),
-            user=(
-                f"Site concept excerpt:\n\n{_concept_excerpt}\n\n"
-                f"The next page to build is: **{title}** "
-                f"(slug: `{slug}`, designer: {designer}, era: {era}, category: {category}).\n\n"
-                "Produce a concise editorial brief (under 350 words) covering:\n"
-                "- 5–7 key narrative angles specific to this piece\n"
-                "- 3–4 H2 section titles (descriptive, not generic)\n"
-                "- Specific facts, dates, or controversies worth investigating\n"
-                "- 2–3 related pieces to cross-reference"
-            ),
-        )
-        _save_checkpoint(slug, "plan", plan)
-        log.info("Stage 1 (plan): done.")
+    # ── Agents ────────────────────────────────────────────────────────────
+    planner = Agent(
+        role="Editorial Director",
+        goal=(
+            "Confirm the next furniture page assignment and produce a focused editorial "
+            "brief that guides the research and writing teams."
+        ),
+        backstory=(
+            "You are a seasoned editorial director for a high-end design museum archive. "
+            "You understand narrative arcs, design history, and what makes a furniture "
+            "deep-dive distinct and authoritative. You read the site concept carefully "
+            "before issuing any brief."
+        ),
+        llm=llm_analytical,
+        verbose=True,
+        allow_delegation=False,
+    )
 
-    # ── Stage 2: Research brief ────────────────────────────────────────────
-    cached_research = load_checkpoint(slug, "research")
-    if cached_research:
-        log.info("Stage 2 (research): loaded from checkpoint.")
-        research = cached_research
-    else:
-        log.info("Stage 2 (research): calling LLM…")
-        research = _llm_call(
-            llm_analytical,
-            system=(
-                "You are a meticulous design historian with encyclopedic knowledge of "
-                "20th-century furniture. You never fabricate dates, names, or records. "
-                "If uncertain, mark the fact (unconfirmed)."
-            ),
-            user=(
-                f"Editorial brief:\n\n{plan}\n\n"
-                f"Now produce a structured research brief for **{title}** by {designer} ({era}).\n\n"
-                "Cover:\n"
-                "1. Exact year designed and first produced; original manufacturer\n"
-                "2. Key design decisions: materials, structural innovations, prototyping\n"
-                "3. Exhibition history, design awards, museum acquisitions\n"
-                "4. Designer biography highlights relevant to this piece\n"
-                "5. Cultural reception: notable appearances, critical reassessments\n"
-                "6. Lesser-known facts that reward a careful reader\n\n"
-                "Format as a numbered list with attributed sources for each fact."
-            ),
-        )
-        _save_checkpoint(slug, "research", research)
-        log.info("Stage 2 (research): done.")
+    researcher = Agent(
+        role="Design Historian & Researcher",
+        goal=(
+            "Gather verified, citation-ready facts about the furniture piece and its "
+            "designer using web search."
+        ),
+        backstory=(
+            "You are a meticulous design historian who cross-references multiple primary "
+            "sources. You never fabricate dates, names, or exhibition records. Every fact "
+            "you surface is backed by a real, attributable source. You run multiple "
+            "targeted searches to ensure completeness."
+        ),
+        tools=[search_tool],
+        llm=llm_analytical,
+        max_iter=10,
+        respect_context_window=True,
+        verbose=True,
+        allow_delegation=False,
+    )
 
-    # ── Stage 3: Article body ──────────────────────────────────────────────
-    cached_body = load_checkpoint(slug, "article_body")
-    if cached_body:
-        log.info("Stage 3 (write): loaded from checkpoint.")
-        article_body = cached_body
-    else:
-        log.info("Stage 3 (write): calling LLM…")
-        _writer_system = (
+    writer = Agent(
+        role="Senior Design Writer",
+        goal=(
+            "Write an authoritative, warm, 1800–2200 word Markdown article about the "
+            "furniture piece that matches the voice of the existing site."
+        ),
+        backstory=(
             "You write like a senior contributor to Wallpaper* or Domus — passionate, "
-            "precise, never condescending. You tell the human story behind design objects, "
-            "weaving biography, craft, culture, and enduring significance."
-        )
-        _writer_user = (
-            f"Editorial brief:\n\n{plan}\n\n"
-            f"Research:\n\n{research}\n\n"
-            f"Write the full article for **{title}**.\n\n"
+            "precise, and never condescending. You tell the human story behind design "
+            "objects, weaving together biography, craft, culture, and enduring "
+            "significance. You use inline citations like [1], [2] throughout, and end "
+            "with a numbered References section."
+        ),
+        llm=llm_creative,
+        verbose=True,
+        allow_delegation=False,
+    )
+
+    publisher = Agent(
+        role="Publisher",
+        goal=(
+            "Assemble the final, complete Markdown file — YAML frontmatter plus article "
+            "body — ready to save as an Astro content collection entry."
+        ),
+        backstory=(
+            "You are a precise technical editor who ensures every page has complete, "
+            "valid Astro frontmatter, proper Markdown structure, an accurate description "
+            "field extracted from the article, and no formatting artifacts."
+        ),
+        llm=llm_analytical,
+        verbose=True,
+        allow_delegation=False,
+    )
+
+    # ── Tasks ─────────────────────────────────────────────────────────────
+    plan_task = Task(
+        description=(
+            f"Read this site concept document carefully:\n\n{concept}\n\n"
+            f"The next page to build is: **{title}** "
+            f"(slug: `{slug}`, designer: {designer}, era: {era}, category: {category}).\n\n"
+            "Produce a concise editorial brief (under 350 words) covering:\n"
+            "- 5–7 key narrative angles specific to this piece\n"
+            "- 3–4 H2 section titles (descriptive, not generic)\n"
+            "- Specific facts, dates, or controversies worth investigating\n"
+            "- 2–3 related pieces already on the site (check the sample backlog in the concept)"
+        ),
+        expected_output=(
+            "A short editorial brief with narrative angles, proposed section titles, "
+            "and specific research questions."
+        ),
+        agent=planner,
+    )
+
+    research_task = Task(
+        description=(
+            f"Research **{title}** by {designer} using web search. Run at least 4 "
+            "targeted searches covering different aspects. Find:\n\n"
+            "1. Exact year the design was created and first manufactured, with manufacturer name\n"
+            "2. Key design decisions: materials chosen, structural innovations, prototyping history\n"
+            "3. Exhibition history, design awards, and museum collection acquisitions\n"
+            "4. Designer biography highlights specifically relevant to this piece\n"
+            "5. Cultural reception: notable appearances, critical reassessments, collector market\n"
+            "6. Any lesser-known facts that would reward a careful reader\n\n"
+            "Return a structured research brief with numbered facts and source URLs for citations."
+        ),
+        expected_output=(
+            "A structured research brief with at least 15 verified facts, each with a "
+            "source URL for citation."
+        ),
+        agent=researcher,
+        context=[plan_task],
+    )
+
+    write_task = Task(
+        description=(
+            f"Using the editorial brief and research, write the full article for "
+            f"**{title}**.\n\n"
             "Requirements:\n"
             "- 1800–2200 words\n"
-            "- Opening hook paragraph (no heading)\n"
-            "- 4–5 H2 sections with descriptive titles\n"
+            "- Opening hook paragraph with no heading (place the reader in the moment)\n"
+            "- 4–5 H2 sections with descriptive, non-generic titles\n"
             "- A 'Meet the Designer' H2 section\n"
             "- A 'Why It Endures' or 'The Legacy' H2 section\n"
-            "- Inline citations [1] [2] etc. throughout\n"
-            "- After the opening hook paragraph (before the first H2), place: <!-- IMAGE: hero -->\n"
-            "- After the first H2 section's opening paragraph, place: <!-- IMAGE: detail-material -->\n"
-            "- After the second H2 section's opening paragraph, place: <!-- IMAGE: detail-structure -->\n"
-            "- After the third H2 section's opening paragraph, place: <!-- IMAGE: detail-silhouette -->\n"
-            "- A '## References' section with numbered citations\n"
-            "- Output: raw Markdown only. No frontmatter. No code fences."
-        )
-        article_body = _llm_call(llm_creative, system=_writer_system, user=_writer_user)
-        article_body = _clean_llm_output(article_body, "article_body")
-        _STAGE3_FAILURE_PHRASES = (
-            "agent stopped due to iteration limit",
-            "agent stopped due to time limit",
-            "invalid format",
-            "missing 'action:' after 'thought:",
-        )
-        if any(p in article_body.lower() for p in _STAGE3_FAILURE_PHRASES):
-            raise RuntimeError(
-                f"Writer LLM produced a failure message: {article_body[:120]!r}"
-            )
-        try:
-            _validate_article_body(article_body)
-        except RuntimeError as val_exc:
-            log.warning("Stage 3 quality check failed: %s — retrying once…", val_exc)
-            article_body = _llm_call(llm_creative, system=_writer_system, user=_writer_user)
-            article_body = _clean_llm_output(article_body, "article_body")
-            _validate_article_body(article_body)  # raise if still failing
-        _save_checkpoint(slug, "article_body", article_body)
-        log.info("Stage 3 (write): done (%d chars).", len(article_body))
+            "- Inline citations [1] [2] etc. throughout body text\n"
+            "- Affiliate placeholder comment at the very end of the body:\n"
+            "  `<!-- AFFILIATE: Original/authenticated replica purchase links -->`\n"
+            "- A '## References' section with numbered, formatted citations\n"
+            "- Tone: warm, expert, museum-catalog quality — match the voice of the "
+            "existing Eames Lounge Chair page on this site\n\n"
+            "Output: raw Markdown only. No frontmatter. No code fences around the output."
+        ),
+        expected_output=(
+            "Full article body in Markdown, 1800-2200 words, no frontmatter, "
+            "ending with a References section."
+        ),
+        agent=writer,
+        context=[plan_task, research_task],
+    )
 
-    # ── Stage 4: Meta description ──────────────────────────────────────────
-    cached_desc = load_checkpoint(slug, "description")
-    if cached_desc:
-        log.info("Stage 4 (description): loaded from checkpoint.")
-        description = cached_desc
-    else:
-        log.info("Stage 4 (description): calling LLM…")
-        description = _llm_call(
-            llm_analytical,
-            system="You are a precise technical editor writing web meta descriptions.",
-            user=(
-                f"Write a single-sentence meta description for an article about the "
-                f"**{title}** by {designer} ({era}).\n\n"
-                "Rules:\n"
-                "- 100–160 characters total\n"
-                "- Name the object, designer, and one key distinguishing fact\n"
-                "- No superlatives unless essential\n"
-                "- Return the sentence ONLY. No label, no quotes."
-            ),
-        )
-        _save_checkpoint(slug, "description", description)
-        log.info("Stage 4 (description): done.")
+    publish_task = Task(
+        description=(
+            f"Assemble the complete, final Markdown file for **{title}**.\n\n"
+            "Steps:\n"
+            "1. Extract a precise 1-sentence description (100–160 characters) from the "
+            "article's opening paragraph.\n"
+            "2. Prepend this exact YAML frontmatter block to the article body:\n\n"
+            "---\n"
+            f'title: "{title}"\n'
+            'description: "[your extracted description here]"\n'
+            f"pubDate: {today}\n"
+            f"heroImage: /images/{slug}-hero.jpg\n"
+            f"heroImageAlt: \"Proposed hero image for {title} highlighting form and materials\"\n"
+            "heroImageAltStatus: proposed\n"
+            "heroImageCaption: \"TBD\"\n"
+            "heroImageSource: \"TBD\"\n"
+            "heroImageLicense: unknown\n"
+            "heroImageOrigin: placeholder\n"
+            "images:\n"
+            f"  - id: {slug}-hero\n"
+            f"    src: /images/{slug}-hero.jpg\n"
+            f"    alt: \"Proposed hero image for {title} highlighting form and materials\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f"  - id: {slug}-detail-material\n"
+            f"    src: /images/{slug}-detail-material.jpg\n"
+            f"    alt: \"Proposed close-up of material texture on {title}\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f"  - id: {slug}-detail-structure\n"
+            f"    src: /images/{slug}-detail-structure.jpg\n"
+            "    alt: \"Proposed detail of visible joints, screws, or frame transitions\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f"  - id: {slug}-detail-silhouette\n"
+            f"    src: /images/{slug}-detail-silhouette.jpg\n"
+            f"    alt: \"Proposed profile silhouette of {title} showing signature geometry\"\n"
+            "    altStatus: proposed\n"
+            "    caption: \"TBD\"\n"
+            "    source: \"TBD\"\n"
+            "    license: unknown\n"
+            "    origin: placeholder\n"
+            f'designer: "{designer}"\n'
+            f'era: "{era}"\n'
+            f'category: "{category}"\n'
+            "---\n\n"
+            "3. Return the COMPLETE file content: the frontmatter block, a blank line, "
+            "then the full article body.\n"
+            "4. Do NOT wrap the output in code fences. Output the raw file content only.\n"
+            "5. The description field must contain real extracted text, not a placeholder.\n"
+            "6. Keep the metadata scaffold exactly, including proposed alt text and TBD source/license placeholders."
+        ),
+        expected_output=(
+            f"Complete Markdown file content — YAML frontmatter + article body — "
+            f"ready to write as src/content/blog/{slug}.md"
+        ),
+        agent=publisher,
+        context=[write_task],
+    )
 
-    return article_body, description
-
-
-def _save_checkpoint(slug: str, name: str, text: str) -> None:
-    """Write a checkpoint file, ignoring errors."""
-    try:
-        cp = _checkpoint_path(slug, name)
-        cp.parent.mkdir(parents=True, exist_ok=True)
-        cp.write_text(text.strip(), encoding="utf-8")
-        log.info("Checkpoint saved: .checkpoints/%s/%s.txt", slug, name)
-    except Exception as exc:
-        log.warning("Checkpoint write failed (%s/%s): %s", slug, name, exc)
-
-
-# ── MDX constants ─────────────────────────────────────────────────────────
-_MDX_IMPORT = "import ImageWithMeta from '../../components/ImageWithMeta.astro';"
-_IMAGE_SLOTS = ["hero", "detail-material", "detail-structure", "detail-silhouette"]
-
-
-# ── Output cleaning and validation ────────────────────────────────────────
-_REPR_PHRASES = ("description=", "summary=", "pydantic",)
-
-
-def _clean_llm_output(text: str, stage: str) -> str:
-    """
-    Strip common LLM output artifacts from checkpoint text:
-    - Python Task repr strings (extract result='...')
-    - Markdown code fences
-    - Stray YAML frontmatter in article body
-    """
-    text = text.strip()
-    # Detect Python Task repr by checking start of text for signature attributes
-    if any(ph in text[:100].lower() for ph in _REPR_PHRASES):
-        for pattern in (r"\bresult='(.*)'\Z", r'\bresult="(.*)"\Z'):
-            m = re.search(pattern, text, re.DOTALL)
-            if m:
-                extracted = m.group(1).strip()
-                if len(extracted) > 200:
-                    text = extracted
-                    break
-    # Strip markdown code fences (```markdown ... ```, etc.)
-    m = re.match(r"^```(?:markdown|md|mdx)?\s*\n(.*?)\n?```\s*$", text, re.DOTALL | re.IGNORECASE)
-    if m:
-        text = m.group(1).strip()
-    # Strip stray YAML frontmatter from article body
-    if stage == "article_body" and text.startswith("---"):
-        parts = text.split("---", 2)
-        if len(parts) >= 3:
-            text = parts[2].strip()
-    return text.strip()
-
-
-_CHECKPOINT_REPR_INDICATORS = (
-    "description=",
-    "summary=",
-    "agent stopped",
-    "invalid format",
-    "missing 'action:'",
-)
-
-
-def _is_valid_checkpoint(name: str, text: str) -> bool:
-    """Return True if checkpoint text looks like genuine LLM output."""
-    if not text or len(text) < 50:
-        return False
-    lowered = text[:200].lower()
-    if any(ph in lowered for ph in _CHECKPOINT_REPR_INDICATORS):
-        return False
-    if name in ("plan", "research"):
-        return len(text) >= 200
-    if name == "article_body":
-        word_count = len(text.split())
-        h2_count = len(re.findall(r"^## ", text, re.MULTILINE))
-        return word_count >= 1200 and h2_count >= 2 and "## references" in text.lower()
-    if name == "description":
-        lines = [ln.strip() for ln in text.strip().splitlines() if ln.strip()]
-        return len(lines) == 1 and 50 <= len(text.strip()) <= 300
-    return True
-
-
-def _validate_article_body(text: str) -> None:
-    """Raise RuntimeError if article body fails minimum quality gates."""
-    word_count = len(text.split())
-    h2_count = len(re.findall(r"^## ", text, re.MULTILINE))
-    has_refs = "## references" in text.lower()
-    issues = []
-    if word_count < 1200:
-        issues.append(f"too short: {word_count} words (need ≥1200)")
-    if h2_count < 2:
-        issues.append(f"only {h2_count} H2 section(s) found (need ≥2)")
-    if not has_refs:
-        issues.append("missing ## References section")
-    if issues:
-        raise RuntimeError("Article body failed quality checks: " + "; ".join(issues))
-
-
-def _post_process_article(body: str, slug: str) -> str:
-    """
-    Replace <!-- IMAGE: {slot} --> markers with ImageWithMeta components.
-    Injects missing components after H2 sections when the LLM placed fewer than 4.
-    """
-    def _tag(slot: str) -> str:
-        return f'<ImageWithMeta id="{slug}-{slot}" images={{props.entryImages}} />'
-
-    # Replace explicit markers
-    for slot in _IMAGE_SLOTS:
-        body = body.replace(f"<!-- IMAGE: {slot} -->", _tag(slot))
-
-    # Count how many are now in the body
-    placed = len(re.findall(r"<ImageWithMeta ", body))
-    if placed >= len(_IMAGE_SLOTS):
-        return body
-
-    # Determine which slots are still missing
-    used = set(re.findall(rf'id="{re.escape(slug)}-([^"]+)"', body))
-    missing = [s for s in _IMAGE_SLOTS if s not in used]
-    if not missing:
-        return body
-
-    # Inject missing slots after the paragraph following each H2 heading
-    lines = body.split("\n")
-    h2_indices = [i for i, ln in enumerate(lines) if re.match(r"^## ", ln)]
-    offset = 0
-    for i, slot in enumerate(missing):
-        if i < len(h2_indices):
-            h2_pos = h2_indices[i] + offset
-            insert_at = h2_pos + 1
-            # Skip blank lines immediately after heading
-            while insert_at < len(lines) and not lines[insert_at].strip():
-                insert_at += 1
-            # Move to end of the first paragraph (stop at blank line)
-            while insert_at < len(lines) and lines[insert_at].strip():
-                insert_at += 1
-            lines.insert(insert_at, _tag(slot))
-            lines.insert(insert_at, "")
-            offset += 2
-        else:
-            # Append before ## References as a last resort
-            ref_idx = next(
-                (j for j, ln in enumerate(lines) if re.match(r"^## [Rr]eferences", ln)),
-                None,
-            )
-            ins = (ref_idx + offset if ref_idx is not None else len(lines))
-            lines.insert(ins, _tag(slot))
-            lines.insert(ins, "")
-            offset += 2
-    return "\n".join(lines)
+    return Crew(
+        agents=[planner, researcher, writer, publisher],
+        tasks=[plan_task, research_task, write_task, publish_task],
+        max_rpm=6,  # additional buffer under free-tier rate limits
+        verbose=True,
+    )
 
 
 # ── Output extraction and file I/O ─────────────────────────────────────────
@@ -611,6 +480,7 @@ def _get_task_raw(tasks_output, index: int) -> str:
     """Safely extract raw string output from a task result at a given index."""
     try:
         output = tasks_output[index]
+        # CrewAI TaskOutput exposes .raw in most versions; fall back to str()
         return str(getattr(output, "raw", output))
     except (IndexError, AttributeError):
         return ""
@@ -619,11 +489,9 @@ def _get_task_raw(tasks_output, index: int) -> str:
 # Labels in order — must match the ImagePrompter task format exactly.
 _PROMPT_LABELS = [
     ("HERO",            "hero.txt"),
-    ("DETAIL_1",        "detail-material.txt"),
-    ("DETAIL_2",        "detail-structure.txt"),
-    ("DETAIL_3",        "silhouette.txt"),
-    ("CONTEXT",         "context.txt"),
-    ("DESIGNER",        "designer.txt"),
+    ("DETAIL_1",        "detail-1-material.txt"),
+    ("DETAIL_2",        "detail-2-structure.txt"),
+    ("DETAIL_3",        "detail-3-silhouette.txt"),
     ("PUBLIC_DOMAIN_1", "search-wikimedia.txt"),
     ("PUBLIC_DOMAIN_2", "search-museum.txt"),
     ("PUBLIC_DOMAIN_3", "search-archive.txt"),
@@ -956,118 +824,26 @@ def collect_reference_images(page: dict, sources_path: Path) -> Path:
     return metadata_path
 
 
-def _build_frontmatter(page: dict, description: str, today_str: str) -> str:
-    """Assemble YAML frontmatter string from page metadata and extracted description."""
-    slug = page["slug"]
-    title = page["title"]
-    designer = page.get("designer", "")
-    era = page.get("era", "")
-    category = page.get("category", "")
-    # Sanitize description: strip surrounding quotes/whitespace, ensure single line
-    desc = description.strip().strip('"').strip("'").replace("\n", " ")
-    if not desc or len(desc) < 20:
-        desc = f"An authoritative history of the {title} by {designer}."
-    lines = [
-        "---",
-        f'title: "{title}"',
-        f'description: "{desc}"',
-        f"pubDate: {today_str}",
-        f"heroImage: /images/{slug}-hero.jpg",
-        f'heroImageAlt: "{title} highlighting form and materials"',
-        "heroImageAltStatus: pending",
-        'heroImageCaption: "TBD"',
-        'heroImageSource: "TBD"',
-        "heroImageLicense: unknown",
-        "heroImageOrigin: placeholder",
-        "images:",
-        f"  - id: {slug}-hero",
-        f"    src: /images/{slug}-hero.jpg",
-        f'    alt: "{title} highlighting form and materials"',
-        "    altStatus: pending",
-        '    caption: "TBD"',
-        '    source: "TBD"',
-        "    license: unknown",
-        "    origin: placeholder",
-        f"  - id: {slug}-detail-material",
-        f"    src: /images/{slug}-detail-material.jpg",
-        f'    alt: "Close-up of material texture on {title}"',
-        "    altStatus: pending",
-        '    caption: "TBD"',
-        '    source: "TBD"',
-        "    license: unknown",
-        "    origin: placeholder",
-        f"  - id: {slug}-detail-structure",
-        f"    src: /images/{slug}-detail-structure.jpg",
-        '    alt: "Detail of visible joints, screws, or frame transitions"',
-        "    altStatus: pending",
-        '    caption: "TBD"',
-        '    source: "TBD"',
-        "    license: unknown",
-        "    origin: placeholder",
-        f"  - id: {slug}-detail-silhouette",
-        f"    src: /images/{slug}-detail-silhouette.jpg",
-        f'    alt: "Profile silhouette of {title} showing signature geometry"',
-        "    altStatus: pending",
-        '    caption: "TBD"',
-        '    source: "TBD"',
-        "    license: unknown",
-        "    origin: placeholder",
-        f'designer: "{designer}"',
-        f'era: "{era}"',
-        f'category: "{category}"',
-        "---",
-    ]
-    return "\n".join(lines)
-
-
 def extract_and_save(result, page: dict) -> Path:
     """
     Extract article from the crew result and write it to disk.
 
-    Task indices: 0=plan, 1=research, 2=write, 3=publish(description only)
-    The Writer (index 2) returns the article body.
-    The Publisher (index 3) returns only the meta description sentence.
-    Frontmatter is assembled in Python to avoid LLM token overflow.
+    Task indices: 0=plan, 1=research, 2=write, 3=publish
+    The Publisher (index 3) returns the complete file with frontmatter.
     """
     slug = page["slug"]
-    today_str = date.today().isoformat()
 
     try:
         tasks_output = result.tasks_output
     except AttributeError:
         tasks_output = []
 
-    # Article body from Writer (task 2)
-    article_body = _get_task_raw(tasks_output, 2)
-    # Meta description from Publisher (task 3)
-    description = _get_task_raw(tasks_output, 3)
-
-    # Reject known CrewAI failure strings so they don't become article content.
-    _FAILURE_PHRASES = (
-        "agent stopped due to iteration limit",
-        "agent stopped due to time limit",
-        "invalid format",
-        "missing 'action:' after 'thought:",
-    )
-    if any(p in article_body.lower() for p in _FAILURE_PHRASES):
-        raise RuntimeError(
-            f"Writer task produced a failure message instead of article content: "
-            f"{article_body[:120]!r}"
-        )
-
-    if not article_body:
-        # Last-resort fallback: use the full crew result string and strip any frontmatter
-        fallback = str(result)
-        # If CrewAI somehow included frontmatter, strip it
-        if fallback.startswith("---"):
-            parts = fallback.split("---", 2)
-            article_body = parts[2].strip() if len(parts) >= 3 else fallback
-        else:
-            article_body = fallback
-        log.warning("Writer task output missing; using full crew result as article body fallback.")
-
-    frontmatter = _build_frontmatter(page, description, today_str)
-    full_markdown = f"{frontmatter}\n\n{article_body.strip()}\n"
+    # Full file from Publisher
+    full_markdown = _get_task_raw(tasks_output, 3)
+    if not full_markdown:
+        # Fallback: use the complete result string
+        full_markdown = str(result)
+        log.warning("Publisher task output missing; using full crew result as fallback.")
 
     # Write the article
     CONTENT_DIR.mkdir(parents=True, exist_ok=True)
@@ -1111,6 +887,11 @@ def _safe_relpath(path: Path) -> str:
     return str(path.relative_to(ROOT)).replace("\\", "/")
 
 
+def _normalize_match_text(value: str) -> str:
+    """Normalize free text for simple heuristic matching."""
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+
 def _file_sha256(path: Path) -> str:
     """Compute SHA-256 for a file path."""
     h = hashlib.sha256()
@@ -1133,29 +914,42 @@ def _read_prompt_bundle(slug: str) -> dict[str, str]:
     return prompts
 
 
-def _load_reference_image_url(slug: str) -> Optional[str]:
-    """Load a best-effort reference image URL from reference metadata."""
+def _load_reference_bank_urls(slug: str) -> list[str]:
+    """Load the broad reference-bank URLs used for AI guidance and provenance."""
+    urls: list[str] = []
+    seen: set[str] = set()
+
+    prompt_dir = PROMPTS_DIR / slug
+    for filename in ("image-sources.txt", "public-domain-sources.txt"):
+        path = prompt_dir / filename
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for url in _extract_urls(text):
+            if url not in seen:
+                seen.add(url)
+                urls.append(url)
+
     metadata_path = REFERENCE_IMAGES_DIR / f"{slug}-reference" / "reference-metadata.json"
-    if not metadata_path.exists():
-        return None
+    if metadata_path.exists():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            metadata = {}
+        for item in metadata.get("items", []):
+            for url in (item.get("downloadUrl"), item.get("sourcePage")):
+                if isinstance(url, str) and url.startswith("http") and url not in seen:
+                    seen.add(url)
+                    urls.append(url)
 
-    try:
-        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-
-    for item in metadata.get("items", []):
-        url = item.get("downloadUrl") or item.get("sourcePage")
-        if isinstance(url, str) and url.startswith("http"):
-            return url
-    return None
+    return urls
 
 
 def _build_style_prompt(base_prompt: str, page: dict, slot: str) -> str:
     """Wrap a slot prompt with shared style and fidelity constraints."""
     title = page.get("title", "furniture piece")
     designer = page.get("designer", "")
-    header = f"Photorealistic high-quality studio photograph of {title}"
+    header = f"Photorealistic museum-catalog image of {title}"
     if designer:
         header += f" by {designer}"
     return (
@@ -1170,6 +964,16 @@ def _normalize_image_size(raw_size: str) -> str:
     if re.fullmatch(r"\d+x\d+", size):
         return size
     return "1024x1024"
+
+
+def _has_real_openai_key() -> bool:
+    """Return True when an actual OpenAI API key is configured."""
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        return False
+    if api_key == "your_openai_api_key_here":
+        return False
+    return True
 
 
 def _download_image_url(url: str, out_path: Path, timeout_seconds: int) -> None:
@@ -1275,85 +1079,293 @@ def _generate_with_fal(
 
 def _provider_and_model() -> tuple[str, str]:
     """Resolve configured image provider and model values."""
-    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "google").strip().lower()
-    if provider not in {"google", "fal", "openai"}:
-        provider = "google"
+    provider = os.getenv("FURNITURE_IMAGE_PROVIDER", "fal").strip().lower()
+    if provider not in {"fal", "openai"}:
+        provider = "fal"
 
     if provider == "openai":
         model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
-    elif provider == "google":
-        model = os.getenv("GEMINI_IMAGE_MODEL", "gemini-3.1-flash-image-preview").strip() or "gemini-3.1-flash-image-preview"
     else:
         model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
     return provider, model
 
 
-def _generate_with_google(
-    prompt: str,
-    reference_url: Optional[str],
-) -> dict:
-    """Generate one image via Google Gemini image APIs."""
+def _reference_origin_for_source(source_url: str) -> str:
+    """Map a source URL to the closest supported origin enum value."""
+    if "commons.wikimedia.org" in source_url:
+        return "public_domain"
+    return "licensed"
+
+
+def _slot_matches_value(slot: str, value: str) -> bool:
+    """Return True when a slot alias appears in a candidate id/src string."""
+    lowered = value.lower()
+    return any(alias in lowered for alias in SLOT_ALIASES.get(slot, [slot]))
+
+
+def _extract_source_url(source_value: str) -> Optional[str]:
+    """Extract the first URL from a free-form source string."""
+    matches = re.findall(r"https?://\S+", source_value)
+    if not matches:
+        return None
+    return matches[0].rstrip(")]}>,.;")
+
+
+def _load_reference_fallbacks(slug: str) -> list[dict]:
+    """Return downloaded reference items available for explicit display fallback use."""
+    metadata_path = REFERENCE_IMAGES_DIR / f"{slug}-reference" / "reference-metadata.json"
+    if not metadata_path.exists():
+        return []
+
     try:
-        from generate_images_gemini import generate_with_gemini
-    except ImportError as exc:
-        raise RuntimeError(
-            "generate_images_gemini.py is unavailable; cannot use FURNITURE_IMAGE_PROVIDER=google"
-        ) from exc
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
 
-    references = [reference_url] if reference_url else None
-    image_bytes = generate_with_gemini(prompt=prompt, reference_image_url=references)
+    candidates: list[dict] = []
+    for item in metadata.get("items", []):
+        local_path = item.get("localPath")
+        if item.get("status") != "downloaded" or not local_path:
+            continue
+        source_path = ROOT / Path(local_path)
+        if not source_path.exists():
+            continue
+        candidates.append(
+            {
+                "sourcePath": source_path,
+                "sourcePage": item.get("sourcePage") or "",
+                "license": item.get("license") or "unknown",
+                "origin": _reference_origin_for_source(item.get("sourcePage") or ""),
+                "matchText": _normalize_match_text(item.get("sourcePage") or ""),
+            }
+        )
+    return candidates
+
+
+def _load_display_selection_file(slug: str) -> dict[str, dict]:
+    """Load an optional explicit slot-to-source display selection manifest."""
+    path = PROMPTS_DIR / slug / "selected-display-images.json"
+    if not path.exists():
+        return {}
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    selections: dict[str, dict] = {}
+    for slot, payload in data.items():
+        if slot not in dict(IMAGE_SLOT_PROMPT_FILES):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        source_value = str(payload.get("source") or payload.get("sourceUrl") or "")
+        source_url = _extract_source_url(source_value) or source_value.strip()
+        if not source_url.startswith("http"):
+            continue
+        selections[slot] = {
+            "sourceUrl": source_url,
+            "source": payload.get("source") or source_url,
+            "license": payload.get("license") or "unknown",
+            "origin": payload.get("origin") or _reference_origin_for_source(source_url),
+        }
+    return selections
+
+
+def _load_article_reference_preferences(article_path: Path) -> dict[str, dict]:
+    """Load already-selected source URLs from article frontmatter when present."""
+    if not article_path.exists():
+        return {}
+
+    try:
+        import yaml
+    except ImportError:
+        return {}
+
+    raw = article_path.read_text(encoding="utf-8")
+    match = re.match(r"^---\n(.*?)\n---\n", raw, flags=re.DOTALL)
+    if not match:
+        return {}
+
+    data = yaml.safe_load(match.group(1)) or {}
+    preferences: dict[str, dict] = {}
+
+    hero_source = str(data.get("heroImageSource") or "")
+    hero_url = _extract_source_url(hero_source)
+    if hero_url:
+        preferences["hero"] = {
+            "sourceUrl": hero_url,
+            "source": hero_source,
+            "license": data.get("heroImageLicense") or "unknown",
+            "origin": data.get("heroImageOrigin") or _reference_origin_for_source(hero_url),
+        }
+
+    images = data.get("images")
+    if isinstance(images, list):
+        for entry in images:
+            if not isinstance(entry, dict):
+                continue
+            source_value = str(entry.get("source") or "")
+            source_url = _extract_source_url(source_value)
+            if not source_url:
+                continue
+            candidate_keys = [str(entry.get("id") or ""), str(entry.get("src") or "")]
+            for slot in IMAGE_SLOT_PROMPT_FILES:
+                slot_name = slot[0]
+                if any(_slot_matches_value(slot_name, value) for value in candidate_keys):
+                    preferences[slot_name] = {
+                        "sourceUrl": source_url,
+                        "source": source_value,
+                        "license": entry.get("license") or "unknown",
+                        "origin": entry.get("origin") or _reference_origin_for_source(source_url),
+                    }
+                    break
+
+    return preferences
+
+
+def _load_curated_reference_preferences(slug: str) -> dict[str, str]:
+    """Load slot-to-source hints from a curated image source block when present."""
+    prompt_dir = PROMPTS_DIR / slug
+    for filename in ("image-sources.txt", "public-domain-sources.txt"):
+        path = prompt_dir / filename
+        if not path.exists():
+            continue
+
+        lines = path.read_text(encoding="utf-8").splitlines()
+        preferences: dict[str, str] = {}
+        in_selected_block = False
+        for raw_line in lines:
+            line = raw_line.strip()
+            if not line:
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                in_selected_block = line == "[SELECTED FOR BLOG]"
+                continue
+            if not in_selected_block or not line.startswith("-"):
+                continue
+
+            body = line[1:].strip()
+            if ":" not in body:
+                continue
+            label, hint = body.split(":", 1)
+            label_norm = _normalize_match_text(label)
+            hint_norm = _normalize_match_text(hint)
+
+            if "hero" in label_norm:
+                preferences["hero"] = hint_norm
+            elif "material" in label_norm:
+                preferences["detail-material"] = hint_norm
+            elif "structure" in label_norm:
+                preferences["detail-structure"] = hint_norm
+            elif "silhouette" in label_norm or "context" in label_norm or "profile" in label_norm:
+                preferences["detail-silhouette"] = hint_norm
+
+        if preferences:
+            return preferences
+
+    return {}
+
+
+def _build_display_fallback_plan(slug: str, article_path: Path) -> dict[str, dict]:
+    """Build a slot-to-original fallback plan using explicit selections only."""
+    candidates = _load_reference_fallbacks(slug)
+    if not candidates:
+        return {}
+
+    plan: dict[str, dict] = {}
+    used_indexes: set[int] = set()
+    file_preferences = _load_display_selection_file(slug)
+    article_preferences = _load_article_reference_preferences(article_path)
+    curated_preferences = _load_curated_reference_preferences(slug)
+
+    def assign_by_source_url(slot: str, source_url: str, metadata: Optional[dict] = None) -> None:
+        normalized_url = source_url.rstrip("/")
+        for index, candidate in enumerate(candidates):
+            if index in used_indexes:
+                continue
+            if candidate.get("sourcePage", "").rstrip("/") == normalized_url:
+                used_indexes.add(index)
+                plan[slot] = {
+                    **candidate,
+                    **(metadata or {}),
+                    "source": (metadata or {}).get("source") or candidate.get("sourcePage", ""),
+                    "license": (metadata or {}).get("license") or candidate.get("license") or "unknown",
+                    "origin": (metadata or {}).get("origin") or candidate.get("origin") or "licensed",
+                }
+                return
+
+    def assign_by_hint(slot: str, hint: str) -> None:
+        normalized_hint = _normalize_match_text(hint)
+        if not normalized_hint:
+            return
+        matches: list[int] = []
+        for index, candidate in enumerate(candidates):
+            if index in used_indexes:
+                continue
+            if normalized_hint in candidate.get("matchText", ""):
+                matches.append(index)
+
+        if len(matches) == 1:
+            index = matches[0]
+            used_indexes.add(index)
+            plan[slot] = {
+                **candidates[index],
+                "source": candidates[index].get("sourcePage", ""),
+            }
+
+    for slot, metadata in file_preferences.items():
+        assign_by_source_url(slot, metadata["sourceUrl"], metadata=metadata)
+    for slot, metadata in article_preferences.items():
+        if slot not in plan:
+            assign_by_source_url(slot, metadata["sourceUrl"], metadata=metadata)
+
+    for slot, hint in curated_preferences.items():
+        if slot in plan:
+            continue
+        assign_by_hint(slot, hint)
+
+    return plan
+
+
+def _select_ai_reference_url(slug: str, article_path: Path) -> Optional[str]:
+    """Select a primary reference URL for AI guidance without requiring downloads."""
+    file_preferences = _load_display_selection_file(slug)
+    article_preferences = _load_article_reference_preferences(article_path)
+
+    for source in (
+        file_preferences.get("hero", {}).get("sourceUrl"),
+        article_preferences.get("hero", {}).get("sourceUrl"),
+    ):
+        if isinstance(source, str) and source.startswith("http"):
+            return source
+
+    urls = _load_reference_bank_urls(slug)
+    return urls[0] if urls else None
+
+
+def _use_reference_image_fallback(
+    slug: str,
+    slot: str,
+    fallback_item: dict,
+) -> dict:
+    """Copy a downloaded reference image into the page slot when AI generation is unavailable."""
+    out_file = IMAGES_DIR / f"{slug}-{slot}.jpg"
+    shutil.copyfile(fallback_item["sourcePath"], out_file)
     return {
-        "image_url": None,
-        "image_bytes": image_bytes,
-        "revised_prompt": None,
-        "raw": {"provider": "google", "reference_url": reference_url},
+        "slot": slot,
+        "status": "reference_fallback",
+        "file": _safe_relpath(out_file),
+        "hash": f"sha256:{_file_sha256(out_file)}",
+        "source": fallback_item.get("sourcePage") or "",
+        "license": fallback_item.get("license") or "unknown",
+        "origin": fallback_item.get("origin") or "licensed",
     }
 
 
-def _slot_alt_and_caption(slot: str, title: str, designer: str) -> tuple[str, str]:
-    """Return (alt, caption) text for a generated image slot."""
-    slot_meta = {
-        "hero": (
-            f"{title} — studio composition highlighting form and materials",
-            f"AI-generated studio photograph of the {title} by {designer}.",
-        ),
-        "silhouette": (
-            f"{title} profile silhouette showing signature geometry",
-            f"AI-generated silhouette of the {title} by {designer}.",
-        ),
-        "context": (
-            f"{title} in a mid-century modern interior setting",
-            f"AI-generated context photograph of the {title} by {designer} in situ.",
-        ),
-        "designer": (
-            f"Portrait of {designer}, designer of the {title}",
-            f"AI-generated portrait of {designer}.",
-        ),
-        "sketch": (
-            f"Industrial design marker rendering of the {title}",
-            f"AI-generated design sketch of the {title} by {designer}.",
-        ),
-        "detail-material": (
-            f"Close-up of material texture on the {title}",
-            f"AI-generated material detail of the {title} by {designer}.",
-        ),
-        "detail-structure": (
-            f"Structural detail showing joints and frame of the {title}",
-            f"AI-generated structural detail of the {title} by {designer}.",
-        ),
-    }
-    return slot_meta.get(slot, (f"{title} — {slot}", f"AI-generated {slot} image for the {title}."))
-
-
-def _apply_generated_image_metadata(
-    article_path: Path,
-    generated_slots: set[str],
-    provider: str,
-    model: str,
-    page: dict | None = None,
-) -> bool:
-    """Update frontmatter image provenance fields for successfully generated slots."""
-    if not generated_slots or not article_path.exists():
+def _apply_image_metadata(article_path: Path, slot_updates: dict[str, dict]) -> bool:
+    """Update frontmatter image provenance fields for successfully resolved slots."""
+    if not slot_updates or not article_path.exists():
         return False
 
     raw = article_path.read_text(encoding="utf-8")
@@ -1370,34 +1382,29 @@ def _apply_generated_image_metadata(
     body = match.group(2)
     data = yaml.safe_load(frontmatter_raw) or {}
 
-    title = (page or {}).get("title") or data.get("title", "")
-    designer = (page or {}).get("designer") or data.get("designer", "")
-    source_label = f"AI generated via {provider}/{model}"
-
-    if "hero" in generated_slots:
-        alt, caption = _slot_alt_and_caption("hero", title, designer)
-        data["heroImageAlt"] = alt
-        data["heroImageAltStatus"] = "actual"
-        data["heroImageCaption"] = caption
-        data["heroImageSource"] = source_label
-        data["heroImageLicense"] = "Original work for educational and archival purposes"
-        data["heroImageOrigin"] = "original"
+    hero_update = slot_updates.get("hero")
+    if hero_update:
+        if hero_update.get("source"):
+            data["heroImageSource"] = hero_update["source"]
+        if hero_update.get("license"):
+            data["heroImageLicense"] = hero_update["license"]
+        if hero_update.get("origin"):
+            data["heroImageOrigin"] = hero_update["origin"]
 
     images = data.get("images")
     if isinstance(images, list):
         for entry in images:
             if not isinstance(entry, dict):
                 continue
-            image_id = str(entry.get("id", ""))
-            for slot in generated_slots:
-                if image_id.endswith(slot):
-                    alt, caption = _slot_alt_and_caption(slot, title, designer)
-                    entry["alt"] = alt
-                    entry["altStatus"] = "actual"
-                    entry["caption"] = caption
-                    entry["source"] = source_label
-                    entry["license"] = "Original work for educational and archival purposes"
-                    entry["origin"] = "original"
+            candidate_keys = [str(entry.get("id") or ""), str(entry.get("src") or "")]
+            for slot, update in slot_updates.items():
+                if any(_slot_matches_value(slot, value) for value in candidate_keys):
+                    if update.get("source"):
+                        entry["source"] = update["source"]
+                    if update.get("license"):
+                        entry["license"] = update["license"]
+                    if update.get("origin"):
+                        entry["origin"] = update["origin"]
                     break
 
     serialized = yaml.safe_dump(data, sort_keys=False, allow_unicode=False).strip()
@@ -1405,7 +1412,7 @@ def _apply_generated_image_metadata(
     return True
 
 
-def generate_and_log_images(page: dict) -> dict:
+def generate_and_log_images(page: dict, article_path: Path) -> dict:
     """Generate page slot images via configured provider and write provenance JSON."""
     slug = page["slug"]
     prompts = _read_prompt_bundle(slug)
@@ -1414,17 +1421,18 @@ def generate_and_log_images(page: dict) -> dict:
     provenance_path = prompt_dir / "provenance-generated.json"
 
     provider, model = _provider_and_model()
-    fal_model = os.getenv("FURNITURE_IMAGE_MODEL", "fal-ai/flux/dev").strip() or "fal-ai/flux/dev"
     fallback_model = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1").strip() or "gpt-image-1"
-    allow_openai_fallback = _env_bool("FURNITURE_ALLOW_OPENAI_FALLBACK", default=False)
+    can_use_openai_fallback = _has_real_openai_key()
     size = _normalize_image_size(os.getenv("FURNITURE_IMAGE_SIZE", "1024x1024"))
     timeout_seconds = _safe_int_env("FURNITURE_IMAGE_TIMEOUT_SECONDS", 60)
     max_images = max(1, min(_safe_int_env("FURNITURE_IMAGE_MAX_PER_PAGE", 4), 4))
-    reference_url = _load_reference_image_url(slug)
+    reference_url = _select_ai_reference_url(slug, article_path)
+    reference_bank_urls = _load_reference_bank_urls(slug)
+    reference_fallback_plan = _build_display_fallback_plan(slug, article_path)
 
     results: list[dict] = []
     generated_files: list[Path] = []
-    generated_slots: set[str] = set()
+    resolved_slots: dict[str, dict] = {}
 
     for slot, _filename in IMAGE_SLOT_PROMPT_FILES[:max_images]:
         base_prompt = prompts.get(slot)
@@ -1453,36 +1461,19 @@ def generate_and_log_images(page: dict) -> dict:
                     model=model,
                     timeout_seconds=timeout_seconds,
                 )
-            elif provider == "google":
+            else:
                 try:
-                    response_payload = _generate_with_google(
+                    response_payload = _generate_with_fal(
                         prompt=final_prompt,
+                        negative_prompt=STYLE_NEGATIVE_PROMPT,
+                        size=size,
+                        model=model,
                         reference_url=reference_url,
                     )
-                except Exception as google_exc:
-                    log.warning(
-                        "Google generation failed for slot '%s'; trying FAL fallback: %s",
-                        slot,
-                        google_exc,
-                    )
-                    try:
-                        response_payload = _generate_with_fal(
-                            prompt=final_prompt,
-                            negative_prompt=STYLE_NEGATIVE_PROMPT,
-                            size=size,
-                            model=fal_model,
-                            reference_url=reference_url,
-                        )
-                        used_provider = "fal"
-                        used_model = fal_model
-                    except Exception as fal_exc:
-                        if not allow_openai_fallback:
-                            raise RuntimeError(
-                                f"google failed ({google_exc}); fal fallback failed ({fal_exc}); "
-                                "openai fallback disabled"
-                            ) from fal_exc
+                except Exception as fal_exc:
+                    if can_use_openai_fallback:
                         log.warning(
-                            "FAL fallback failed for slot '%s'; trying OpenAI fallback: %s",
+                            "FAL generation failed for slot '%s'; trying OpenAI fallback: %s",
                             slot,
                             fal_exc,
                         )
@@ -1495,34 +1486,10 @@ def generate_and_log_images(page: dict) -> dict:
                         )
                         used_provider = "openai"
                         used_model = fallback_model
-            else:
-                try:
-                    response_payload = _generate_with_fal(
-                        prompt=final_prompt,
-                        negative_prompt=STYLE_NEGATIVE_PROMPT,
-                        size=size,
-                        model=fal_model,
-                        reference_url=reference_url,
-                    )
-                except Exception as fal_exc:
-                    if not allow_openai_fallback:
+                    else:
                         raise RuntimeError(
-                            f"fal failed ({fal_exc}); openai fallback disabled"
-                        ) from fal_exc
-                    log.warning(
-                        "FAL generation failed for slot '%s'; trying OpenAI fallback: %s",
-                        slot,
-                        fal_exc,
-                    )
-                    response_payload = _generate_with_openai(
-                        prompt=final_prompt,
-                        negative_prompt=STYLE_NEGATIVE_PROMPT,
-                        size=size,
-                        model=fallback_model,
-                        timeout_seconds=timeout_seconds,
-                    )
-                    used_provider = "openai"
-                    used_model = fallback_model
+                            f"FAL generation failed and no OpenAI fallback key is configured: {fal_exc}"
+                        )
 
             image_bytes = response_payload.get("image_bytes") if response_payload else None
             image_url = response_payload.get("image_url") if response_payload else None
@@ -1535,7 +1502,11 @@ def generate_and_log_images(page: dict) -> dict:
                 raise RuntimeError("No image URL or bytes returned by provider")
 
             generated_files.append(out_file)
-            generated_slots.add(slot)
+            resolved_slots[slot] = {
+                "source": f"AI generated via {used_provider}/{used_model}",
+                "license": "ai_generated",
+                "origin": "ai_generated",
+            }
             results.append(
                 {
                     "slot": slot,
@@ -1553,17 +1524,51 @@ def generate_and_log_images(page: dict) -> dict:
             )
             log.info("Generated image slot '%s': %s", slot, out_file)
         except Exception as exc:
-            results.append(
-                {
-                    "slot": slot,
-                    "status": "failed",
-                    "reason": str(exc),
-                    "prompt": final_prompt,
-                    "negativePrompt": STYLE_NEGATIVE_PROMPT,
-                    "referenceUrl": reference_url,
+            fallback_item = reference_fallback_plan.get(slot)
+            if fallback_item:
+                fallback_result = _use_reference_image_fallback(
+                    slug=slug,
+                    slot=slot,
+                    fallback_item=fallback_item,
+                )
+                generated_files.append(ROOT / fallback_result["file"])
+                resolved_slots[slot] = {
+                    "source": fallback_result["source"],
+                    "license": fallback_result["license"],
+                    "origin": fallback_result["origin"],
                 }
-            )
-            log.warning("Image generation failed for slot '%s' (non-blocking): %s", slot, exc)
+                results.append(
+                    {
+                        "slot": slot,
+                        "status": "reference_fallback",
+                        "reason": str(exc),
+                        "file": fallback_result["file"],
+                        "hash": fallback_result["hash"],
+                        "source": fallback_result["source"],
+                        "license": fallback_result["license"],
+                        "origin": fallback_result["origin"],
+                        "prompt": final_prompt,
+                        "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                        "referenceUrl": reference_url,
+                    }
+                )
+                log.warning(
+                    "Image generation failed for slot '%s'; using downloaded reference fallback: %s",
+                    slot,
+                    exc,
+                )
+            else:
+                results.append(
+                    {
+                        "slot": slot,
+                        "status": "failed",
+                        "reason": str(exc),
+                        "prompt": final_prompt,
+                        "negativePrompt": STYLE_NEGATIVE_PROMPT,
+                        "referenceUrl": reference_url,
+                    }
+                )
+                log.warning("Image generation failed for slot '%s' (non-blocking): %s", slot, exc)
 
     budget = os.getenv("FURNITURE_IMAGE_BUDGET_USD", "")
     metadata = {
@@ -1575,9 +1580,12 @@ def generate_and_log_images(page: dict) -> dict:
         "imageSize": size,
         "maxImages": max_images,
         "budgetUsd": budget or None,
+        "referenceBankUrls": reference_bank_urls,
+        "aiReferenceUrl": reference_url,
         "results": results,
         "summary": {
             "generatedCount": len(generated_files),
+            "referenceFallbackCount": sum(1 for item in results if item.get("status") == "reference_fallback"),
             "failedCount": sum(1 for item in results if item.get("status") == "failed"),
             "skippedCount": sum(1 for item in results if item.get("status") == "skipped"),
         },
@@ -1588,7 +1596,7 @@ def generate_and_log_images(page: dict) -> dict:
     return {
         "provenance_path": provenance_path,
         "generated_files": generated_files,
-        "generated_slots": generated_slots,
+        "resolved_slots": resolved_slots,
         "generated_count": len(generated_files),
     }
 
@@ -1638,70 +1646,13 @@ def validate_env() -> None:
     """Abort early if required environment variables are missing."""
     use_github_models = os.getenv("GITHUB_MODELS", "").strip() in ("1", "true", "yes")
     llm_key = "GITHUB_TOKEN" if use_github_models else "OPENAI_API_KEY"
-    # TAVILY_API_KEY is only used for post-build image source discovery (non-blocking).
-    # Only the LLM key is required for the main crew to run.
-    missing = [k for k in (llm_key,) if not os.getenv(k)]
+    missing = [k for k in (llm_key, "TAVILY_API_KEY") if not os.getenv(k)]
     if missing:
         log.error("Missing required environment variables: %s", ", ".join(missing))
         if use_github_models:
             log.error("GITHUB_MODELS=1 is set — GITHUB_TOKEN must be present.")
         log.error("Copy .env.example to .env and fill in your API keys.")
         sys.exit(1)
-    if not os.getenv("TAVILY_API_KEY"):
-        log.warning("TAVILY_API_KEY not set — post-build image source discovery will be skipped.")
-
-
-# ── Checkpoint-based helpers for run_build ─────────────────────────────────
-
-def _assemble_from_checkpoints(page: dict, article_body: str, description: str) -> Path:
-    """Write the final .mdx article file using cached task outputs (no crew run needed)."""
-    slug = page["slug"]
-    today_str = date.today().isoformat()
-    body = _clean_llm_output(article_body, "article_body")
-    _validate_article_body(body)
-    body = _post_process_article(body, slug)
-    frontmatter = _build_frontmatter(page, description, today_str)
-    full_content = f"{frontmatter}\n\n{_MDX_IMPORT}\n\n{body.strip()}\n"
-    CONTENT_DIR.mkdir(parents=True, exist_ok=True)
-    article_path = CONTENT_DIR / f"{slug}.mdx"
-    article_path.write_text(full_content, encoding="utf-8")
-    log.info("Article assembled from checkpoints: %s", article_path)
-    ensure_placeholder_hero(slug)
-    ensure_placeholder_images(slug)
-    return article_path
-
-
-def _save_partial_checkpoints(slug: str, exc: Exception) -> None:
-    """
-    After a crew failure, try to extract any task outputs that completed and
-    save them as checkpoints so the next run can resume.
-    """
-    # CrewAI 0.5.0 stores completed task outputs on the exception in some cases.
-    tasks_output = getattr(exc, "tasks_output", None)
-    if not tasks_output:
-        # The exception may be wrapping a crew result object.
-        cause = getattr(exc, "__cause__", None) or getattr(exc, "__context__", None)
-        tasks_output = getattr(cause, "tasks_output", None)
-    if not tasks_output:
-        return
-
-    names = ["plan", "research", "article_body", "description"]
-    saved = 0
-    for i, name in enumerate(names):
-        if i >= len(tasks_output):
-            break
-        raw = str(getattr(tasks_output[i], "raw", tasks_output[i])).strip()
-        if raw and not load_checkpoint(slug, name):
-            cp = _checkpoint_path(slug, name)
-            cp.parent.mkdir(parents=True, exist_ok=True)
-            cp.write_text(raw, encoding="utf-8")
-            log.info("Partial checkpoint saved from failed run: .checkpoints/%s/%s.txt", slug, name)
-            saved += 1
-    if saved:
-        log.info(
-            "Saved %d partial checkpoint(s) for '%s'. "
-            "Re-run the script to resume from this point.", saved, slug,
-        )
 
 
 # ── Run modes ──────────────────────────────────────────────────────────────
@@ -1777,17 +1728,11 @@ def run_build() -> None:
         reference_metadata_path: Optional[Path] = None
         generated_meta_path: Optional[Path] = None
 
-        slug = page["slug"]
-
-        # ── Pipeline (checkpoint-aware) ────────────────────────────────────
-        # run_pipeline handles resume internally: each stage checks for a
-        # saved checkpoint before calling the LLM, so partial progress from a
-        # previous failed run is reused automatically.
-        article_body, description = run_pipeline(page, concept)
-        article_path = _assemble_from_checkpoints(page, article_body, description)
+        crew = build_crew(page, concept)
+        result = crew.kickoff()
+        article_path = extract_and_save(result, page)
         artifact_paths.append(article_path)
         mark_done(backlog, page["slug"])
-        clear_checkpoints(slug)  # clean up now that the article is safely on disk
 
         # Phase 2: non-blocking discovery of mixed-license source links.
         try:
@@ -1811,17 +1756,15 @@ def run_build() -> None:
             )
 
         # Phase 4: non-blocking AI image generation + provenance.
-        generated_slots: set[str] = set()
         try:
-            image_result = generate_and_log_images(page)
+            image_result = generate_and_log_images(page, article_path)
             generated_meta_path = image_result.get("provenance_path")
             if generated_meta_path:
                 artifact_paths.append(generated_meta_path)
             artifact_paths.extend(image_result.get("generated_files", []))
 
-            generated_slots = image_result.get("generated_slots", set())
-            provider, model = _provider_and_model()
-            if _apply_generated_image_metadata(article_path, generated_slots, provider, model, page):
+            resolved_slots = image_result.get("resolved_slots", {})
+            if _apply_image_metadata(article_path, resolved_slots):
                 artifact_paths.append(article_path)
         except Exception as gen_exc:
             log.warning(
@@ -1838,53 +1781,19 @@ def run_build() -> None:
                 commit_exc,
             )
 
-        # Phase 6: if Phase 4 produced no images, try Gemini batch first,
-        # then deploy downloaded references as a fallback.
-        if not generated_slots:
-            log.info(
-                "Phase 4 generated no images — launching Gemini batch for %s",
-                slug,
-            )
-            gemini_slots = [slot for slot, _ in IMAGE_SLOT_PROMPT_FILES if slot in {"hero", "silhouette", "context", "designer", "sketch", "detail-material"}]
-            gemini_exit = 1
-            try:
-                gemini_proc = subprocess.run(
-                    [
-                        sys.executable,
-                        str(ROOT / "generate_images_gemini.py"),
-                        slug,
-                        "--use-reference-metadata",
-                        "--no-update-mdx",
-                        "--slots",
-                        *gemini_slots,
-                    ],
-                    cwd=ROOT,
-                    check=False,
-                )
-                gemini_exit = gemini_proc.returncode
-            except Exception as img_exc:
-                log.warning("Gemini image script failed (non-blocking): %s", img_exc)
-
-            if gemini_exit != 0:
-                log.info(
-                    "Gemini fallback failed for %s — deploying downloaded references instead",
-                    slug,
-                )
-                try:
-                    subprocess.run(
-                        [sys.executable, str(ROOT / "use_reference_images.py"), slug],
-                        cwd=ROOT,
-                        check=False,
-                    )
-                except Exception as ref_img_exc:
-                    log.warning("Reference-image fallback failed (non-blocking): %s", ref_img_exc)
-
         print(
             f"\n✅ PAGE COMPLETE: {page['slug']} — "
             f"Review at http://localhost:4321/blog/{page['slug']}"
         )
     except Exception as exc:
         log.error("Build failed for '%s': %s", page["slug"], exc)
+        use_github_models = os.getenv("GITHUB_MODELS", "").strip().lower() in ("1", "true", "yes")
+        err_text = str(exc)
+        if use_github_models and ("401" in err_text or "Bad credentials" in err_text):
+            log.error(
+                "GitHub Models authentication failed. Verify GITHUB_TOKEN has Models read permission, "
+                "has not expired/revoked, and matches the token in .env."
+            )
         # Write raw output for manual inspection
         fallback = ROOT / f"{page['slug']}-raw-output.txt"
         try:

@@ -44,15 +44,17 @@ def main():
     fm = parse_frontmatter(mdx_path)
 
     # Title: title (designer - yearDesigned)
-    designer = fm.get('designer', '')
-    year = fm.get('yearDesigned', '')
-    title = fm['title']
+    designer = (fm.get('designer') or '').strip()
+    year = str(fm.get('yearDesigned') or '').strip()
+    base_title = fm['title']
     if designer and year:
-        title = f'{title} ({designer} - {year})'
+        title = f'{base_title} ({designer} - {year})'
     elif designer:
-        title = f'{title} ({designer})'
+        title = f'{base_title} ({designer})'
     elif year:
-        title = f'{title} ({year})'
+        title = f'{base_title} ({year})'
+    else:
+        title = base_title
 
     # Media URL: heroImage
     hero_image = fm.get('heroImage', '')
@@ -73,15 +75,35 @@ def main():
     # Publish date
     pub_date = fm.get('pubDate', '')
 
-    # Keywords: semicolon separated
+    # Keywords: comma separated
     keywords = fm.get('keywords', [])
     if isinstance(keywords, list):
-        keywords = ', '.join(keywords)
+        keywords = ', '.join([k.strip() for k in keywords if k and str(k).strip()])
     else:
-        keywords = str(keywords)
+        keywords = str(keywords).strip()
 
-    row = [title, media_url, pinterest_board, thumbnail, description, link, pub_date, keywords]
-    print(','.join(csv_escape(val) for val in row))
+    # Always quote description, and quote any field with comma, quote, or newline
+    def csv_escape_force(field, force_quote=False):
+        if field is None:
+            return ''
+        field = str(field)
+        needs_quote = force_quote or any(c in field for c in [',', '"', '\n'])
+        if needs_quote:
+            field = field.replace('"', '""')
+            return f'"{field}"'
+        return field
+
+    row = [
+        csv_escape_force(title),
+        csv_escape_force(media_url),
+        csv_escape_force(pinterest_board),
+        csv_escape_force(thumbnail),
+        csv_escape_force(description, force_quote=True),
+        csv_escape_force(link),
+        csv_escape_force(pub_date),
+        csv_escape_force(keywords)
+    ]
+    print(','.join(row))
 
 if __name__ == '__main__':
     main()
